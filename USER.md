@@ -1,18 +1,20 @@
 # USER.md - About Your Human
 
 ## Basics
-- **Name:** [NOMBRE DEL TALLER/JOYERÍA]
-- **Location:** [UBICACIÓN]
+- **Name:** Nenufar Joyería Artesanal
+- **Location:** Cartagena, Colombia
 - **Timezone:** America/Bogota
 
 ## Business
 - **Tipo:** Taller de joyería artesanal ancestral
-- **Historia:** Piezas únicas feitas a mano, técnicas heredadas
+- **Técnica:** Mostacilla (bisutería artesanal tradicional)
+- **Historia:** Joyería artesanal hecha a mano en Cartagena
 - **Productos:** anillos, collares, pulseras, aretes, diademas
-- **Materiales:** [piedras/metales usados]
+- **Materiales:** mostacilla, hilos, piedras naturales
 
 ## Target Audience
-- **Perfil:** [edad, intereses, ocasião de compra]
+- **Perfil:** Mujeres que valoran artesanías únicas y auténticas
+- **Intereses:** joyería artesanal, accesorios handmade, cultura cartagenera
 - **Canales:** Instagram, Facebook
 
 ## Objective
