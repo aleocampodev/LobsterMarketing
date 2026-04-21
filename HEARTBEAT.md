@@ -1,7 +1,11 @@
-# HEARTBEAT.md Template
+# HEARTBEAT.md - Periodic Tasks
 
-```markdown
-# Keep this file empty (or with only comments) to skip heartbeat API calls.
+## Active Checks
+- [ ] Check Google Drive for new photos/videos from Aleja.
+- [ ] Verify if there are pending approvals in the Telegram queue.
+- [ ] Monitor n8n worker status.
 
-# Add tasks below when you want the agent to check something periodically.
-```
+## Schedule
+- **Morning:** Content strategy review.
+- **Afternoon:** Engagement and performance check.
+- **Evening:** Next day preparation.

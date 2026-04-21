@@ -1,43 +1,57 @@
-# RAG_PROMPTS.md — Banco de Prompts Nenufar
+# RAG_PROMPTS.md — Nenufar Prompt Bank
 
-Este archivo contiene la estructura y los prompts base para el sistema de copywriting con voz de marca.
-
----
-
-## 🎨 Voz de Marca (Contexto RAG)
-
-**Misión:** Comunicar el valor de la joyería ancestral de Cartagena.
-**Tono:** Cercano, evocador, profesional, orgullosamente colombiano.
+This file contains technical data and message structures to ensure the AI never invents information.
 
 ---
 
-## 📝 Prompts para Captions (Instagram/Facebook)
+## 🛠️ Technical Data (Base Catalog)
 
-### 1. El Gancho (Hook)
-- [ ] Prompt para historias ancestrales: "Cuéntanos la historia detrás de la técnica de la técnica de..."
-- [ ] Prompt para piezas nuevas: "Presenta esta nueva creación destacando su significado..."
+**Frequent Materials:**
+- Czech Beads (Mostacilla Checa).
+- Apta Thread.
+- Stainless steel.
+- Natural stones.
 
-### 2. El Cuerpo (Body)
-- [ ] Estilo narrativo: Enfocarse en el artesano, el tiempo y el legado.
-- [ ] Estilo informativo: Detallar materiales (Piedras naturales, hilos, mostacilla).
+**Weaving Techniques:**
+- Freehand weaving.
+- Loom weaving.
+- Peyote technique.
+- Brick technique (Ladrillo).
+- Tubular technique.
 
-### 3. El Cierre (CTA)
-- [ ] Compra directa: "Escríbenos al link de la bio para llevar esta historia contigo."
-- [ ] Consulta: "¿Quieres personalizar tu pieza? Hablemos por DM."
-
----
-
-## 🏷️ Estrategia de Hashtags
-
-- **Nicho:** #JoyeríaAncestral #Mostacilla #HechoEnCartagena #ArtisanJewelry
-- **Marca:** #NenufarJoyería #NenufarAncestral
-- **Tendencia:** (A completar mediante scraping semanal)
+**Price Range:** $15,000 - $400,000 COP.
 
 ---
 
-## ⚙️ Instrucciones para el Agente
+## 🎨 Brand Narratives
 
-Cuando generes un copy, siempre:
-1. Lee este archivo para mantener la voz.
-2. Combina el contexto visual de la imagen con un hook emocional.
-3. Asegúrate de que el CTA sea claro y amable.
+### 1. Icebreakers
+Use these phrases to start posts or stories:
+- "I invite you to discover my **woven poems**..."
+- "Step into the **weaving universe** through our workshop *Tejiendo Caminos*."
+- "Each piece is a **stitch of love** made real."
+
+### 2. Social Hook (Impact)
+Mention periodically:
+- "Nenufar is hope: we work with head-of-household mothers, training them so art can flourish from their homes."
+- "Behind these earrings is a mother balancing her home with the magic of her hands."
+
+### 3. Usage Context
+- "Perfect for a poetry recital, a museum visit, or a musical night in the historic center."
+
+---
+
+## 📝 Caption Structure (Nenufar Voice)
+
+1. **Poetic Hook:** A phrase evoking nature, literature, or spirituality.
+2. **Technical/Social Body:** Mention the technique (e.g., "Woven in Peyote") and who made it (e.g., "Our artisan mothers").
+3. **Call to Action (CTA):** "Tap the link in the bio so Nenufar goes with you" or "DM us to customize your colors."
+4. **Closing:** Emojis ONLY at the end. ✨🌸
+
+---
+
+## 🏷️ Hashtag Strategy
+
+- **Niche:** #JoyeríaAncestral #MostacillaCheca #ArteÍndigo #HechoEnCartagena #ArtisanJewelry
+- **Brand:** #NenufarContigo #TejiendoCaminos #PoemasTejidos #PunzadasDeAmor
+- **Social:** #MadresArtesanas #ModaConImpacto #HechoAManoConAmor

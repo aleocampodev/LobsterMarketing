@@ -1,0 +1,28 @@
+# MEMORY.md - Long-Term Memory
+
+## Project Milestones
+- **2026-04-20:** Project documentation fully translated to English. Brand essence and technical specs formalized in the `specs/` directory.
+- **2026-04-20:** Integration plan for OpenClaw and n8n established.
+- **2026-04-20:** OpenClaw system configuration integrated into memory.
+
+## System Configuration (OpenClaw)
+- **Primary Model:** `openrouter/auto` (Aliased as OpenRouter).
+- **System Prompt Override:** "Responde siempre en español. Eres un asistente experto en n8n y Supabase."
+- **Telegram Channel:** Enabled with `dmPolicy: pairing` and `groupPolicy: allowlist`. Streaming mode set to `partial`.
+- **Enabled Plugins:** Google, OpenRouter.
+- **Gateway Mode:** Local.
+
+## System Configuration (n8n & Infrastructure)
+- **Domain:** `n8n-stack-prod-dev.duckdns.org` (HTTPS).
+- **Execution Mode:** `queue` (Distributed processing enabled).
+- **Redis Broker:** Upstash Redis with TLS.
+- **Database Store:** Supabase PostgreSQL (via Transaction Pooler, port 6543).
+- **Memory Optimization:** `max-old-space-size=512MB` (Optimized for GCP e2-micro).
+- **Persistence:** Local volume `./n8n-persistence`.
+
+## Brand Insights
+- Nenufar's mission is deeply rooted in social impact, specifically empowering working mothers in Cartagena.
+- The "Woven Poems" (Poemas Tejidos) concept is the primary narrative hook for all marketing content.
+
+## Technical Lessons
+- Decoupling decision-making (OpenClaw) from execution (n8n) allows for better scalability on free-tier cloud providers.
