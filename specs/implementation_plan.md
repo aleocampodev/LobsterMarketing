@@ -1,21 +1,16 @@
-# Implementation Plan: Phase 1
+# Implementation Plan Index
 
-## Phase 1: Infrastructure Setup (Week 1)
-- [ ] **Cloud Provisioning:** Setup Oracle Cloud (OpenClaw) and Google Cloud (n8n) free instances.
-- [ ] **Database Setup:** Initialize Supabase project and create schemas for `brand_prompts` and `posts`.
-- [ ] **Redis Connection:** Configure Upstash Redis for n8n queue mode.
+This is the central index for the Nenufar Marketing Automation System implementation. Each Epic is detailed in its own document within this folder.
 
-## Phase 2: OpenClaw Core (Week 2)
-- [ ] **RAG Implementation:** Load `specs/*.md` into Supabase vector store.
-- [ ] **Telegram Bot:** Build the basic approval flow (Receive task -> Approve/Edit -> Trigger n8n).
-- [ ] **Content Engine:** Integrate OpenAI text-generation using `RAG_PROMPTS.md`.
+## Epics Backlog
 
-## Phase 3: n8n Workflows (Week 3)
-- [ ] **Media Pipeline:** Build workflow to fetch from Google Drive, resize for IG/FB, and apply watermark.
-- [ ] **Posting Logic:** Implement Instagram/Facebook Graph API nodes.
-- [ ] **Analytics Sync:** Build workflow to fetch post performance and save to Supabase.
+| ID | Epic Name | Status | Link |
+|:---|:---|:---|:---|
+| **ip-001** | Infrastructure & Core Setup | ✅ Done | [View Epic](./implementation_plan/ip-001-infrastructure.md) |
+| **ip-002** | The Brain - OpenClaw Server | ⏳ Pending | [View Epic](./implementation_plan/ip-002-openclaw-brain.md) |
+| **ip-003** | The Arms - n8n Workflows | ⏳ Pending | [View Epic](./implementation_plan/ip-003-n8n-workflows.md) |
+| **ip-004** | Integration, Spike & E2E Testing | ⏳ Pending | [View Epic](./implementation_plan/ip-004-integration-testing.md) |
+| **ip-005** | Production Launch & Monitoring | ⏳ Pending | [View Epic](./implementation_plan/ip-005-production-launch.md) |
 
-## Phase 4: Integration & Testing (Week 4)
-- [ ] **End-to-End Test:** Run a full cycle from Drive upload to Telegram notification.
-- [ ] **Security Audit:** Verify RLS in Supabase and OAuth scopes.
-- [ ] **Deployment:** Finalize environment variables and setup monitoring heartbeats.
+---
+*Created for Nenufar - Jewelry with soul.*

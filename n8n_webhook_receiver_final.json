@@ -1,0 +1,33 @@
+{
+  "name": "Luna Webhook Receiver (Secure)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "luna-trigger",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "luna-nenufar-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = '73f0b54afa26320af143b62794ca2c4c';\nconst headers = items[0].json.headers;\nconst body = items[0].json.body;\nconst signature = headers['x-luna-signature'];\n\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(JSON.stringify(body));\nconst expectedSignature = hmac.digest('hex');\n\nif (signature !== expectedSignature) {\n  return [{ json: { error: 'Invalid HMAC Signature' } }];\n}\n\nreturn [{ json: { status: 'authorized', payload: body } }];"
+      },
+      "name": "Verify HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Verify HMAC", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "meta": null
+}

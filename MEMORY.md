@@ -6,6 +6,7 @@
 - **2026-04-20:** OpenClaw system configuration integrated into memory.
 
 ## System Configuration (OpenClaw)
+- WEBHOOK_SECRET: 73f0b54afa26320af143b62794ca2c4c (Used for OpenClaw -> n8n signing)
 - **Primary Model:** `openrouter/auto` (Aliased as OpenRouter).
 - **System Prompt Override:** "Responde siempre en español. Eres un asistente experto en n8n y Supabase."
 - **Telegram Channel:** Enabled with `dmPolicy: pairing` and `groupPolicy: allowlist`. Streaming mode set to `partial`.
@@ -13,6 +14,7 @@
 - **Gateway Mode:** Local.
 
 ## System Configuration (n8n & Infrastructure)
+- WEBHOOK_SECRET: 73f0b54afa26320af143b62794ca2c4c (Used for OpenClaw -> n8n signing)
 - **Domain:** `n8n-stack-prod-dev.duckdns.org` (HTTPS).
 - **Execution Mode:** `queue` (Distributed processing enabled).
 - **Redis Broker:** Upstash Redis with TLS.
