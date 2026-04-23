@@ -1,6 +1,9 @@
 # MEMORY.md - Long-Term Memory
 
 ## Project Milestones
+- **2026-04-22:** Started Google Drive integration (Task ip-002.3).
+- **2026-04-22:** Brand Memory established via local OpenClaw file integration.
+- **2026-04-22:** Trello board link added: [Lobstermarketing Board](https://trello.com/b/A6VjYPGU/lobstermarketing)
 - **2026-04-20:** Project documentation fully translated to English. Brand essence and technical specs formalized in the `specs/` directory.
 - **2026-04-20:** Integration plan for OpenClaw and n8n established.
 - **2026-04-20:** OpenClaw system configuration integrated into memory.

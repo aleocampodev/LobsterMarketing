@@ -1,0 +1,70 @@
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config({ path: '.env.production' });
+const { createClient } = require('@supabase/supabase-js');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Configuración
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
+const SPECS_DIR = './specs';
+
+async function generateEmbedding(text) {
+    const result = await embeddingModel.embedContent(text);
+    return result.embedding.values;
+}
+
+async function ingestFile(filePath) {
+    console.log(`📖 Leyendo: ${filePath}...`);
+    const content = fs.readFileSync(filePath, 'utf8');
+    
+    // Dividimos el contenido por secciones (Markdown headers) para mejor precisión
+    const sections = content.split(/\n(?=# )|\n(?=## )/).filter(s => s.trim().length > 0);
+    
+    for (const section of sections) {
+        try {
+            console.log(`  - Procesando sección...`);
+            const embedding = await generateEmbedding(section);
+            
+            const { error } = await supabase
+                .from('brand_knowledge')
+                .insert({
+                    content: section,
+                    metadata: { source: filePath, length: section.length },
+                    embedding: embedding
+                });
+
+            if (error) throw error;
+        } catch (err) {
+            console.error(`❌ Error en sección de ${filePath}:`, err.message);
+        }
+    }
+}
+
+async function run() {
+    if (!process.env.SUPABASE_URL || !process.env.GEMINI_API_KEY) {
+        console.error("❌ Faltan variables de entorno en .env.production");
+        return;
+    }
+
+    const files = [
+        'brand_essence.md',
+        'social_impact.md',
+        'product_catalog.md'
+    ];
+
+    for (const file of files) {
+        const fullPath = path.join(SPECS_DIR, file);
+        if (fs.existsSync(fullPath)) {
+            await ingestFile(fullPath);
+        } else {
+            console.warn(`⚠️ Archivo no encontrado: ${fullPath}`);
+        }
+    }
+
+    console.log("✅ Ingestión completada. Luna ya tiene memoria de marca. 🌸");
+}
+
+run();

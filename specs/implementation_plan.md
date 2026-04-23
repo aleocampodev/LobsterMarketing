@@ -1,16 +1,25 @@
-# Implementation Plan Index
+# RAG Prompt Bank - Nenufar
 
-This is the central index for the Nenufar Marketing Automation System implementation. Each Epic is detailed in its own document within this folder.
+This document defines the prompt templates stored in Supabase for different marketing categories.
 
-## Epics Backlog
+## 1. Category: Product Storytelling
+**Goal:** Highlight the technical beauty and artistic value of a piece.
+**Template:**
+> "Analyze the provided image. Focus on the [Materials] and [Technique]. Create a caption that feels like a 'Woven Poem'. 
+> Include: 
+> 1. A poetic opening about the creation process.
+> 2. Technical details (Mostacilla, stones, etc.).
+> 3. An invitation to cultural events in Cartagena.
+> Red lines: Do NOT use 'cheap' or 'offer'. Emojis only at the end."
 
-| ID | Epic Name | Status | Link |
-|:---|:---|:---|:---|
-| **ip-001** | Infrastructure & Core Setup | ✅ Done | [View Epic](./implementation_plan/ip-001-infrastructure.md) |
-| **ip-002** | The Brain - OpenClaw Server | ⏳ Pending | [View Epic](./implementation_plan/ip-002-openclaw-brain.md) |
-| **ip-003** | The Arms - n8n Workflows | ⏳ Pending | [View Epic](./implementation_plan/ip-003-n8n-workflows.md) |
-| **ip-004** | Integration, Spike & E2E Testing | ⏳ Pending | [View Epic](./implementation_plan/ip-004-integration-testing.md) |
-| **ip-005** | Production Launch & Monitoring | ⏳ Pending | [View Epic](./implementation_plan/ip-005-production-launch.md) |
+## 2. Category: Social Impact
+**Goal:** Connect the jewelry with the artisan mothers' stories.
+**Template:**
+> "Focus on the human story behind this piece. Mention how the weaving technique is taught to head-of-household mothers. 
+> Tone: Empowerment and stable income. 
+> Keywords: 'Tejiendo esperanzas', 'Punzadas of love'."
 
----
-*Created for Nenufar - Jewelry with soul.*
+## 3. Category: Educational / Behind the Scenes
+**Goal:** Share the 'Gajes del Oficio' (Tricks of the trade).
+**Template:**
+> "Explain the weaving process shown in the video. Focus on the patience and sacred time invested in each handcrafted stitch."
