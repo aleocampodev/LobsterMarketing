@@ -46,18 +46,25 @@ Every generated Instagram/Facebook caption MUST contain:
 
 ---
 
-## 3. System Workflow & Architecture (Derived from `specs/architecture.md` & `specs/openclaw-n8n-integration-spike.md`)
+## 3. System Workflow & Architecture (Derived from `specs/architecture.md`)
 
-### 3.1 The Brain (OpenClaw / Agent)
-- **Environment:** Oracle Cloud (Free Tier) | Node.js/Python | OpenAI/Anthropic.
-- **Task:** Retrieve data from Supabase (RAG), generate the proposed post (Caption, Tags, Optimal Time).
-- **Approval:** Send the proposal to Aleja via Telegram.
-- **Trigger:** Upon approval, construct a structured JSON payload (`task_id`, `media_path`, `caption`, `hashtags`, `platforms`) and send a signed secure webhook to n8n.
-
-### 3.2 The Arms (n8n Execution)
+### 3.1 Orchestrator (n8n - Principal Coordinator)
 - **Environment:** Google Cloud e2-micro | Docker (Queue Mode) | `https://n8n-stack-prod-dev.duckdns.org/`.
-- **Task:** Validate webhook signature, download media from Google Drive.
-- **Action:** Resize image, apply Nenufar watermark, publish via Graph API, log execution in Supabase, and notify the user via Telegram.
+- **Task:** Coordinate entire workflow from media detection to publication.
+- **Workflow:**
+  1. Google Drive Trigger detects new uploads
+  2. Download and process media (resize + watermark)
+  3. Call OpenClaw service for caption generation
+  4. Send preview to Telegram for user approval
+  5. If approved, publish to Instagram/Facebook via Graph API
+  6. Log execution in Supabase
+
+### 3.2 Copywriting Service (OpenClaw / Luna)
+- **Environment:** Oracle Cloud (Free Tier) | Node.js/Python | Gemini Vision.
+- **Task:** Generate brand-consistent captions and hashtags.
+- **Input:** Image metadata from n8n.
+- **Output:** JSON with caption, hashtags, and content suggestions.
+- **Process:** Retrieve data from Supabase (RAG), analyze image with Gemini, generate post content following Nenufar voice.
 
 ---
 
