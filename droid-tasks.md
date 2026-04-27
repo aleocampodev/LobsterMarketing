@@ -7,3 +7,9 @@
 ## COMPLETED
 <!-- Droid will move tasks here when done -->
 test
+## PENDING
+- [ ] File: AGENTS.md | Change: Eliminar el encabezado duplicado "## 5. Proactive Behavior (Heartbeats)" y corregir la versión del modelo "Gemini 2.5 Flash" a "Gemini 1.5 Flash" o "Gemini 2.0 Flash" (2.5 no existe).
+- [ ] File: specs/implementation_plan/ip-002.6-brand-assets.md | Change: Actualizar la Sección 10 (Integration Points) para reflejar la nueva arquitectura "n8n-First" y eliminar las referencias obsoletas a "OpenClaw Brain (Oracle Cloud)".
+- [ ] File: scripts/gemini-review.sh | Change: Ajustar el prompt para que las tareas en `droid-tasks.md` se escriban en español, cumpliendo con la regla de "SIEMPRE comunicarse con el usuario (Aleja) en español".
+- [ ] File: specs/implementation_plan/INDEX.md | Change: Mantener un registro de los epics antiguos (ip-002 original) marcándolos como "Migrados" o "Deprecados" en lugar de eliminarlos por completo, para conservar el historial del proyecto.
+- [ ] File: AGENTS.md | Change: Restaurar las referencias "Derived from specs/architecture.md..." en la sección 3 para mantener la trazabilidad documental.
