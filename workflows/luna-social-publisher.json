@@ -1,0 +1,127 @@
+{
+  "name": "Luna Social Publisher Worker",
+  "id": "dENMnialkmtgKCo7",
+  "active": true,
+  "nodes": [
+    {
+      "id": "redis-trigger",
+      "name": "Redis Queue Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "channels": "luna-image-processed"
+      },
+      "credentials": {
+        "redis": {
+          "id": "0Kt51mAkW9dMB3aj",
+          "name": "Upstash Redis Queue"
+        }
+      }
+    },
+    {
+      "id": "parse-data",
+      "name": "Parse Task Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Parse JSON data from Redis queue\nconst taskData = JSON.parse($input.item.json.data);\nreturn {\n  json: {\n    task_id: taskData.task_id,\n    image_path: taskData.image_path,\n    caption: taskData.caption,\n    hashtags: taskData.hashtags,\n    platforms: taskData.platforms\n  }\n};"
+      }
+    },
+    {
+      "id": "facebook-publish",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "parameters": {
+        "resource": "page",
+        "operation": "post",
+        "graphApiVersion": "v19.0",
+        "node": "/105635875813018/feed",
+        "additionalFields": {
+          "message": "={{$json.caption}}",
+          "link": ""
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Y0zhyBRQq2yAnA31",
+          "name": "Nenufar Facebook Graph API"
+        }
+      }
+    },
+    {
+      "id": "instagram-publish",
+      "name": "Instagram Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "parameters": {
+        "resource": "page",
+        "operation": "post",
+        "graphApiVersion": "v19.0",
+        "node": "/105635875813018/media",
+        "additionalFields": {
+          "image_url": "={{$json.image_path}}",
+          "caption": "={{$json.caption}}"
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Y0zhyBRQq2yAnA31",
+          "name": "Nenufar Facebook Graph API"
+        }
+      }
+    },
+    {
+      "id": "feedback-webhook",
+      "name": "Send to Feedback Logger",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-stack-prod-dev.duckdns.org/webhook/84a3d6c1-418d-574b-9dc9-5b8a4e209e00",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_id",
+              "value": "={{$json.task_id}}"
+            },
+            {
+              "name": "platforms",
+              "value": "={{JSON.stringify($json.platforms)}}"
+            },
+            {
+              "name": "post_url",
+              "value": "={{$json.post_url}}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Redis Queue Trigger": {
+      "main": [[{"node": "Parse Task Data", "type": "main", "index": 0}]]
+    },
+    "Parse Task Data": {
+      "main": [[{"node": "Facebook Graph API", "type": "main", "index": 0}], [{"node": "Instagram Graph API", "type": "main", "index": 0}]]
+    },
+    "Facebook Graph API": {
+      "main": [[{"node": "Send to Feedback Logger", "type": "main", "index": 0}]]
+    },
+    "Instagram Graph API": {
+      "main": [[{"node": "Send to Feedback Logger", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

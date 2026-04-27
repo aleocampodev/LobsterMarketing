@@ -1,102 +1,116 @@
-# 📁 Workflows n8n - Nenufar Marketing Automation
+# 📁 n8n Workflows - Nenufar Marketing Automation
 
-Esta carpeta contiene los 5 workflows activos que componen el sistema de automatización de marketing para Nenufar.
+This folder contains the 5 active workflows that make up the marketing automation system for Nenufar.
 
-## 🎯 Arquitectura del Sistema
+## 🎯 System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     LUNA MULTI-AGENT SYSTEM v2                  │
-│                    Interfaz Telegram con AI                      │
+│                    ORCHESTRATOR - Telegram AI Interface         │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                   LUNA WEBHOOK RECEIVER                         │
-│                  Recepciona aprobaciones                         │
+│                  Sub-workflow - Approval receiver               │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
         ┌─────────────────────┼─────────────────────┐
         ↓                     ↓                     ↓
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
 │ IMAGE V2      │    │  PUBLISHER    │    │  FEEDBACK     │
+│ Sub-workflow  │    │ Sub-workflow  │    │ Sub-workflow  │
 └───────────────┘    └───────────────┘    └───────────────┘
 ```
 
 ## 📋 Workflows
 
-### 1. Luna Multi-Agent System v2
-**Archivo:** `luna-multi-agent-v2.json`
-**ID:** `mKssn8hROxLNWWVH`
-**Propósito:** Orquestador principal con interfaz Telegram
+### 🤖 ORCHESTRATOR
 
-**Características:**
-- Ultimate Assistant con eco-poetic voice (español colombiano)
-- Google Gemini 2.5 Flash como LLM
+#### 1. Luna Multi-Agent System v2
+**File:** `luna-multi-agent-v2.json`  
+**ID:** `mKssn8hROxLNWWVH`  
+**Type:** Orchestrator  
+**Purpose:** Main orchestrator with Telegram interface
+
+**Features:**
+- Ultimate Assistant with eco-poetic voice (Colombian Spanish)
+- Google Gemini 2.5 Flash as LLM
 - Think + Calculator tools
 - Simple Memory (Buffer Window)
-- Support para texto y voz
+- Text and voice support
 
-**Credenciales:**
+**Credentials:**
 - Google Generative AI
 - Telegram API
 
-### 2. Luna Webhook Receiver
-**Archivo:** `luna-webhook-receiver.json`
-**ID:** `EPslgKTzkbLcxdrs`
-**Propósito:** Recibe aprobaciones de Luna y distribuye tasks
+---
 
-**Características:**
-- Webhook con validación HMAC
+### ⚙️ SUB-WORKFLOWS (Workers)
+
+#### 2. Luna Webhook Receiver
+**File:** `luna-webhook-receiver.json`  
+**ID:** `EPslgKTzkbLcxdrs`  
+**Type:** Sub-workflow  
+**Purpose:** Receives Luna approvals and distributes tasks
+
+**Features:**
+- Webhook with HMAC validation
 - Redis Queue (Upstash)
-- Distribuye tasks a workers
+- Distributes tasks to workers
 
-**Credenciales:**
+**Credentials:**
 - Upstash Redis Queue
 
-### 3. Luna Image Processor Worker v2
-**Archivo:** `luna-image-processor-v2.json`
-**ID:** `3JGieW6MBlANnaud`
-**Propósito:** Procesa imágenes con marca de agua Nenufar
+#### 3. Luna Image Processor Worker v2
+**File:** `luna-image-processor-v2.json`  
+**ID:** `3JGieW6MBlANnaud`  
+**Type:** Sub-workflow  
+**Purpose:** Processes images with Nenufar watermark
 
-**Características:**
-- Descarga desde Google Drive
-- Redimensiona (FB: 1080x1080, IG: 1080x1350)
-- Aplica watermark
+**Features:**
+- Downloads from Google Drive
+- Resizes (FB: 1080x1080, IG: 1080x1350)
+- Applies watermark
 
-**Credenciales:**
+**Credentials:**
 - Google Drive
 
-### 4. Luna Social Publisher Worker
-**Archivo:** `luna-social-publisher.json`
-**ID:** `dENMnialkmtgKCo7`
-**Propósito:** Publica en Instagram y Facebook
+#### 4. Luna Social Publisher Worker
+**File:** `luna-social-publisher.json`  
+**ID:** `dENMnialkmtgKCo7`  
+**Type:** Sub-workflow  
+**Purpose:** Publishes to Instagram and Facebook
 
-**Características:**
+**Features:**
 - Facebook/Instagram Graph API
-- Publica captions con hashtags
-- Soporte multi-plataforma
+- Publishes captions with hashtags
+- Multi-platform support
 
-**Credenciales:**
+**Credentials:**
 - Facebook Graph API
 
-### 5. Luna Feedback and Logging Worker
-**Archivo:** `luna-feedback-logging.json`
-**ID:** `v7j1Dv1mgO5ZUgmG`
-**Propósito:** Logging en Supabase y notificaciones
+#### 5. Luna Feedback and Logging Worker
+**File:** `luna-feedback-logging.json`  
+**ID:** `v7j1Dv1mgO5ZUgmG`  
+**Type:** Sub-workflow  
+**Purpose:** Supabase logging and notifications
 
-**Características:**
-- Registra execution en Supabase
-- Envía notificaciones vía Telegram
-- Track de analytics
+**Features:**
+- Logs execution to Supabase
+- Sends Telegram notifications
+- Analytics tracking
 
-**Credenciales:**
+**Credentials:**
 - Supabase
 - Telegram API
 
-## 🔧 Credenciales Requeridas
+---
 
-| Credencial | Tipo | Workflows que la usan |
-|------------|------|----------------------|
+## 🔧 Required Credentials
+
+| Credential | Type | Used by Workflows |
+|------------|------|-------------------|
 | Google Generative AI | googlePalmApi | Multi-Agent v2 |
 | Telegram API | telegramApi | Multi-Agent v2, Feedback |
 | Upstash Redis Queue | redis | Webhook Receiver, Image V2, Publisher |
@@ -105,40 +119,42 @@ Esta carpeta contiene los 5 workflows activos que componen el sistema de automat
 | Supabase | supabaseApi | Feedback Worker |
 | Header Auth | httpHeaderAuth | Webhooks |
 
-## 📦 Instalación
+---
 
-Para importar estos workflows en tu instancia n8n:
+## 📦 Installation
 
-1. Ve a n8n → Workflows → Import from File
-2. Selecciona el archivo JSON correspondiente
-3. Configura las credenciales necesarias
-4. Activa el workflow
+To import these workflows into your n8n instance:
 
-## ⚠️ Notas Importantes
+1. Go to n8n → Workflows → Import from File
+2. Select the corresponding JSON file
+3. Configure the necessary credentials
+4. Activate the workflow
 
-- **Orden de activación:** Activar primero los workers (Webhook Receiver, Image Processor, Social Publisher, Feedback) y luego el Multi-Agent System
-- **Variables de entorno:** Configurar `.env.production` con las credenciales correctas
-- **Redis Queue:** Asegurarse de que Upstash Redis esté configurado correctamente
-- **Webhook URLs:** Las URLs de webhook pueden variar según la configuración de tu instancia n8n
+## ⚠️ Important Notes
+
+- **Activation order:** Activate workers first (Webhook Receiver, Image Processor, Social Publisher, Feedback), then the Multi-Agent System orchestrator
+- **Environment variables:** Configure `.env.production` with the correct credentials
+- **Redis Queue:** Ensure Upstash Redis is properly configured
+- **Webhook URLs:** Webhook URLs may vary depending on your n8n instance configuration
 
 ## 🚀 Testing
 
-Para probar el sistema:
+To test the system:
 
-1. Envía un mensaje al bot de Telegram
-2. Verifica que Ultimate Assistant responda en español colombiano
-3. Prueba la generación de captions con eco-poetic voice
-4. Verifica el flujo completo hasta publicación (si está configurado)
+1. Send a message to the Telegram bot
+2. Verify that Ultimate Assistant responds in Colombian Spanish
+3. Test caption generation with eco-poetic voice
+4. Verify the complete flow to publication (if configured)
 
-## 📈 Métricas
+## 📈 Metrics
 
-- **Total workflows:** 5
-- **Total nodos:** 31
-- **Credenciales:** 7
-- **Conexiones:** 20+
+- **Total workflows:** 5 (1 orchestrator + 4 sub-workflows)
+- **Total nodes:** 31
+- **Credentials:** 7
+- **Connections:** 20+
 - **Triggers:** 2 (Telegram, Webhook)
 
 ---
 
-**Última actualización:** 2026-04-27
-**Estado:** ✅ Production ready
+**Last updated:** 2026-04-27  
+**Status:** ✅ Production ready
