@@ -1,42 +1,37 @@
 # System Architecture: Nenufar Marketing Automation
 
 ## Overview
-The system follows a "Brain & Arms" architectural pattern, decoupling decision-making from execution.
+The system follows an **n8n-First Orchestration** pattern, where the decision-making (Brain) and execution (Arms) are unified within a single automated ecosystem.
 
-## 1. OpenClaw (The Brain)
-- **Role:** Central Intelligence & Orchestration.
-- **Platform:** Oracle Cloud (Always Free Tier).
-- **Core Engine:** Node.js / Python with LLM integration (OpenAI/Anthropic).
+## 1. The Orchestrator (The Brain)
+- **Role:** Central Intelligence, Strategic Planning & User Interface.
+- **Platform:** n8n (Google Cloud e2-micro).
+- **Core Engine:** Google Gemini 2.5 Flash.
 - **Features:**
-    - **RAG Engine:** Retrieves brand essence and product data from Supabase.
-    - **Strategic Planner:** Determines content calendar based on `SOUL.md`.
-    - **Copywriter:** Generates Spanish captions and hashtags.
-    - **User Interface:** Telegram Bot for approvals and human-in-the-loop control.
+    - **Unified Assistant:** Handles conversational interface (Telegram), voice transcription, and content generation.
+    - **Contextual Memory:** Uses Buffer Window memory to maintain conversation flow.
+    - **Strategic Logic:** Directly integrates brand essence (`SOUL.md`) and RAG prompts into the LLM system message.
+    - **Approval Gate:** Manages the human-in-the-loop validation via Telegram buttons.
 
-## 2. n8n (The Arms)
-- **Role:** Workflow Execution & Automation.
-- **Platform:** Google Cloud e2-micro.
-- **Endpoint:** `https://n8n-stack-prod-dev.duckdns.org/`
-- **Deployment:** Docker with Queue Mode enabled.
-- **Resource Limit:** 512MB RAM (NODE_OPTIONS).
-- **Integrations:**
-    - **Google Drive:** Source for raw media.
-    - **Facebook/Instagram Graph API:** Posting destination.
-    - **Supabase:** Persistence via Transaction Pooler (port 6543).
-    - **Telegram:** Notification delivery.
+## 2. Sub-Workflows (The Workers)
+- **Role:** Atomic Task Execution & Scalability.
+- **Platform:** n8n Docker (Queue Mode) with Upstash Redis.
+- **Workflows:**
+    - **Webhook Receiver:** Secure entry point that validates signatures and routes tasks.
+    - **Image Processor v2:** Specialized in media handling (Download from Drive, Resize, Watermarking).
+    - **Social Publisher:** Manages direct integration with Meta Graph API (Instagram/Facebook).
+    - **Feedback & Logging:** Ensures observability by persisting data to Supabase and notifying the user.
 
-## 3. Data & Communication Layer
+## 3. Infrastructure & Data Layer
+- **Google Cloud Platform:** Hosts the n8n Docker instance.
 - **Supabase Cloud:**
-    - PostgreSQL database for metadata and logs.
-    - Vector store for RAG embeddings.
-    - Object storage for brand assets (watermarks, logos).
+    - PostgreSQL for execution logs and metadata.
+    - Vector Store for brand knowledge (RAG).
 - **Upstash Redis:**
-    - Message broker for n8n workers.
-- **REST APIs / Webhooks:**
-    - OpenClaw triggers n8n workflows via secure webhooks.
-    - n8n sends status updates back to OpenClaw.
+    - Serves as the message broker for n8n workers, ensuring high availability and task persistence.
+- **Google Drive:** Primary source for raw media assets.
 
 ## Security & Reliability
-- **Secrets Management:** Environment variables only.
-- **Queueing:** Ensures tasks are not lost during peak API usage.
-- **Pruning:** Automatic execution data pruning in n8n to stay within free tier limits.
+- **End-to-End Encryption:** Secured via HTTPS and Webhook HMAC signatures.
+- **Queue Mode:** Decouples the orchestrator from heavy processing tasks, preventing memory overflows in the e2-micro instance.
+- **Free Tier Optimization:** Architected to stay within the limits of Google Cloud Free Tier, Supabase Free, and Upstash Free.

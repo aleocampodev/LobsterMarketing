@@ -46,18 +46,26 @@ Every generated Instagram/Facebook caption MUST contain:
 
 ---
 
-## 3. System Workflow & Architecture (Derived from `specs/architecture.md` & `specs/openclaw-n8n-integration-spike.md`)
+## 3. System Workflow & Architecture (n8n-First Orchestration)
 
-### 3.1 The Brain (OpenClaw / Agent)
-- **Environment:** Oracle Cloud (Free Tier) | Node.js/Python | OpenAI/Anthropic.
-- **Task:** Retrieve data from Supabase (RAG), generate the proposed post (Caption, Tags, Optimal Time).
-- **Approval:** Send the proposal to Aleja via Telegram.
-- **Trigger:** Upon approval, construct a structured JSON payload (`task_id`, `media_path`, `caption`, `hashtags`, `platforms`) and send a signed secure webhook to n8n.
+The system operates as a decentralized network of n8n workflows, where the intelligence is embedded directly into the orchestration layer.
 
-### 3.2 The Arms (n8n Execution)
-- **Environment:** Google Cloud e2-micro | Docker (Queue Mode) | `https://n8n-stack-prod-dev.duckdns.org/`.
-- **Task:** Validate webhook signature, download media from Google Drive.
-- **Action:** Resize image, apply Nenufar watermark, publish via Graph API, log execution in Supabase, and notify the user via Telegram.
+### 3.1 The Orchestrator (Luna Multi-Agent System v2)
+- **Environment:** n8n Instance (`mKssn8hROxLNWWVH`) | Gemini 2.5 Flash.
+- **Role:** Central Intelligence and User Interface.
+- **Workflow:** 
+    1. Receives Text/Voice via Telegram.
+    2. Processes intent using "Ultimate Assistant" (Eco-poetic voice).
+    3. Uses Tools (Think, Calculator, Memory) to generate content.
+    4. Upon user approval, triggers the **Webhook Receiver** to initiate execution.
+
+### 3.2 The Workers (Sub-Workflows)
+- **Environment:** n8n Instance | Docker (Queue Mode) | Upstash Redis.
+- **Task Distribution:**
+    - **Luna Webhook Receiver:** Validates signatures and queues tasks via Redis.
+    - **Image Processor Worker v2:** Downloads media from Google Drive, resizes, and applies the Nenufar watermark.
+    - **Social Publisher Worker:** Manages Facebook/Instagram Graph API for final posting.
+    - **Feedback & Logging Worker:** Persists metadata in Supabase and notifies the user of success.
 
 ---
 
