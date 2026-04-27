@@ -6,7 +6,7 @@ if [ -z "$DIFF" ]; then
   exit 0
 fi
 
-echo "🤖 Gemini loading project context..."
+echo "🌀 Gemini loading project context..."
 
 # Core files
 AGENTS=$(cat AGENTS.md 2>/dev/null || echo "not found")
@@ -29,93 +29,84 @@ for f in workflows/*.md workflows/*.json; do
   [ -f "$f" ] && WORKFLOW_FILES="$WORKFLOW_FILES\n\n### $f:\n$(cat $f)"
 done
 
-echo "🤖 Gemini reviewing diff with full context..."
+echo "🌀 Gemini reviewing diff with full context..."
 
-gemini -p "
-You are a senior AI systems reviewer for LobsterMarketing.
-This is a marketing automation system for Nenufar — Colombian ancestral jewelry brand.
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
+COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "pending")
+
+REVIEW=$(gemini -p "
+You are a senior reviewer for LobsterMarketing (Luna AI - Nenufar).
 
 ================================================================
-## FULL PROJECT CONTEXT — READ BEFORE REVIEWING
+## FULL PROJECT CONTEXT
 ================================================================
 
-### AGENTS.md (Operational rules & red lines):
+### AGENTS.md:
 $AGENTS
 
----
-
-### SOUL.md (Brand identity & voice):
+### SOUL.md:
 $SOUL
-
----
 
 ### IDENTITY.md:
 $IDENTITY
 
----
-
-### MEMORY.md (System config & milestones):
+### MEMORY.md:
 $MEMORY
-
----
 
 ### HEARTBEAT.md:
 $HEARTBEAT
 
----
-
 ### WORKFLOWS_STATE.md:
 $WORKFLOWS
-
----
 
 ### RAG_PROMPTS.md:
 $RAG
 
----
-
-### specs/ directory:
+### specs/:
 $SPECS_FILES
 
----
-
-### workflows/ directory:
+### workflows/:
 $WORKFLOW_FILES
 
 ================================================================
-## YOUR REVIEW TASKS
+## REVIEW TASKS
 ================================================================
 
-Analyze the diff below against ALL the context above and check:
-
-1. RED LINES — Does anything violate AGENTS.md section 1.3?
-2. BRAND VOICE — Is tone consistent with SOUL.md? (poetic, warm, Colombian Spanish)
-3. WORKFLOW LOGIC — Are n8n workflows complete? (webhook validation, watermark, Supabase logging, Telegram approval)
-4. RAG CONSISTENCY — Do prompts align with RAG_PROMPTS.md templates?
-5. SPECS ACCURACY — Are materials/techniques from the actual product catalog?
-6. ARCHITECTURE — Does it respect the n8n-first orchestration pattern?
-7. MISSING STEPS — Are there gaps in the automation flow?
-8. SECURITY — Any exposed keys, unvalidated webhooks, or missing signatures?
+Analyze the diff and check:
+1. RED LINES — Violations of AGENTS.md section 1.3?
+2. BRAND VOICE — Consistent with SOUL.md?
+3. WORKFLOW LOGIC — n8n workflows complete? (webhook validation, watermark, Supabase logging, Telegram approval)
+4. RAG CONSISTENCY — Prompts align with RAG_PROMPTS.md?
+5. SPECS ACCURACY — Materials/techniques from product catalog?
+6. ARCHITECTURE — Respects n8n-first orchestration?
+7. MISSING STEPS — Gaps in automation flow?
+8. SECURITY — Exposed keys, unvalidated webhooks?
 
 ================================================================
-## OUTPUT FORMAT
+## OUTPUT FORMAT (follow exactly)
 ================================================================
 
-Write a report and then tasks for Droid Factory:
-
-## REVIEW REPORT
+## REVIEW REPORT [$TIMESTAMP]
+- Commit: <commit message>
 - Overall status: APPROVED | NEEDS WORK | BLOCKED
 - Summary: <2-3 sentences>
 
 ## PENDING
 - [ ] File: <path> | Change: <specific fix with reason>
 
-(If nothing to fix write '(no tasks)' under PENDING)
+If nothing to fix write exactly:
+## PENDING
+(no tasks)
 
 ================================================================
-## DIFF TO REVIEW:
+## DIFF:
 $DIFF
 ================================================================
-" >> droid-tasks.md
+")
+
+# Append review cleanly to droid-tasks.md
+echo "" >> droid-tasks.md
+echo "---" >> droid-tasks.md
+echo "$REVIEW" >> droid-tasks.md
 
 echo "✅ Full review saved in droid-tasks.md"
