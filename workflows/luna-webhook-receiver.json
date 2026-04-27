@@ -1,0 +1,75 @@
+{
+  "name": "Luna Webhook Receiver",
+  "id": "EPslgKTzkbLcxdrs",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [250, 300],
+      "parameters": {
+        "path": "luna-trigger",
+        "options": {
+          "onError": "continueRegularOutput"
+        }
+      },
+      "webhookId": "195cc659-faa6-4671-95fe-a505e92317e7"
+    },
+    {
+      "id": "validate-signature",
+      "name": "Validate HMAC Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Validate HMAC signature from OpenClaw\nconst crypto = require('crypto');\nconst secret = $env.WEBHOOK_SECRET;\nconst payload = JSON.stringify($input.item.json);\nconst receivedSignature = $input.item.json.signature;\n\n// Calculate expected signature\nconst expectedSignature = crypto\n  .createHmac('sha256', secret)\n  .update(payload)\n  .digest('hex');\n\n// Validate signature\nif (receivedSignature !== expectedSignature) {\n  throw new Error('Invalid signature: payload may be tampered');\n}\n\n// Return validated data without signature\nreturn {\n  json: {\n    task_id: $input.item.json.task_id,\n    media_path: $input.item.json.media_path,\n    caption: $input.item.json.caption,\n    hashtags: $input.item.json.hashtags,\n    platforms: $input.item.json.platforms,\n    validated: true\n  }\n};"
+      }
+    },
+    {
+      "id": "redis-queue",
+      "name": "Add to Redis Queue",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "operation": "push",
+        "list": "luna-queue",
+        "messageData": "={{JSON.stringify($json)}}"
+      },
+      "credentials": {
+        "redis": {
+          "id": "0Kt51mAkW9dMB3aj",
+          "name": "Upstash Redis Queue"
+        }
+      }
+    },
+    {
+      "id": "respond-202",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"accepted\", \"task_id\": \"{{$json.task_id}}\", \"message\": \"Task queued for processing\"}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Validate HMAC Signature", "type": "main", "index": 0}]]
+    },
+    "Validate HMAC Signature": {
+      "main": [[{"node": "Add to Redis Queue", "type": "main", "index": 0}]]
+    },
+    "Add to Redis Queue": {
+      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
