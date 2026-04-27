@@ -13,3 +13,9 @@ test
 - [ ] File: scripts/gemini-review.sh | Change: Ajustar el prompt para que las tareas en `droid-tasks.md` se escriban en español, cumpliendo con la regla de "SIEMPRE comunicarse con el usuario (Aleja) en español".
 - [ ] File: specs/implementation_plan/INDEX.md | Change: Mantener un registro de los epics antiguos (ip-002 original) marcándolos como "Migrados" o "Deprecados" en lugar de eliminarlos por completo, para conservar el historial del proyecto.
 - [ ] File: AGENTS.md | Change: Restaurar las referencias "Derived from specs/architecture.md..." en la sección 3 para mantener la trazabilidad documental.
+## PENDING
+- [ ] File: CONTRIBUTING.md | Change: Traducir el contenido al español (Colombia) y adaptar el tono a la persona de Luna (cálido, cercano y profesional), asegurando el uso de "tú" y alineación total con las reglas de SOUL.md.
+- [ ] File: CONTRIBUTING.md | Change: Unificar la terminología de "Droid Factory" con la identidad de "Luna/OpenClaw" para evitar inconsistencias y asegurar que se entienda quién es el agente que opera el sistema.
+- [ ] File: AGENTS.md | Change: Incluir `CONTRIBUTING.md` en la sección 4 (Memory & Context Management) como archivo de lectura inicial obligatoria para que el agente comprenda el flujo de trabajo del repositorio desde el inicio.
+- [ ] File: CONTRIBUTING.md | Change: Agregar una referencia explícita a `specs/architecture.md` en la descripción del stack tecnológico para mantener la coherencia y trazabilidad documental del proyecto.
+test full context
