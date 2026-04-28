@@ -20,9 +20,8 @@
       "typeVersion": 4.1,
       "position": [450, 300],
       "parameters": {
-        "url": "https://api.openai.com/v1/embeddings",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=YOUR_GEMINI_API_KEY",
+        "authentication": "none",
         "method": "POST",
         "sendHeaders": true,
         "headerParameters": {
@@ -35,25 +34,12 @@
         },
         "sendBody": true,
         "bodyParameters": {
-          "parameters": [
-            {
-              "name": "input",
-              "value": "={{$json.query}}"
-            },
-            {
-              "name": "model",
-              "value": "text-embedding-ada-002"
-            }
-          ]
+          "parameters": []
         },
-        "options": {}
+        "options": {},
+        "jsonBody": "={\n  \"content\": {\n    \"parts\": [\n      {\n        \"text\": \"{{ $json.query }}\"\n      }\n    ]\n  }\n}"
       },
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "kKHR1K1b41LwCGBF",
-          "name": "Header Auth account"
-        }
-      }
+      "credentials": {}
     },
     {
       "id": "prepare-search-query",
@@ -63,7 +49,7 @@
       "position": [650, 300],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Extract query embedding\nconst embedding = $input.item.json.data[0].embedding;\nconst query = $input.item.json.query;\nconst topK = $input.item.json.top_k || 3;\n\n// Prepare Supabase RPC call for vector similarity search\nreturn {\n  json: {\n    query_embedding: embedding,\n    query: query,\n    top_k: topK\n  }\n};"
+        "jsCode": "// Extract query embedding from Gemini response\nconst embedding = $input.item.json.embedding.values;\nconst query = $input.item.json.query;\nconst topK = $input.item.json.top_k || 3;\n\n// Prepare Supabase RPC call for vector similarity search\nreturn {\n  json: {\n    query_embedding: embedding,\n    query: query,\n    top_k: topK\n  }\n};"
       }
     },
     {

@@ -116,16 +116,18 @@ This document summarizes the RAG (Retrieval-Augmented Generation) integration im
 ## Technical Architecture
 
 ### Vector Store Configuration
-- **Dimension:** 1536 (OpenAI text-embedding-ada-002)
+- **Dimension:** 768 (Gemini text-embedding-004)
 - **Index Type:** ivfflat with cosine similarity
 - **Lists:** 100 (optimized for ~1000 documents)
 - **Similarity Metric:** Cosine distance (1 - cosine_similarity)
 
 ### Embedding Model
-- **Model:** OpenAI text-embedding-ada-002
-- **Cost:** $0.0001 / 1K tokens (very affordable)
-- **Performance:** Excellent for semantic search
-- **Language:** Multilingual (supports Spanish)
+- **Model:** Gemini text-embedding-004
+- **Provider:** Google Generative AI
+- **Cost:** GRATIS (más económico que OpenAI)
+- **Performance:** Excelente para búsqueda semántica
+- **Language:** Multilingual (soporta español perfectamente)
+- **API Key:** Configurada en n8n como "Google Generative AI"
 
 ### API Integration
 - **Semantic Search Webhook:** `/webhook/luna-semantic-search`

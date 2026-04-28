@@ -27,9 +27,8 @@
       "typeVersion": 4.1,
       "position": [650, 300],
       "parameters": {
-        "url": "https://api.openai.com/v1/embeddings",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=YOUR_GEMINI_API_KEY",
+        "authentication": "none",
         "method": "POST",
         "sendHeaders": true,
         "headerParameters": {
@@ -44,23 +43,19 @@
         "bodyParameters": {
           "parameters": [
             {
-              "name": "input",
+              "name": "content",
               "value": "={{$json.content}}"
             },
             {
               "name": "model",
-              "value": "text-embedding-ada-002"
+              "value": "models/text-embedding-004"
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "jsonBody": "={\n  \"content\": {\n    \"parts\": [\n      {\n        \"text\": \"{{ $json.content }}\"\n      }\n    ]\n  }\n}"
       },
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "kKHR1K1b41LwCGBF",
-          "name": "Header Auth account"
-        }
-      }
+      "credentials": {}
     },
     {
       "id": "prepare-vector-data",
@@ -70,7 +65,7 @@
       "position": [850, 300],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Extract embedding from OpenAI response\nconst embedding = $input.item.json.data[0].embedding;\nconst document = $input.item.json;\n\n// Prepare data for Supabase Vector Store\nreturn {\n  json: {\n    id: document.id,\n    content: document.content,\n    embedding: embedding,\n    metadata: document.metadata\n  }\n};"
+        "jsCode": "// Extract embedding from Gemini response\nconst embedding = $input.item.json.embedding.values;\nconst document = $input.item.json;\n\n// Prepare data for Supabase Vector Store\nreturn {\n  json: {\n    id: document.id,\n    content: document.content,\n    embedding: embedding,\n    metadata: document.metadata\n  }\n};"
       }
     },
     {

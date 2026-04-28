@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE IF NOT EXISTS brand_knowledge (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
-    embedding vector(1536), -- OpenAI text-embedding-ada-002 dimension
+    embedding vector(768), -- Gemini text-embedding-004 dimension
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -21,7 +21,7 @@ WITH (lists = 100);
 
 -- Create function for similarity search
 CREATE OR REPLACE FUNCTION match_brand_knowledge(
-    query_embedding vector(1536),
+    query_embedding vector(768),
     match_count INT DEFAULT 5
 )
 RETURNS TABLE (
@@ -81,7 +81,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION upsert_knowledge(
     p_id TEXT,
     p_content TEXT,
-    p_embedding vector(1536),
+    p_embedding vector(768),
     p_metadata JSONB DEFAULT '{}'
 )
 RETURNS TEXT AS $$
