@@ -18,22 +18,25 @@ test
 - [x] File: CONTRIBUTING.md | Change: Unificar la terminología de "Droid Factory" con la identidad de "Luna/OpenClaw" para evitar inconsistencias y asegurar que se entienda quién es el agente que opera el sistema.
 - [x] File: AGENTS.md | Change: Incluir `CONTRIBUTING.md` en la sección 4 (Memory & Context Management) como archivo de lectura inicial obligatoria para que el agente comprenda el flujo de trabajo del repositorio desde el inicio.
 - [x] File: CONTRIBUTING.md | Change: Agregar una referencia explícita a `specs/architecture.md` en la descripción del stack tecnológico para mantener la coherencia y trazabilidad documental del proyecto.
-## REVIEW REPORT
-- Overall status: NEEDS WORK
-- Summary: The updated `gemini-review.sh` is a significant improvement as it provides full project context to the AI reviewer, ensuring consistency with brand rules and technical specs. However, the system currently contains a critical Red Line violation (missing watermark implementation) and references a potentially non-existent model version (`gemini-2.5-flash`).
-
-## PENDING
-- [x] File: workflows/luna-image-processor-v2.json | Change: Implementar el procesamiento de imagen con Sharp para redimensionar y aplicar la marca de agua de Nenufar. Actualmente es un TODO y viola la línea roja de AGENTS.md: "NEVER publish visual media without the Nenufar watermark".
-- [x] File: workflows/luna-multi-agent-v2.json | Change: Verificar el nombre del modelo de IA. Se hace referencia a `gemini-2.5-flash`, el cual no existe actualmente (probablemente sea `gemini-1.5-flash` o `gemini-2.0-flash`).
-- [x] File: droid-tasks.md | Change: Eliminar la línea "test full context" al final del archivo, ya que es ruido de depuración.
-- [x] File: scripts/gemini-review.sh | Change: Modificar el script para que sobrescriba el archivo `droid-tasks.md` o lo gestione de forma que no se dupliquen los encabezados `## PENDING` en cada ejecución.
-- [x] File: workflows/luna-social-publisher.json | Change: Parametrizar el ID de la página de Facebook y los endpoints de la API en lugar de tenerlos hardcoded, para facilitar cambios futuros sin editar el workflow.
 
 ---
-## REVIEW REPORT [2026-04-27 16:28]
-- Commit: pending
-- Overall status: APPROVED
-- Summary: The update to `scripts/gemini-review.sh` refines the automated review process by improving the prompt structure and adding metadata like timestamps and commit messages. The transition to a more structured output format ensures that reviews are consistently logged in `droid-tasks.md`.
+
+
+---
+## REVIEW REPORT [2026-04-27 21:42]
+- Status: NEEDS WORK
+- Summary: The update significantly reduces the context provided to the AI reviewer, directly violating the mandatory context and memory management rules in AGENTS.md. It also removes the Spanish language requirement for user tasks and the cleanup logic for droid-tasks.md.
 
 ## PENDING
-(no tasks)
+- [ ] File: scripts/gemini-review.sh | Change: Restore the context-gathering logic for SOUL.md, MEMORY.md, and the specs/ and workflows/ directories to ensure the reviewer can validate changes against brand and technical standards as required by AGENTS.md Section 4.
+- [ ] File: scripts/gemini-review.sh | Change: Re-insert the instruction to write the "Change" part of the pending tasks in Spanish (Colombia) to comply with the mandate in AGENTS.md Section 1.1 regarding user communication.
+- [ ] File: scripts/gemini-review.sh | Change: Restore the `sed`-based cleanup logic to prevent `droid-tasks.md` from accumulating duplicate headers and becoming cluttered over time.
+- [ ] File: scripts/gemini-review.sh | Change: Restore the safety checks (e.g., `|| echo "not found"`) for file reads to ensure the script does not crash if a peripheral context file is missing.
+
+---
+## REVIEW REPORT [2026-04-27 21:45]
+- Status: APPROVED
+- Summary: The update to `gemini-review.sh` successfully integrates brand identity from `SOUL.md` and enforces strict repository language standards. These changes ensure the automated reviewer has full context of Luna's persona while maintaining technical consistency in English.
+
+## PENDING
+no tasks
