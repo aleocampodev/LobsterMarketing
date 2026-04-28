@@ -92,21 +92,42 @@ Analyze the diff and check:
 - Summary: <2-3 sentences>
 
 ## PENDING
-- [ ] File: <path> | Change: <specific fix with reason>
+- [ ] File: <path> | Change: <specific fix with reason (in Spanish)>
 
 If nothing to fix write exactly:
 ## PENDING
 (no tasks)
 
 ================================================================
+## IMPORTANT: Language Requirement
+================================================================
+ All repo files (code, docs, specs) must be in ENGLISH. 
+Spanish (Colombia) is ONLY for external Nenufar content (Instagram captions, Facebook captions and comments).
+================================================================
 ## DIFF:
 $DIFF
 ================================================================
 ")
 
-# Append review cleanly to droid-tasks.md
+# Append review cleanly to droid-tasks.md (avoiding duplicate headers)
+# Create temp file to process content
+TEMP_FILE=$(mktemp)
+echo "$REVIEW" > "$TEMP_FILE"
+
+# Check if droid-tasks.md exists and has content
+if [ -f droid-tasks.md ]; then
+  # Remove the last REVIEW REPORT section to avoid duplicates
+  sed -i '/## REVIEW REPORT/,/^(no tasks)$/d' droid-tasks.md
+  # Remove duplicate PENDING headers that might exist
+  sed -i '/^## PENDING$/{ N; /^## PENDING\n## PENDING$/d; }' droid-tasks.md
+fi
+
+# Append separator and new review
 echo "" >> droid-tasks.md
 echo "---" >> droid-tasks.md
-echo "$REVIEW" >> droid-tasks.md
+cat "$TEMP_FILE" >> droid-tasks.md
+
+# Clean up
+rm "$TEMP_FILE"
 
 echo "✅ Full review saved in droid-tasks.md"

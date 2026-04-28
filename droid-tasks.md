@@ -8,14 +8,32 @@
 <!-- Droid will move tasks here when done -->
 test
 ## PENDING
-- [ ] File: AGENTS.md | Change: Eliminar el encabezado duplicado "## 5. Proactive Behavior (Heartbeats)" y corregir la versión del modelo "Gemini 2.5 Flash" a "Gemini 1.5 Flash" o "Gemini 2.0 Flash" (2.5 no existe).
-- [ ] File: specs/implementation_plan/ip-002.6-brand-assets.md | Change: Actualizar la Sección 10 (Integration Points) para reflejar la nueva arquitectura "n8n-First" y eliminar las referencias obsoletas a "OpenClaw Brain (Oracle Cloud)".
-- [ ] File: scripts/gemini-review.sh | Change: Ajustar el prompt para que las tareas en `droid-tasks.md` se escriban en español, cumpliendo con la regla de "SIEMPRE comunicarse con el usuario (Aleja) en español".
-- [ ] File: specs/implementation_plan/INDEX.md | Change: Mantener un registro de los epics antiguos (ip-002 original) marcándolos como "Migrados" o "Deprecados" en lugar de eliminarlos por completo, para conservar el historial del proyecto.
-- [ ] File: AGENTS.md | Change: Restaurar las referencias "Derived from specs/architecture.md..." en la sección 3 para mantener la trazabilidad documental.
+- [x] File: AGENTS.md | Change: Eliminar el encabezado duplicado "## 5. Proactive Behavior (Heartbeats)" y corregir la versión del modelo "Gemini 2.5 Flash" a "Gemini 1.5 Flash" o "Gemini 2.0 Flash" (2.5 no existe).
+- [x] File: specs/implementation_plan/ip-002.6-brand-assets.md | Change: Actualizar la Sección 10 (Integration Points) para reflejar la nueva arquitectura "n8n-First" y eliminar las referencias obsoletas a "OpenClaw Brain (Oracle Cloud)".
+- [x] File: scripts/gemini-review.sh | Change: Ajustar el prompt para que las tareas en `droid-tasks.md` se escriban en español, cumpliendo con la regla de "SIEMPRE comunicarse con el usuario (Aleja) en español".
+- [x] File: specs/implementation_plan/INDEX.md | Change: Mantener un registro de los epics antiguos (ip-002 original) marcándolos como "Migrados" o "Deprecados" en lugar de eliminarlos por completo, para conservar el historial del proyecto.
+- [x] File: AGENTS.md | Change: Restaurar las referencias "Derived from specs/architecture.md..." en la sección 3 para mantener la trazabilidad documental.
 ## PENDING
-- [ ] File: CONTRIBUTING.md | Change: Traducir el contenido al español (Colombia) y adaptar el tono a la persona de Luna (cálido, cercano y profesional), asegurando el uso de "tú" y alineación total con las reglas de SOUL.md.
-- [ ] File: CONTRIBUTING.md | Change: Unificar la terminología de "Droid Factory" con la identidad de "Luna/OpenClaw" para evitar inconsistencias y asegurar que se entienda quién es el agente que opera el sistema.
-- [ ] File: AGENTS.md | Change: Incluir `CONTRIBUTING.md` en la sección 4 (Memory & Context Management) como archivo de lectura inicial obligatoria para que el agente comprenda el flujo de trabajo del repositorio desde el inicio.
-- [ ] File: CONTRIBUTING.md | Change: Agregar una referencia explícita a `specs/architecture.md` en la descripción del stack tecnológico para mantener la coherencia y trazabilidad documental del proyecto.
-test full context
+- [x] File: CONTRIBUTING.md | Change: Traducir el contenido al español (Colombia) y adaptar el tono a la persona de Luna (cálido, cercano y profesional), asegurando el uso de "tú" y alineación total con las reglas de SOUL.md.
+- [x] File: CONTRIBUTING.md | Change: Unificar la terminología de "Droid Factory" con la identidad de "Luna/OpenClaw" para evitar inconsistencias y asegurar que se entienda quién es el agente que opera el sistema.
+- [x] File: AGENTS.md | Change: Incluir `CONTRIBUTING.md` en la sección 4 (Memory & Context Management) como archivo de lectura inicial obligatoria para que el agente comprenda el flujo de trabajo del repositorio desde el inicio.
+- [x] File: CONTRIBUTING.md | Change: Agregar una referencia explícita a `specs/architecture.md` en la descripción del stack tecnológico para mantener la coherencia y trazabilidad documental del proyecto.
+## REVIEW REPORT
+- Overall status: NEEDS WORK
+- Summary: The updated `gemini-review.sh` is a significant improvement as it provides full project context to the AI reviewer, ensuring consistency with brand rules and technical specs. However, the system currently contains a critical Red Line violation (missing watermark implementation) and references a potentially non-existent model version (`gemini-2.5-flash`).
+
+## PENDING
+- [x] File: workflows/luna-image-processor-v2.json | Change: Implementar el procesamiento de imagen con Sharp para redimensionar y aplicar la marca de agua de Nenufar. Actualmente es un TODO y viola la línea roja de AGENTS.md: "NEVER publish visual media without the Nenufar watermark".
+- [x] File: workflows/luna-multi-agent-v2.json | Change: Verificar el nombre del modelo de IA. Se hace referencia a `gemini-2.5-flash`, el cual no existe actualmente (probablemente sea `gemini-1.5-flash` o `gemini-2.0-flash`).
+- [x] File: droid-tasks.md | Change: Eliminar la línea "test full context" al final del archivo, ya que es ruido de depuración.
+- [x] File: scripts/gemini-review.sh | Change: Modificar el script para que sobrescriba el archivo `droid-tasks.md` o lo gestione de forma que no se dupliquen los encabezados `## PENDING` en cada ejecución.
+- [x] File: workflows/luna-social-publisher.json | Change: Parametrizar el ID de la página de Facebook y los endpoints de la API en lugar de tenerlos hardcoded, para facilitar cambios futuros sin editar el workflow.
+
+---
+## REVIEW REPORT [2026-04-27 16:28]
+- Commit: pending
+- Overall status: APPROVED
+- Summary: The update to `scripts/gemini-review.sh` refines the automated review process by improving the prompt structure and adding metadata like timestamps and commit messages. The transition to a more structured output format ensures that reviews are consistently logged in `droid-tasks.md`.
+
+## PENDING
+(no tasks)

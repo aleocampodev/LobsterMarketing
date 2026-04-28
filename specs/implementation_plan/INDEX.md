@@ -24,9 +24,13 @@ Sistema automatizado de marketing para Nenufar que integra generación de conten
 **Objetivo:** Migrar la inteligencia de Luna directamente a n8n como orquestador central.
 
 **Sub-epics:**
-- **ip-002.1:** Unified Agent v2 (Gemini 2.5 Flash) ✅
+- **ip-002.1:** Unified Agent v2 (Gemini 1.5 Flash) ✅
 - **ip-002.2:** RAG Integration (Supabase Vector Store) ⏳ **EN PROGRESO**
 - **ip-002.3:** Telegram Interface (Buttons/Voice) ✅
+- **ip-002.5:** Multi-Agent System v2 ✅
+- **ip-002.6:** Brand Assets & Content Resources ✅
+
+**[MIGRADO]** ip-002-original: Oracle Cloud OpenClaw Brain - **Deprecado** en favor de arquitectura n8n-First.
 
 ---
 
@@ -54,3 +58,12 @@ Sistema automatizado de marketing para Nenufar que integra generación de conten
 **Archivo:** `ip-005-production-launch.md`
 **Estado:** Pendiente
 **Objetivo:** Desplegar sistema en producción y monitorear performance.
+
+---
+
+## 📝 Historial de Cambios Arquitectónicos
+
+**2026-04-27:** Migración completa a arquitectura n8n-First
+- OpenClaw Brain (Oracle Cloud) → **Deprecado**
+- Luna Multi-Agent System v2 (n8n + Gemini 1.5 Flash) → **Activo**
+- Worker workflows especializados (Queue Mode con Upstash Redis) → **Activo**

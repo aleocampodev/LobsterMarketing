@@ -89,7 +89,7 @@
       "typeVersion": 1,
       "position": [160, 608],
       "parameters": {
-        "modelName": "models/gemini-2.5-flash"
+        "modelName": "models/gemini-1.5-flash"
       },
       "credentials": {
         "googlePalmApi": {

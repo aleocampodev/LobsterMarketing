@@ -1,0 +1,196 @@
+{
+  "name": "Luna Social Publisher v2 (Supabase Tracking)",
+  "id": "social-publisher-v2",
+  "active": true,
+  "nodes": [
+    {
+      "id": "redis-trigger",
+      "name": "Redis Queue Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "channels": "luna-image-processed"
+      },
+      "credentials": {
+        "redis": {
+          "id": "0Kt51mAkW9dMB3aj",
+          "name": "Upstash Redis Queue"
+        }
+      }
+    },
+    {
+      "id": "parse-data",
+      "name": "Parse Task Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const taskData = JSON.parse($input.item.json.data);\nconst FACEBOOK_PAGE_ID = $env.FACEBOOK_PAGE_ID || '105635875813018';\nconst GRAPH_API_VERSION = $env.GRAPH_API_VERSION || 'v19.0';\n\nreturn {\n  json: {\n    task_id: taskData.task_id,\n    file_id: taskData.file_id,\n    caption: taskData.caption,\n    hashtags: taskData.hashtags,\n    platforms: taskData.platforms,\n    processed_data: taskData,\n    facebook_page_id: FACEBOOK_PAGE_ID,\n    graph_api_version: GRAPH_API_VERSION\n  }\n};"
+      }
+    },
+    {
+      "id": "check-platforms",
+      "name": "Check Target Platforms",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [650, 300],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "facebook",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.platforms}}",
+                    "rightValue": "facebook",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "instagram",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.platforms}}",
+                    "rightValue": "instagram",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "facebook-publish",
+      "name": "Publish to Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/' + $json.graph_api_version + '/' + $json.facebook_page_id + '/photos' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"https://n8n-stack-prod-dev.duckdns.org/webhook/get-image/{{ $json.file_id }}\",\n  \"caption\": \"{{ $json.caption }}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "facebook_graph_api",
+          "name": "Facebook Graph API"
+        }
+      }
+    },
+    {
+      "id": "instagram-publish",
+      "name": "Publish to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/' + $json.graph_api_version + '/' + $json.facebook_page_id + '/media' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"https://n8n-stack-prod-dev.duckdns.org/webhook/get-image/{{ $json.file_id }}\",\n  \"caption\": \"{{ $json.caption }}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "facebook_graph_api",
+          "name": "Facebook Graph API"
+        }
+      }
+    },
+    {
+      "id": "merge-results",
+      "name": "Merge Publication Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1050, 300],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      }
+    },
+    {
+      "id": "mark-published",
+      "name": "Mark as Published in Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://agizzmrxmswjwpiawjzj.supabase.co/rest/v1/rpc/mark_file_published",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_file_id\": \"{{ $('Parse Task Data').item.json.file_id }}\",\n  \"p_platforms\": {{ JSON.stringify($('Parse Task Data').item.json.platforms) }}\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "supabase_service_role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "id": "log-feedback",
+      "name": "Log Success Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1450, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-stack-prod-dev.duckdns.org/webhook/feedback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": \"{{ $('Parse Task Data').item.json.task_id }}\",\n  \"status\": \"success\",\n  \"platforms\": {{ JSON.stringify($('Parse Task Data').item.json.platforms) }},\n  \"file_id\": \"{{ $('Parse Task Data').item.json.file_id }}\"\n}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Redis Queue Trigger": {
+      "main": [[{"node": "Parse Task Data", "type": "main", "index": 0}]]
+    },
+    "Parse Task Data": {
+      "main": [[{"node": "Check Target Platforms", "type": "main", "index": 0}]]
+    },
+    "Check Target Platforms": {
+      "main": [
+        [{"node": "Publish to Facebook", "type": "main", "index": 0}],
+        [{"node": "Publish to Instagram", "type": "main", "index": 0}]
+      ]
+    },
+    "Publish to Facebook": {
+      "main": [[{"node": "Merge Publication Results", "type": "main", "index": 0}]]
+    },
+    "Publish to Instagram": {
+      "main": [[{"node": "Merge Publication Results", "type": "main", "index": 1}]]
+    },
+    "Merge Publication Results": {
+      "main": [[{"node": "Mark as Published in Supabase", "type": "main", "index": 0}]]
+    },
+    "Mark as Published in Supabase": {
+      "main": [[{"node": "Log Success Feedback", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

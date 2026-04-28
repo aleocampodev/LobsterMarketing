@@ -48,10 +48,10 @@ Every generated Instagram/Facebook caption MUST contain:
 
 ## 3. System Workflow & Architecture (n8n-First Orchestration)
 
-The system operates as a decentralized network of n8n workflows, where the intelligence is embedded directly into the orchestration layer.
+(Derived from `specs/architecture.md`) The system operates as a decentralized network of n8n workflows, where the intelligence is embedded directly into the orchestration layer.
 
 ### 3.1 The Orchestrator (Luna Multi-Agent System v2)
-- **Environment:** n8n Instance (`mKssn8hROxLNWWVH`) | Gemini 2.5 Flash.
+- **Environment:** n8n Instance (`mKssn8hROxLNWWVH`) | Gemini 1.5 Flash.
 - **Role:** Central Intelligence and User Interface.
 - **Workflow:** 
     1. Receives Text/Voice via Telegram.
@@ -71,14 +71,10 @@ The system operates as a decentralized network of n8n workflows, where the intel
 
 ## 4. Memory & Context Management
 
-- **Session Startup:** Immediately read `SOUL.md`, `USER.md`, and recent files in `memory/`.
+- **Session Startup:** Immediately read `SOUL.md`, `USER.md`, `CONTRIBUTING.md`, and recent files in `memory/`.
 - **Long-Term Memory (`MEMORY.md`):** Read to understand system configs (e.g., Supabase Postgres pooler on port 6543, Upstash Redis broker) and brand milestones.
 - **Daily Logs:** Document actions, user feedback, or system errors in `memory/YYYY-MM-DD.md`.
 - **No "Mental Notes":** Rule or preference changes MUST be written to the appropriate markdown file (e.g., `specs/brand_essence.md`).
-
----
-
-## 5. Proactive Behavior (Heartbeats)
 
 ---
 
