@@ -27,7 +27,7 @@
       "position": [450, 300],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Parse JSON data from Redis queue\nconst taskData = JSON.parse($input.item.json.data);\nreturn {\n  json: {\n    task_id: taskData.task_id,\n    image_path: taskData.image_path,\n    caption: taskData.caption,\n    hashtags: taskData.hashtags,\n    platforms: taskData.platforms\n  }\n};"
+        "jsCode": "// Parse JSON data from Redis queue\nconst taskData = JSON.parse($input.item.json.data);\n\n// Configuration - Parametrize these values\nconst FACEBOOK_PAGE_ID = $env.FACEBOOK_PAGE_ID || '105635875813018';\nconst GRAPH_API_VERSION = $env.GRAPH_API_VERSION || 'v19.0';\nconst FEEDBACK_WEBHOOK_URL = $env.FEEDBACK_WEBHOOK_URL || 'https://n8n-stack-prod-dev.duckdns.org/webhook/84a3d6c1-418d-574b-9dc9-5b8a4e209e00';\n\nreturn {\n  json: {\n    task_id: taskData.task_id,\n    image_path: taskData.image_path,\n    caption: taskData.caption,\n    hashtags: taskData.hashtags,\n    platforms: taskData.platforms,\n    // Configurable parameters\n    facebook_page_id: FACEBOOK_PAGE_ID,\n    graph_api_version: GRAPH_API_VERSION,\n    feedback_webhook_url: FEEDBACK_WEBHOOK_URL\n  }\n};"
       }
     },
     {
@@ -39,8 +39,8 @@
       "parameters": {
         "resource": "page",
         "operation": "post",
-        "graphApiVersion": "v19.0",
-        "node": "/105635875813018/feed",
+        "graphApiVersion": "={{$json.graph_api_version}}",
+        "node": "={{ '/' + $json.facebook_page_id + '/feed' }}",
         "additionalFields": {
           "message": "={{$json.caption}}",
           "link": ""
@@ -62,8 +62,8 @@
       "parameters": {
         "resource": "page",
         "operation": "post",
-        "graphApiVersion": "v19.0",
-        "node": "/105635875813018/media",
+        "graphApiVersion": "={{$json.graph_api_version}}",
+        "node": "={{ '/' + $json.facebook_page_id + '/media' }}",
         "additionalFields": {
           "image_url": "={{$json.image_path}}",
           "caption": "={{$json.caption}}"
@@ -84,7 +84,7 @@
       "position": [850, 300],
       "parameters": {
         "method": "POST",
-        "url": "https://n8n-stack-prod-dev.duckdns.org/webhook/84a3d6c1-418d-574b-9dc9-5b8a4e209e00",
+        "url": "={{$json.feedback_webhook_url}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,

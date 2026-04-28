@@ -1,0 +1,222 @@
+{
+  "name": "Luna Image Processor v4 (Supabase Tracking)",
+  "id": "image-processor-v4",
+  "active": true,
+  "nodes": [
+    {
+      "id": "redis-trigger",
+      "name": "Redis Queue Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "channels": "luna-queue"
+      },
+      "credentials": {
+        "redis": {
+          "id": "0Kt51mAkW9dMB3aj",
+          "name": "Upstash Redis Queue"
+        }
+      }
+    },
+    {
+      "id": "parse-task",
+      "name": "Parse Task Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const taskData = JSON.parse($input.item.json.data);\nreturn {\n  json: {\n    task_id: taskData.task_id,\n    file_id: taskData.file_id,\n    file_name: taskData.file_name,\n    mime_type: taskData.mime_type,\n    caption: taskData.caption,\n    hashtags: taskData.hashtags,\n    platforms: taskData.platforms\n  }\n};"
+      }
+    },
+    {
+      "id": "check-if-processed",
+      "name": "Check if Already Processed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://agizzmrxmswjwpiawjzj.supabase.co/rest/v1/rpc/is_file_processed",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_file_id\": \"{{ $json.file_id }}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "supabase_anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "id": "check-duplicate",
+      "name": "Check for Duplicates",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_file_processed }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "mark-processing",
+      "name": "Mark as Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://agizzmrxmswjwpiawjzj.supabase.co/rest/v1/rpc/mark_file_processed",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_file_id\": \"{{ $('Parse Task Data').item.json.file_id }}\",\n  \"p_file_name\": \"{{ $('Parse Task Data').item.json.file_name }}\",\n  \"p_mime_type\": \"{{ $('Parse Task Data').item.json.mime_type }}\",\n  \"p_size\": 0,\n  \"p_task_id\": \"{{ $('Parse Task Data').item.json.task_id }}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "supabase_service_role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "id": "download-drive",
+      "name": "Download from Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1250, 200],
+      "parameters": {
+        "operation": "get",
+        "fileId": "={{$('Parse Task Data').item.json.file_id}}"
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IJGx4YEq7DBtHbZM",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "id": "download-logo",
+      "name": "Download Nenufar Logo",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1250, 350],
+      "parameters": {
+        "operation": "get",
+        "fileId": "1IqV6LcrVuZPl9iBdQCPjgro1WYhFB5UQ"
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IJGx4YEq7DBtHbZM",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "id": "merge-assets",
+      "name": "Merge Image + Logo",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1450, 250],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      }
+    },
+    {
+      "id": "process-image",
+      "name": "Process Image (Resize + Watermark)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 250],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Image processing with Sharp for Nenufar watermark\nconst sharp = require('sharp');\n\n// Extract data from merged nodes\nconst imageData = $input.item(0).binary.data;\nconst logoData = $input.item(1).binary.data;\nconst taskData = $('Parse Task Data').item.json;\n\n// Determine target platform dimensions\nconst isInstagram = taskData.platforms && taskData.platforms.includes('instagram');\nconst targetWidth = 1080;\nconst targetHeight = isInstagram ? 1350 : 1080;\n\ntry {\n  // Load and resize main image\n  let image = sharp(imageData)\n    .resize(targetWidth, targetHeight, {\n      fit: 'cover',\n      position: 'center'\n    });\n\n  // Get metadata for sizing logo appropriately\n  const metadata = await image.metadata();\n  const logoSize = Math.floor(Math.min(metadata.width, metadata.height) * 0.15);\n\n  // Load and resize logo with transparency\n  const logoBuffer = await sharp(logoData)\n    .resize(logoSize, logoSize, {\n      fit: 'inside',\n      withoutEnlargement: true\n    })\n    .png()\n    .toBuffer();\n\n  // Apply watermark (bottom-right corner)\n  const processedBuffer = await image\n    .composite([{\n      input: logoBuffer,\n      gravity: 'southeast',\n      blend: 'over'\n    }])\n    .png()\n    .toBuffer();\n  \n  return {\n    json: {\n      task_id: taskData.task_id,\n      file_id: taskData.file_id,\n      caption: taskData.caption,\n      hashtags: taskData.hashtags,\n      platforms: taskData.platforms,\n      processed: true,\n      watermark_applied: true,\n      dimensions: `${targetWidth}x${targetHeight}`\n    },\n    binary: {\n      data: processedBuffer\n    }\n  };\n} catch (error) {\n  throw new Error(`Image processing failed: ${error.message}`);\n}"
+      }
+    },
+    {
+      "id": "queue-next",
+      "name": "Queue for Social Publisher",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1850, 250],
+      "parameters": {
+        "operation": "push",
+        "list": "luna-image-processed",
+        "messageData": "={{JSON.stringify($json)}}"
+      },
+      "credentials": {
+        "redis": {
+          "id": "0Kt51mAkW9dMB3aj",
+          "name": "Upstash Redis Queue"
+        }
+      }
+    },
+    {
+      "id": "skip-duplicate",
+      "name": "Skip Duplicate File",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1050, 450],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Redis Queue Trigger": {
+      "main": [[{"node": "Parse Task Data", "type": "main", "index": 0}]]
+    },
+    "Parse Task Data": {
+      "main": [[{"node": "Check if Already Processed", "type": "main", "index": 0}]]
+    },
+    "Check if Already Processed": {
+      "main": [[{"node": "Check for Duplicates", "type": "main", "index": 0}]]
+    },
+    "Check for Duplicates": {
+      "main": [
+        [{"node": "Mark as Processing", "type": "main", "index": 0}],
+        [{"node": "Skip Duplicate File", "type": "main", "index": 0}]
+      ]
+    },
+    "Mark as Processing": {
+      "main": [[{"node": "Download from Google Drive", "type": "main", "index": 0}], [{"node": "Download Nenufar Logo", "type": "main", "index": 0}]]
+    },
+    "Download from Google Drive": {
+      "main": [[{"node": "Merge Image + Logo", "type": "main", "index": 0}]]
+    },
+    "Download Nenufar Logo": {
+      "main": [[{"node": "Merge Image + Logo", "type": "main", "index": 1}]]
+    },
+    "Merge Image + Logo": {
+      "main": [[{"node": "Process Image (Resize + Watermark)", "type": "main", "index": 0}]]
+    },
+    "Process Image (Resize + Watermark)": {
+      "main": [[{"node": "Queue for Social Publisher", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

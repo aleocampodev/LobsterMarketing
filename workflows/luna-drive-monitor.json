@@ -1,0 +1,155 @@
+{
+  "name": "Luna Drive Monitor (Semi-Auto)",
+  "id": "drive-monitor-001",
+  "active": true,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger (1 hour)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-drive",
+      "name": "Check Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [450, 300],
+      "parameters": {
+        "operation": "getAll",
+        "limit": 50,
+        "filters": {
+          "searchQuery": "modifiedTime > '{{DateTime.now().minus({hours: 1}).toFormat(\"yyyy-MM-dd\\\"T\\\"HH:mm:ss\\\"Z\\\"")}}'"
+        }
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IJGx4YEq7DBtHbZM",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "id": "filter-new-files",
+      "name": "Filter New Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Filter for media files only (images and videos)\nconst mediaFiles = $input.all().filter(item => {\n  const mimeType = item.json.mimeType;\n  const name = item.json.name;\n  \n  // Only process media files\n  const isMedia = mimeType.startsWith('image/') || \n                  mimeType.startsWith('video/') ||\n                  name.match(/\\.(jpg|jpeg|png|gif|mp4|mov|avi)$/i);\n  \n  // Skip system files and already processed files\n  const isSystem = name.startsWith('.') || name.includes('procesado') || name.includes('processed');\n  \n  return isMedia && !isSystem;\n});\n\nif (mediaFiles.length === 0) {\n  return [{ json: { status: 'no_new_files', message: 'No new media files found' }}];\n}\n\nreturn mediaFiles.map(file => ({\n  json: {\n    file_id: file.json.id,\n    file_name: file.json.name,\n    mime_type: file.json.mimeType,\n    created_time: file.json.createdTime,\n    modified_time: file.json.modifiedTime,\n    web_view_link: file.json.webViewLink,\n    thumbnail_link: file.json.thumbnailLink,\n    size: file.json.size\n  }\n}));"
+      }
+    },
+    {
+      "id": "check-processed",
+      "name": "Check Already Processed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://agizzmrxmswjwpiawjzj.supabase.co/rest/v1/processed_files?file_id=eq.{{ $json.file_id }}",
+        "sendBody": false,
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "supabase_anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "id": "filter-unprocessed",
+      "name": "Filter Unprocessed Files",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1.1,
+      "position": [1050, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.length }}",
+              "value2": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-telegram-notification",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1250, 200],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "🔔 **Nuevos archivos detectados en Google Drive**\n\n📁 **Archivos encontrados:**\n{{ $map($json, function(item) { return '📸 ' + item.file_name + ' (' + item.size + ' bytes)'}).join('\\n') }}\n\n¿Deseas procesar alguno de estos archivos?\n\nUsa: /procesar [nombre del archivo]",
+        "additionalFields": {
+          "parseMode": "markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "Qnh5jmW5sNzjGjrY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "log-activity",
+      "name": "Log Monitoring Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://agizzmrxmswjwpiawjzj.supabase.co/rest/v1/monitoring_logs",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"files_checked\": {{ $json.length }},\n  \"new_files\": 0,\n  \"status\": \"completed\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "genericAuthType": {
+          "id": "supabase_service_role",
+          "name": "Supabase Service Role"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (1 hour)": {
+      "main": [[{"node": "Check Google Drive", "type": "main", "index": 0}]]
+    },
+    "Check Google Drive": {
+      "main": [[{"node": "Filter New Files", "type": "main", "index": 0}]]
+    },
+    "Filter New Files": {
+      "main": [[{"node": "Check Already Processed", "type": "main", "index": 0}]]
+    },
+    "Check Already Processed": {
+      "main": [[{"node": "Filter Unprocessed Files", "type": "main", "index": 0}]]
+    },
+    "Filter Unprocessed Files": {
+      "main": [
+        [{"node": "Send Telegram Notification", "type": "main", "index": 0}],
+        [{"node": "Log Monitoring Activity", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
