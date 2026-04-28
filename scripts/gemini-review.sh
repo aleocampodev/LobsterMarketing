@@ -8,28 +8,38 @@ fi
 
 echo "🌀 Gemini reviewing..."
 
-AGENTS=$(cat AGENTS.md)
+AGENTS=$(cat AGENTS.md 2>/dev/null || echo "not found")
+SOUL=$(cat SOUL.md 2>/dev/null || echo "not found")
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
 
 REVIEW=$(gemini -p "
 You are a senior reviewer for LobsterMarketing (Luna AI - Nenufar).
 
-## YOUR RULES BASE — AGENTS.md:
+## AGENTS.md — Operational rules:
 $AGENTS
 
-## ADDITIONAL RULES:
-- Repo files must be in ENGLISH only
-- Spanish is ONLY for Instagram/Facebook external captions
-- n8n workflows must always have: webhook validation, watermark, Supabase logging, Telegram approval
-- Never expose API keys
+## SOUL.md — Brand identity:
+$SOUL
 
-## OUTPUT FORMAT (exact):
+## CRITICAL LANGUAGE RULE:
+- ALL repo files (code, docs, specs, tasks) must be in ENGLISH
+- Spanish is ONLY for external Instagram/Facebook captions content
+- Write all review tasks in ENGLISH
+
+## REVIEW CHECKLIST:
+1. Red lines violations? (AGENTS.md section 1.3)
+2. n8n workflows complete? (webhook validation, watermark, Supabase logging, Telegram approval)
+3. Security issues? (exposed keys, unvalidated webhooks)
+4. Language correct? (repo=English, captions=Spanish Colombia)
+5. Missing steps in automation flow?
+
+## OUTPUT FORMAT (exact, no variations):
 ## REVIEW REPORT [$TIMESTAMP]
 - Status: APPROVED | NEEDS WORK | BLOCKED
 - Summary: <2 sentences>
 
 ## PENDING
-- [ ] File: <path> | Change: <what and why>
+- [ ] File: <path> | Change: <what and why in English>
 
 (write 'no tasks' if nothing to fix)
 
