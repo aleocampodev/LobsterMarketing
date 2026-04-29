@@ -1,112 +1,112 @@
-# 🧪 Guía de Testing - Nenufar Marketing Automation
+# 🧪 Testing Guide - Nenufar Marketing Automation
 
-## 🎯 Objetivo
-Probar la implementación completa de:
-- **Option A:** Marca de agua en imágenes
-- **Option B:** Sistema RAG con Gemini embeddings
+## 🎯 Objective
+Test the complete implementation of:
+- **Option A:** Image watermarking
+- **Option B:** RAG system with Gemini embeddings
 
 ---
 
-## 📋 Pre-requisitos
+## 📋 Prerequisites
 
-### 1. Configuración de Gemini API
-Ya tienes las credenciales configuradas en n8n: **"Google Generative AI"**
+### 1. Gemini API Configuration
+You already have credentials configured in n8n: **"Google Generative AI"**
 
 ### 2. Supabase
 - URL: `https://your-project-id.supabase.co`
-- Credenciales ya existentes: **"Supabase account"**
+- Existing credentials: **"Supabase account"**
 
 ### 3. Google Drive
 - Logo File ID: `1IqV6LcrVuZPl9iBdQCPjgro1WYhFB5UQ`
-- Credenciales ya existentes: **"Google Drive account"**
+- Existing credentials: **"Google Drive account"**
 
 ---
 
-## 🚀 PASO 1: Configurar Supabase Vector Store (5 minutos)
+## 🚀 STEP 1: Setup Supabase Vector Store (5 minutes)
 
-1. **Abre Supabase Dashboard**
-   - Ve a: https://supabase.com/dashboard
-   - Selecciona tu proyecto
+1. **Open Supabase Dashboard**
+   - Go to: https://supabase.com/dashboard
+   - Select your project
 
-2. **Abre SQL Editor**
-   - Menú lateral → SQL Editor
-   - Crea un nuevo query
+2. **Open SQL Editor**
+   - Sidebar → SQL Editor
+   - Create a new query
 
-3. **Ejecuta el script**
+3. **Execute the script**
    ```bash
-   # Copia el contenido de este archivo:
+   # Copy the content of this file:
    scripts/setup-vector-store.sql
    ```
    
-4. **Verifica la creación**
+4. **Verify creation**
    ```sql
-   -- Debe retornar 'brand_knowledge'
+   -- Should return 'brand_knowledge'
    SELECT table_name 
    FROM information_schema.tables 
    WHERE table_name = 'brand_knowledge';
    
-   -- Verifica el índice
+   -- Verify the index
    SELECT indexname 
    FROM pg_indexes 
    WHERE tablename = 'brand_knowledge';
    ```
 
-**✅ Checklist Paso 1:**
-- [ ] Tabla `brand_knowledge` creada
-- [ ] Índice `brand_knowledge_embedding_idx` creado
-- [ ] Función `match_brand_knowledge` creada
-- [ ] Extension `vector` habilitada
+**✅ Checklist Step 1:**
+- [ ] Table `brand_knowledge` created
+- [ ] Index `brand_knowledge_embedding_idx` created
+- [ ] Function `match_brand_knowledge` created
+- [ ] Extension `vector` enabled
 
 ---
 
-## 🔥 PASO 2: Importar Workflows en n8n (3 minutos)
+## 🔥 STEP 2: Import Workflows in n8n (3 minutes)
 
-1. **Abre n8n**
+1. **Open n8n**
    - URL: https://n8n-stack-prod-dev.duckdns.org
-   - Login con tus credenciales
+   - Login with your credentials
 
-2. **Importa los workflows**
+2. **Import the workflows**
    ```
    workflows/luna-rag-knowledge-base.json
    workflows/luna-semantic-search.json
    ```
 
-3. **Conecta las credenciales**
-   - **Supabase account**: Ya existe
-   - **Google Generative AI**: Ya existe
+3. **Connect credentials**
+   - **Supabase account**: Already exists
+   - **Google Generative AI**: Already exists
 
-4. **Configura la API Key de Gemini**
-   - En el nodo "Generate Embeddings", reemplaza:
+4. **Configure Gemini API Key**
+   - In the "Generate Embeddings" node, replace:
      ```
      YOUR_GEMINI_API_KEY
      ```
-   - Por tu API key real de Gemini
-   - Puedes obtenerla en: https://makersuite.google.com/app/apikey
+   - With your actual Gemini API key
+   - Get it at: https://makersuite.google.com/app/apikey
 
-**✅ Checklist Paso 2:**
-- [ ] Workflows importados correctamente
-- [ ] Credenciales conectadas
-- [ ] API Key de Gemini configurada
+**✅ Checklist Step 2:**
+- [ ] Workflows imported correctly
+- [ ] Credentials connected
+- [ ] Gemini API Key configured
 
 ---
 
-## 📊 PASO 3: Crear Embeddings (2 minutos)
+## 📊 STEP 3: Create Embeddings (2 minutes)
 
-1. **Abre el workflow** "Luna RAG Knowledge Base"
+1. **Open the workflow** "Luna RAG Knowledge Base"
 
-2. **Haz clic en** "Test Workflow" (▶️)
+2. **Click on** "Test Workflow" (▶️)
 
-3. **Verifica la ejecución**
-   - Debes ver 4 items procesados
-   - Cada item representa un documento de marca
+3. **Verify execution**
+   - You should see 4 items processed
+   - Each item represents a brand document
 
-4. **Confirma en Supabase**
+4. **Confirm in Supabase**
    ```sql
    SELECT id, metadata->>'type' as type, metadata->>'source' as source 
    FROM brand_knowledge;
    ```
 
-   **Resultado esperado:**
+   **Expected result:**
    ```
    id                  | type            | source
    --------------------|-----------------|-----------------------
@@ -116,48 +116,48 @@ Ya tienes las credenciales configuradas en n8n: **"Google Generative AI"**
    social-impact-001   | social_impact   | specs/social_impact.md
    ```
 
-**✅ Checklist Paso 3:**
-- [ ] 4 embeddings creados
-- [ ] Registros visibles en Supabase
-- [ ] Embeddings tienen 768 dimensiones
+**✅ Checklist Step 3:**
+- [ ] 4 embeddings created
+- [ ] Records visible in Supabase
+- [ ] Embeddings have 768 dimensions
 
 ---
 
-## 🔍 PASO 4: Probar Búsqueda Semántica (3 minutos)
+## 🔍 STEP 4: Test Semantic Search (3 minutes)
 
-1. **Activa el workflow** "Luna Semantic Search"
-   - Toggle ON (esquina superior derecha)
+1. **Activate the workflow** "Luna Semantic Search"
+   - Toggle ON (top right corner)
 
-2. **Copia el Webhook URL**
-   - Haz clic en "Listen for Test Event"
-   - Copia el URL generado
+2. **Copy the Webhook URL**
+   - Click on "Listen for Test Event"
+   - Copy the generated URL
 
-3. **Prueba con curl**
+3. **Test with curl**
    ```bash
    curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search \
      -H "Content-Type: application/json" \
      -d '{
-       "query": "¿Cuál es la misión social de Nenufar?",
+       "query": "What is Nenufar\\'s social mission?",
        "top_k": 3
      }'
    ```
 
-4. **Prueba con Postman** (si prefieres UI)
+4. **Test with Postman** (if you prefer UI)
    - Method: POST
-   - URL: [tu webhook URL]
+   - URL: [your webhook URL]
    - Headers: Content-Type: application/json
    - Body (raw JSON):
      ```json
      {
-       "query": "¿Cuáles son las palabras prohibidas en Nenufar?",
+       "query": "What words are prohibited in Nenufar?",
        "top_k": 2
      }
      ```
 
-**Respuesta esperada:**
+**Expected response:**
 ```json
 {
-  "query": "¿Cuál es la misión social de Nenufar?",
+  "query": "What is Nenufar's social mission?",
   "results": [
     {
       "rank": 1,
@@ -171,40 +171,40 @@ Ya tienes las credenciales configuradas en n8n: **"Google Generative AI"**
 }
 ```
 
-**✅ Checklist Paso 4:**
-- [ ] Webhook responde correctamente
-- [ ] Resultados son relevantes
-- [ ] Similarity scores son razonables (> 0.7)
+**✅ Checklist Step 4:**
+- [ ] Webhook responds correctly
+- [ ] Results are relevant
+- [ ] Similarity scores are reasonable (> 0.7)
 
 ---
 
-## 🖼️ PASO 5: Probar Marca de Agua (5 minutos)
+## 🖼️ STEP 5: Test Watermark (5 minutes)
 
-1. **Verifica el workflow** "Luna Image Processor Worker v2"
-   - Debe tener 7 nodos
-   - Debe incluir "Download Nenufar Logo"
+1. **Verify the workflow** "Luna Image Processor Worker v2"
+   - Should have 7 nodes
+   - Must include "Download Nenufar Logo"
 
-2. **Sube una imagen de prueba**
-   - Ve a Google Drive
-   - Sube una imagen (ej: `test-photo.jpg`)
-   - Copia el File ID
+2. **Upload a test image**
+   - Go to Google Drive
+   - Upload an image (e.g., `test-photo.jpg`)
+   - Copy the File ID
 
-3. **Envía una tarea a Redis**
-   - Usa el workflow "Luna Webhook Receiver" o Redis CLI
+3. **Send a task to Redis**
+   - Use the "Luna Webhook Receiver" workflow or Redis CLI
    - Payload:
      ```json
      {
        "task_id": "test-watermark-001",
-       "media_path": "TU_FILE_ID_AQUI",
-       "caption": "Test de marca de agua Nenufar",
+       "media_path": "YOUR_FILE_ID_HERE",
+       "caption": "Nenufar watermark test",
        "hashtags": ["#Nenufar", "#Test"],
        "platforms": ["instagram"]
      }
      ```
 
-4. **Verifica el procesamiento**
+4. **Verify processing**
    ```sql
-   -- Revisa el estado
+   -- Check the status
    SELECT file_name, status, watermark_applied, dimensions, error_message 
    FROM processed_files 
    WHERE task_id = 'test-watermark-001'
@@ -212,29 +212,29 @@ Ya tienes las credenciales configuradas en n8n: **"Google Generative AI"**
    LIMIT 1;
    ```
 
-5. **Descarga la imagen procesada**
-   - Busca la imagen en Google Drive (si se guardó)
-   - O revisa el output del nodo "Queue for Social Publisher"
+5. **Download the processed image**
+   - Look for the image in Google Drive (if saved)
+   - Or check the output of the "Queue for Social Publisher" node
 
-**✅ Checklist Paso 5:**
-- [ ] Workflow procesa la imagen
-- [ ] Marca de agua visible (esquina inferior derecha)
-- [ ] Dimensiones correctas (1080x1350 para IG)
-- [ ] Status = 'published' en Supabase
+**✅ Checklist Step 5:**
+- [ ] Workflow processes the image
+- [ ] Watermark visible (bottom right corner)
+- [ ] Correct dimensions (1080x1350 for IG)
+- [ ] Status = 'published' in Supabase
 
 ---
 
-## 🤖 PASO 6: Integración con Multi-Agent System (Opcional)
+## 🤖 STEP 6: Integration with Multi-Agent System (Optional)
 
-Este paso integra la búsqueda semántica en el sistema multi-agente:
+This step integrates semantic search into the multi-agent system:
 
-1. **Abre** "Luna Multi-Agent System v2"
+1. **Open** "Luna Multi-Agent System v2"
 
-2. **Agrega un nodo HTTP Request**
-   - Posición: Después de "Set 'Text'" (node cfea44af)
-   - Conecta antes de "Google Gemini Chat Model"
+2. **Add an HTTP Request node**
+   - Position: After "Set 'Text'" (node cfea44af)
+   - Connect before "Google Gemini Chat Model"
 
-3. **Configura el nodo:**
+3. **Configure the node:**
    - **Method:** POST
    - **URL:** https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search
    - **Body:**
@@ -245,81 +245,81 @@ Este paso integra la búsqueda semántica en el sistema multi-agente:
      }
      ```
 
-4. **Actualiza el nodo "Google Gemini Chat Model"**
-   - Agrega un "System Message" que incluya el contexto de RAG:
+4. **Update the "Google Gemini Chat Model" node**
+   - Add a "System Message" that includes RAG context:
      ```
-     Contexto de marca: {{ $json.results }}
+     Brand context: {{ $json.results }}
      
-     Eres Luna, la voz digital de Nenufar. Usa el contexto anterior para responder.
+     You are Luna, Nenufar's digital voice. Use the context above to respond.
      ```
 
-5. **Prueba por Telegram**
-   - Envía un mensaje al bot de Telegram
-   - Pregunta sobre la misión social de Nenufar
-   - Verifica que la respuesta usa la información de la búsqueda semántica
+5. **Test via Telegram**
+   - Send a message to the Telegram bot
+   - Ask about Nenufar's social mission
+   - Verify that the response uses semantic search information
 
-**✅ Checklist Paso 6:**
-- [ ] Búsqueda semántica integrada
-- [ ] Respuestas del bot son más precisas
-- [ ] Contexto de marca se usa correctamente
+**✅ Checklist Step 6:**
+- [ ] Semantic search integrated
+- [ ] Bot responses are more accurate
+- [ ] Brand context used correctly
 
 ---
 
 ## 🐛 Troubleshooting
 
 ### Error: "Function not found"
-**Solución:** Ejecuta `scripts/setup-vector-store.sql` en Supabase
+**Solution:** Execute `scripts/setup-vector-store.sql` in Supabase
 
 ### Error: "dimension mismatch"
-**Solución:** Verifica que los embeddings tengan 768 dimensiones (Gemini)
+**Solution:** Verify that embeddings have 768 dimensions (Gemini)
 ```sql
 SELECT array_length(embedding, 1) FROM brand_knowledge LIMIT 1;
 ```
 
 ### Error: "API key not valid"
-**Solución:** Reemplaza `YOUR_GEMINI_API_KEY` con tu API key real
+**Solution:** Replace `YOUR_GEMINI_API_KEY` with your actual API key
 
 ### Error: "Watermark not applied"
-**Solución:** 
-1. Verifica que el logo existe en Google Drive
-2. Revisa los logs de ejecución del workflow
-3. Prueba el nodo "Process Image" independientemente
+**Solution:** 
+1. Verify that the logo exists in Google Drive
+2. Check workflow execution logs
+3. Test the "Process Image" node independently
 
-### Búsqueda retorna resultados irrelevantes
-**Solución:**
-1. Aumenta el parámetro `top_k`
-2. Mejora la calidad de los documentos fuente
-3. Verifica que los embeddings se crearon correctamente
+### Search returns irrelevant results
+**Solution:**
+1. Increase the `top_k` parameter
+2. Improve source document quality
+3. Verify embeddings were created correctly
 
 ---
 
-## 📝 Test Cases Sugeridos
+## 📝 Suggested Test Cases
 
-### Test 1: Búsqueda de Misión Social
+### Test 1: Social Mission Search
 ```bash
 curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Qué hace Nenufar por las madres?", "top_k": 2}'
+  -d '{"query": "What does Nenufar do for mothers?", "top_k": 2}'
 ```
-**Esperado:** Documento `social-impact-001` en #1
+**Expected:** Document `social-impact-001` at #1
 
-### Test 2: Búsqueda de Palabras Prohibidas
+### Test 2: Prohibited Words Search
 ```bash
 curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Qué palabras no debo usar?", "top_k": 2}'
+  -d '{"query": "What words should I not use?", "top_k": 2}'
 ```
-**Esperado:** Documento `brand-essence-001` o `soul-001` en #1
+**Expected:** Document `brand-essence-001` or `soul-001` at #1
 
-### Test 3: Búsqueda de Productos
+### Test 3: Product Search
 ```bash
 curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Qué materiales usan?", "top_k": 3}'
+  -d '{"query": "What materials do they use?", "top_k": 3}'
 ```
-**Esperado:** Documento `product-catalog-001` en #1
+**Expected:** Document `product-catalog-001` at #1
 
-### Test 4: Marca de Agua Instagram
+### Test 4: Instagram Watermark
 ```json
 {
   "task_id": "test-ig-001",
@@ -329,9 +329,9 @@ curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search
   "platforms": ["instagram"]
 }
 ```
-**Esperado:** Imagen 1080x1350 con watermark
+**Expected:** 1080x1350 image with watermark
 
-### Test 5: Marca de Agua Facebook
+### Test 5: Facebook Watermark
 ```json
 {
   "task_id": "test-fb-001",
@@ -341,55 +341,55 @@ curl -X POST https://n8n-stack-prod-dev.duckdns.org/webhook/luna-semantic-search
   "platforms": ["facebook"]
 }
 ```
-**Esperado:** Imagen 1080x1080 con watermark
+**Expected:** 1080x1080 image with watermark
 
 ---
 
-## ✅ Checklist Final
+## ✅ Final Checklist
 
-Copia y marca cada elemento:
+Copy and mark each item:
 
 ```
 Supabase Setup:
-□ Tabla brand_knowledge creada
-□ Índice vectorial creado
-□ Funciones RPC creadas
-□ RLS policies configuradas
+□ brand_knowledge table created
+□ Vector index created
+□ RPC functions created
+□ RLS policies configured
 
 Embeddings:
-□ 4 documentos embebidos
-□ 768 dimensiones correctas
-□ Datos visibles en Supabase
+□ 4 documents embedded
+□ 768 dimensions correct
+□ Data visible in Supabase
 
-Búsqueda Semántica:
-□ Webhook responde
-□ Resultados relevantes
+Semantic Search:
+□ Webhook responds
+□ Relevant results
 □ Similarity scores > 0.7
-□ 3 test cases pasan
+□ 3 test cases pass
 
-Marca de Agua:
-□ Workflow tiene 7 nodos
-□ Logo descargado correctamente
-□ Imagen redimensionada
-□ Watermark aplicado
-□ Test IG y FB pasan
+Watermark:
+□ Workflow has 7 nodes
+□ Logo downloaded correctly
+□ Image resized
+□ Watermark applied
+□ IG and FB tests pass
 
-Integración:
-□ Multi-Agent System usa RAG
-□ Respuestas mejoran
-□ Contexto de marca preservado
+Integration:
+□ Multi-Agent System uses RAG
+□ Responses improve
+□ Brand context preserved
 ```
 
 ---
 
-## 🎉 ¡Felicidades!
+## 🎉 Congratulations!
 
-Si completaste todos los pasos, el sistema está listo para producción.
+If you completed all steps, the system is ready for production.
 
-**Próximos pasos:**
-1. Merge del PR #2
-2. Deploy a producción
-3. Monitoreo de errores
-4. Recopilación de feedback
+**Next steps:**
+1. Merge PR #2
+2. Deploy to production
+3. Error monitoring
+4. Feedback collection
 
-**¿Necesitas ayuda?** Revisa `specs/rag_integration_summary.md` para más detalles técnicos.
+**Need help?** Check `specs/rag_integration_summary.md` for more technical details.

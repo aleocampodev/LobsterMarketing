@@ -1,11 +1,17 @@
 # Epic ip-001: Infrastructure & Core Setup
+Version: v1.1
 
-Goal: Have the foundational servers, databases, and message brokers running and communicating.
+**Goal:** Establish the foundational servers, databases, and message brokers required for the n8n-First Architecture.
 
 ## Tasks
-- [x] **ip-001.1:** Provision Oracle Cloud Always Free instance (ARM) for OpenClaw.
-- [x] **ip-001.2:** Configure Google Cloud e2-micro instance for n8n.
-- [x] **ip-001.3:** Deploy n8n via Docker Compose on GCP with Queue Mode enabled.
-- [x] **ip-001.4:** Setup Supabase project (PostgreSQL + pgvector extension enabled).
-- [x] **ip-001.5:** Configure Upstash Redis cluster for n8n queue management.
-- [x] **ip-001.6:** Setup DNS and SSL (`n8n-stack-prod-dev.duckdns.org`).
+- [x] **ip-001.1:** Provision Google Cloud e2-micro instance for the central n8n instance.
+- [x] **ip-001.2:** Deploy n8n via Docker Compose on GCP with Queue Mode enabled.
+- [x] **ip-001.3:** Setup Supabase project (PostgreSQL + pgvector extension for RAG).
+- [x] **ip-001.4:** Configure Upstash Redis cluster for n8n worker queue management.
+- [x] **ip-001.5:** Setup DNS and SSL certificates (`n8n-stack-prod-dev.duckdns.org`).
+- [x] **ip-001.6:** Define Google Drive folder hierarchy (Input, Processing, Published).
+
+## Definition of Done Verification
+- [x] **Versioning:** Header updated to v1.1.
+- [x] **Language:** Technical specs in English.
+- [x] **Manual E2E Test:** Created in `specs/tests/test-ip-001.md`.

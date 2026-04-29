@@ -1,17 +1,33 @@
-# Epic ip-005: Production Launch and Monitoring
+# Epic ip-005: Production Launch & Monitoring
+Version: v1.1
 
-Goal: Hand over the system for daily autonomous operation.
+**Goal:** Formally hand over the n8n system for daily autonomous operation, ensuring production-grade stability and brand voice compliance.
 
-## Tasks
+**Status:** ⏳ Pending Final Validation
 
-### ip-005.1: Quality Assurance (Brand Voice)
-- [ ] **ip-005.1.1:** Final review of RAG output quality against `SOUL.md` red lines.
-- [ ] **ip-005.1.2:** Verify no prohibited words (e.g., "barato") are generated in captions.
+---
 
-### ip-005.2: Reliability and Backups
-- [ ] **ip-005.2.1:** Set up automated PostgreSQL backups in Supabase.
-- [ ] **ip-005.2.2:** Configure monitoring/alerts for n8n container health and Oracle instance uptime.
+## 1. Quality & Compliance Audit
+- [ ] **ip-005.1:** Conduct a final audit of RAG-generated content to ensure zero usage of prohibited words (e.g., *barato*, *oferta*).
+- [ ] **ip-005.2:** Verify that all published media includes the correct Nenufar watermark.
 
-### ip-005.3: Go-Live
-- [ ] **ip-005.3.1:** Launch! The first fully automated post for Nenufar goes live.
-- [ ] **ip-005.3.2:** Document the final system architecture and maintenance guide.
+---
+
+## 2. Infrastructure Hardening
+- [ ] **ip-005.3:** Set up automated daily backups for the Supabase PostgreSQL database.
+- [ ] **ip-005.4:** Implement a log rotation/cleanup routine in Supabase to maintain storage limits.
+- [ ] **ip-005.5:** Configure monitoring alerts for the n8n Docker container status in GCP.
+
+---
+
+## 3. Official Launch
+- [ ] **ip-005.6:** **Day 0 Launch:** Execute the first scheduled publication from the automated queue.
+- [ ] **ip-005.7:** **24-Hour Observation:** Monitor the Proactive Discovery Mode (Heartbeat) to ensure it triggers correctly at 9:00 AM.
+- [ ] **ip-005.8:** Project hand-off: Final documentation of workflow IDs and credentials management.
+
+---
+
+## Success Criteria
+- [ ] The system operates for 7 consecutive days without manual intervention.
+- [ ] All production metrics (publish success rate, engagement logs) are visible in Supabase.
+- [ ] Version header updated to v1.1 and technical documentation in English.

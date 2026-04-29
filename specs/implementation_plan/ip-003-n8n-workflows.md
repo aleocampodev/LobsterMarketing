@@ -1,56 +1,52 @@
 # Epic ip-003: The Arms - n8n Workflows
+Version: v1.1
 
-**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media.
+**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n Queue Mode and dedicated worker containers.
 
-**Status:** ✅ Completed (2026-04-24)
-
----
-
-## Tasks
-
-### ip-003.1: n8n Orchestrator - Redis Queue Delegation
-- [x] **ip-003.1.1:** Configure the secure Webhook receiver (Luna Webhook Receiver - EPslgKTzkbLcxdrs)
-- [x] **ip-003.1.2:** Implement Redis Queue node to delegate heavy processing to workers
-- [x] **ip-003.1.3:** Configure HMAC signature validation with WEBHOOK_SECRET
-- [x] **ip-003.1.4:** Active workflow in production
-
-### ip-003.2: n8n Worker - Image Processing (Watermark)
-- [x] **ip-003.2.1:** Google Drive node: Download media using ID from OpenClaw (Luna Image Processor Worker - yGrcQFekZSnWUlDF)
-- [x] **ip-003.2.2:** Image Transformation: Resize to platform standards (FB: 1080x1080 / IG: 1080x1350)
-- [x] **ip-003.2.3:** Watermark: Apply the Nenufar logo to the bottom-left corner with transparency
-- [x] **ip-003.2.4:** Active workflow in production
-
-### ip-003.3: n8n Worker - Social Media Publishing
-- [x] **ip-003.3.1:** Instagram Graph API: Upload processed image and publish with Luna's generated caption (Luna Social Publisher Worker - NlSGA3RcvMw6oC3h)
-- [x] **ip-003.3.2:** Facebook Graph API: Cross-post or direct upload to the Business Page
-- [x] **ip-003.3.3:** Active workflow in production
-
-### ip-003.4: n8n Worker - Feedback and Logging
-- [x] **ip-003.4.1:** Log the successful publication in the Supabase `posts` table (metadata, links, timestamps) (Luna Feedback and Logging Worker - v7j1Dv1mgO5ZUgmG)
-- [x] **ip-003.4.2:** Send a success/failure notification to Aleja via Telegram with a direct link to the post
-- [x] **ip-003.4.3:** Active workflow in production
+**Status:** ✅ Completed / Optimization Phase
 
 ---
 
-## Related Files
+## 1. Orchestration & Queue Management
+*Ref: specs/architecture.md v1.3*
 
-### Workflows Created
-- `Luna Webhook Receiver` (ID: EPslgKTzkbLcxdrs) - Orchestrator with Redis Queue
-- `Luna Image Processor Worker` (ID: yGrcQFekZSnWUlDF) - Image processing + watermark
-- `Luna Social Publisher Worker` (ID: NlSGA3RcvMw6oC3h) - Instagram + Facebook publishing
-- `Luna Feedback and Logging Worker` (ID: v7j1Dv1mgO5ZUgmG) - Supabase logging + Telegram notifications
-
-### Credentials Configured
-- Upstash Redis Queue (ID: 0Kt51mAkW9dMB3aj)
-- Telegram Bot Token
-- Supabase (PostgreSQL pooler port 6543)
-- Google Drive API
-- WEBHOOK_SECRET (generated: fe4f2ef63ed74d0fab3a73471f95f8646f51961ebacffbf9ad2ad55a3157a47f)
+- [x] **ip-003.1:** Implement the secure `Luna Webhook Receiver` (ID: `EPslgKTzkbLcxdrs`).
+- [x] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
+- [x] **ip-003.3:** Setup Redis Queue nodes to delegate processing tasks to workers, ensuring zero-latency for the orchestrator.
 
 ---
 
-## Next Steps
+## 2. Image Processing (The Artisan)
+*Ref: specs/implementation_plan/ip-002.6-brand-assets.md*
 
-Conectar el sistema multi-agent (ip-002.5) con estos workflows ya existentes:
-- Luna Telegram Agent → Luna Webhook Receiver
-- Approval flow → Redis Queue → Workers
+- [x] **ip-003.4:** Implement `Luna Image Processor Worker v2` (ID: `3JGieW6MBlANnaud`).
+- [x] **ip-003.5:** Automate media download from Google Drive using the `media_path` (file_id).
+- [x] **ip-003.6:** Image Transformation Logic:
+    - Resize to 1080x1350 for Instagram.
+    - Resize to 1080x1080 for Facebook.
+- [x] **ip-003.7:** Watermarking: Apply the Nenufar logo with 20% opacity at the bottom-right corner.
+
+---
+
+## 3. Social Publishing (The Herald)
+*Ref: Meta Graph API Documentation*
+
+- [x] **ip-003.8:** Implement `Luna Social Publisher Worker` (ID: `dENMnialkmtgKCo7`).
+- [x] **ip-003.9:** Configure Instagram Graph API nodes for direct photo/video publishing.
+- [x] **ip-003.10:** Configure Facebook Page API for cross-posting content.
+
+---
+
+## 4. Observability & Feedback (The Scribe)
+*Ref: specs/database_schema.sql*
+
+- [x] **ip-003.11:** Implement `Luna Feedback and Logging Worker` (ID: `v7j1Dv1mgO5ZUgmG`).
+- [x] **ip-003.12:** Log every execution step into Supabase `processed_files` and `monitoring_logs`.
+- [x] **ip-003.13:** Send final success/failure notification to Aleja via Telegram with the live URL.
+
+---
+
+## Success Criteria
+- [x] All heavy processing (image resizing) happens in worker containers.
+- [x] Supabase correctly reflects the state of every post (Pending -> Published).
+- [x] Version header updated to v1.1 and technical specs in English.

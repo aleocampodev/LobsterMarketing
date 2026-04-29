@@ -78,6 +78,52 @@ Every generated Instagram/Facebook caption MUST contain:
 
 ---
 
+## 6. Documentation & Versioning Rules
+
+### 6.1 Automatic Versioning
+- **Scope:** ALL files within `specs/` (e.g., `specs/*.md`) and `specs/implementation_plan/` (e.g., `ip-*.md`).
+- **Trigger:** Any modification to the content of these files.
+- **Action:** The agent MUST increment or add a version identifier (e.g., `Version: v1.x`) at the top of the file, immediately below the main title.
+- **Format:** Use `v1.x` where `x` is incremented for each change (e.g., v1.0 -> v1.1). Major architectural changes should increment the major version (e.g., v2.0).
+- **Responsibility:** This behavior must be handled automatically by the agent whenever a directive involves modifying a specification or implementation plan.
+
+---
+
+## 7. Testing & Quality Assurance Rules
+
+### 7.1 Epic Completion Protocol
+- **Trigger:** When all tasks of an Epic in an Implementation Plan (`specs/implementation_plan/ip-*.md`) are marked as completed (`[x]`).
+- **Action:** The agent MUST create or update a testing markdown file (e.g., `specs/tests/test-ip-xxx.md`) specifically for that epic.
+- **Content:** The file must contain:
+    1. **Objective:** What is being tested.
+    2. **Prerequisites:** Credentials, data, or states needed.
+    3. **Manual E2E Procedure:** Step-by-step instructions for Aleja to perform a manual end-to-end test.
+    4. **Expected Results:** How to verify that the feature works as intended.
+    5. **Checklist:** A final validation list for the user.
+- **Goal:** Ensure every major milestone is verifiable by the human-in-the-loop before proceeding.
+
+---
+
+## 8. Definition of Done (DoD) & Task Lifecycle
+
+A task or epic cannot be marked as complete (`[x]`) until it strictly satisfies the following Definition of Done:
+
+### 8.1 Time Estimation & Tracking
+- **ETA Requirement:** Before starting a task, the agent MUST provide an Estimated Time of Arrival (ETA) or duration.
+- **Completion Logging:** Upon finishing, the agent MUST log the actual time taken alongside the task completion status.
+
+### 8.2 Technical & Documentation Requirements
+- [ ] **Versioning:** If the task involved modifying any specification or plan in `specs/`, its version header (`Version: v1.x`) has been incremented.
+- [ ] **Language Consistency:** Technical logic is documented in English; User interaction examples and brand persona data remain in Spanish.
+- [ ] **Modularity:** The solution respects the n8n-First Architecture (Brain vs. Arms) and does not introduce hardcoded logic that bypasses RAG.
+
+### 8.3 Testing & Validation
+- [ ] **E2E Test Created:** A manual End-to-End test document has been created in `specs/tests/` following the Rule 7.1 protocol.
+- [ ] **Agent Self-Verification:** The agent MUST explicitly execute a verification step (e.g., reading the modified file to check formatting, running a syntax check on JSON/code) and document the result before claiming completion.
+- [ ] **Operational Validation:** Verify that the "Eco Poético" voice is maintained and that relevant data is correctly logged in Supabase (`processed_files`, `monitoring_logs`).
+
+---
+
 ## 5. Proactive Behavior (Heartbeats)
 
 When triggered by a system heartbeat, agents should:

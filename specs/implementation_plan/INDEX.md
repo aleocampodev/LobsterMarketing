@@ -1,69 +1,54 @@
-# Implementation Plan: Nenufar Marketing Automation System
+# Implementation Plan Index: Nenufar Marketing Automation
+Version: v1.1
 
 ## 🎯 Overview
+Automated marketing system for Nenufar that integrates AI content generation and workflow automation, orchestrated entirely in **n8n (n8n-First Architecture)**.
 
-Sistema automatizado de marketing para Nenufar que integra generación de contenido con IA y automatización de workflows, orquestado íntegramente en **n8n (n8n-First Architecture)**.
-
-**Arquitectura:** n8n Orchestrator & Workers
-- **Orchestrator (The Brain):** Luna Multi-Agent System v2 (Gemini 2.5 Flash) manejando estrategia, copywriting y aprobación via Telegram.
-- **Workers (The Arms):** Sub-workflows especializados en procesamiento de imagen, publicación en Meta y logging.
+**Architecture:** n8n Orchestrator & Workers
+- **Orchestrator (The Brain):** Luna Multi-Agent System v2 (Gemini 1.5 Flash) handling strategy, copywriting, and human-in-the-loop approval via Telegram.
+- **Workers (The Arms):** Specialized sub-workflows for image processing, Meta publishing, and centralized logging via Upstash Redis queues.
 
 ---
 
 ## 📚 Epics
 
 ### ✅ ip-001: Infrastructure Setup
-**Archivo:** `ip-001-infrastructure.md`
-**Estado:** Completado
-**Objetivo:** Configurar infraestructura en la nube (Google Cloud, Supabase, Upstash Redis)
+- **File:** `ip-001-infrastructure.md`
+- **Status:** Completed
+- **Goal:** Configure cloud infrastructure (GCP, Supabase, Upstash Redis).
 
 ---
 
-### ✅ ip-002: The Brain - n8n Orchestrator
-**Estado:** Completado (v2)
-**Objetivo:** Migrar la inteligencia de Luna directamente a n8n como orquestador central.
-
-**Sub-epics:**
-- **ip-002.1:** Unified Agent v2 (Gemini 1.5 Flash) ✅
-- **ip-002.2:** RAG Integration (Supabase Vector Store) ⏳ **EN PROGRESO**
-- **ip-002.3:** Telegram Interface (Buttons/Voice) ✅
-- **ip-002.5:** Multi-Agent System v2 ✅
-- **ip-002.6:** Brand Assets & Content Resources ✅
-
-**[MIGRADO]** ip-002-original: Oracle Cloud OpenClaw Brain - **Deprecado** en favor de arquitectura n8n-First.
+### ✅ ip-002: Luna's Brain & Interface (Orchestrator)
+- **File:** `ip-002-luna-brain-interface.md`
+- **Status:** Completed / In Optimization
+- **Goal:** Implement the intelligence layer (Luna) directly in n8n as the central mission control, including RAG and Telegram interface.
 
 ---
 
 ### ✅ ip-003: The Arms - n8n Workers
-**Archivo:** `ip-003-n8n-workflows.md`
-**Estado:** En Optimización
-**Objetivo:** Automatizar tareas mecánicas de descarga, procesamiento y publicación
-
-**Sub-epics:**
-- **ip-003.1:** Webhook Receiver & Redis Queue ✅
-- **ip-003.2:** Image Processor (Sharp/Watermark) ⚠️ **PENDIENTE LÓGICA**
-- **ip-003.3:** Social Media Publisher (Meta Graph API) ✅
-- **ip-003.4:** Feedback and Logging (Supabase) ✅
+- **File:** `ip-003-n8n-workflows.md`
+- **Status:** Optimization Phase
+- **Goal:** Automate mechanical tasks: download from Drive, process (watermark/resize), and publish.
 
 ---
 
 ### ⏳ ip-004: Integration Testing & Robustness
-**Archivo:** `ip-004-integration-testing.md`
-**Estado:** Pendiente
-**Objetivo:** Implementar manejo de errores y validación de extremo a extremo.
+- **File:** `ip-004-integration-testing.md`
+- **Status:** Pending
+- **Goal:** Implement error handling and manual end-to-end (E2E) validation protocols.
 
 ---
 
 ### ⏳ ip-005: Production Launch
-**Archivo:** `ip-005-production-launch.md`
-**Estado:** Pendiente
-**Objetivo:** Desplegar sistema en producción y monitorear performance.
+- **File:** `ip-005-production-launch.md`
+- **Status:** Pending
+- **Goal:** Deploy the system to production and establish monitoring.
 
 ---
 
-## 📝 Historial de Cambios Arquitectónicos
-
-**2026-04-27:** Migración completa a arquitectura n8n-First
-- OpenClaw Brain (Oracle Cloud) → **Deprecado**
-- Luna Multi-Agent System v2 (n8n + Gemini 1.5 Flash) → **Activo**
-- Worker workflows especializados (Queue Mode con Upstash Redis) → **Activo**
+## 📝 Architectural Change Log
+**2026-04-27:** Full migration to n8n-First Architecture.
+- OpenClaw Brain (Oracle Cloud/Python) → **Deprecated** in favor of n8n Orchestration.
+- Luna Multi-Agent System v2 (n8n + Gemini 1.5 Flash) → **Active**.
+- Specialized Worker workflows (Queue Mode with Upstash Redis) → **Active**.
