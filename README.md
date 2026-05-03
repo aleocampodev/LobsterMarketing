@@ -1,206 +1,170 @@
-# SOUL.md — Nenufar
+# Nenufar Marketing Automation
 
-## Agent Identity
-You are **Luna**, the digital voice of Nenufar. Your purpose is to connect the art of ancestral weaving with people's hearts, communicating not only the beauty of the pieces but also the social impact behind them.
+> _"Cada pieza es un poema que alguien decide llevar consigo."_
 
-**IMPORTANT:**
-- **Language:** ALWAYS respond and write in Spanish. 🇪🇸
-- **Tone:** Use "tú" (informal) when addressing the customer.
-- **Emojis:** Use them ONLY at the end of each message or paragraph. 🛑
+Sistema de marketing automatizado para **Nenufar**, joyeria artesanal colombiana. Integra generacion de contenido AI con automatizacion de workflows para publicar en Instagram y Facebook con voz eco-poetica.
 
-## Brand Soul (DNA)
-> "We enhance the beauty and style of men and women who embrace indigo art."
+---
 
-**Social Mission:**
-Nenufar is not just jewelry; it is a driver of change. We train working mothers in weaving techniques so they can create from their homes, balancing family care with generating sustainable income.
+## Architecture
 
-**Brand Personality:**
-Lover of nature and meaningful details. We value creativity and the sacred time invested in every handcrafted stitch. We are a space of tolerance and respect for diversity.
+```text
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   🌸  NENUFAR MARKETING AUTOMATION  🌸                               ║
+║   Brain-Arms Architecture · Gemini 2.5 Flash                         ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
 
-## Target Audience (Segments)
-1. **Childhood:** Minimalist accessories, cute designs, or favorite characters (cartoons).
-2. **Empowered/Bold Woman:** Striking designs, nature insignias, and pieces that highlight a powerful personality.
-3. **Conservative Woman:** Simple and meaningful designs connecting with literature, nature, or spirituality.
 
-## Tone and Style
-- **Poetic Echo:** We talk about the process as "woven poems."
-- **Educational:** We share the "tricks of the trade" and the value of the crafting process.
-- **Close and Human:** We are not a mass store; we are art to be worn.
+ ┌───────────────────────────────────────────────────────────────────┐
+ │  🧠  THE BRAIN — OPENCLAW (LUNA)                                 │
+ │     AI Agent · Gemini 2.5 Flash + RAG · Telegram Interface       │
+ │                                                                   │
+ │  ① LISTEN    Telegram Messages (Voice, Text, Media)               │
+ │  ② THINK     Gemini 2.5 Flash + RAG (Supabase pgvector)          │
+ │  ③ CRAFT     "Poemas Tejidos" (Eco-Poetic Voice)                 │
+ │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)         │
+ │  ⑤ DISPATCH  Sign Payload (HMAC) → Push to Redis Queue           │
+ └──────┬──────────────┬────────────────────┬────────────────────────┘
+        │              │                    │
+        ▼              ▼                    ▼
+ ┌────────────┐ ┌──────────────┐ ┌─────────────────┐
+ │ 📱 Telegram │ │ 🗄️ Supabase  │ │ 🔀 Redis Queue  │
+ │ Bot API     │ │ (Memory/RAG) │ │ (Dispatch)      │
+ └────────────┘ └──────────────┘ └────────┬────────┘
+                                           │
+                                           ▼
+ ┌───────────────────────────────────────────────────────────────────┐
+ │  🦾  THE ARMS — n8n WORKERS                                      │
+ │                                                                   │
+ │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                        │
+ │  [ 🎨 PROCESSOR ]  Download from Drive + Sharp Watermark          │
+ │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)          │
+ │  [ 📝 SCRIBE    ]  Log Status & Notify (Supabase + Telegram)      │
+ └───────────────────────────────────────────────────────────────────┘
 
-## Golden Rules (Copywriting)
-- **Words we LOVE:** Nenúfar contigo, tejiendo esperanzas, tejiendo caminos, punzadas de amor, arte hecho a mano, poemas tejidos, gajes del oficio.
-- **PROHIBITED Words:** "Cheap" (barato), "Aggressive offer", "Low cost".
-- **Color Meaning:**
-    - 🟡 **Gold:** Power and luminosity.
-    - 🔴 **Red:** Strength.
-    - 🟡 **Yellow:** Joy and enthusiasm for a new day.
 
-## Content Strategy (7 Days)
-- **Monday:** "Tejiendo Caminos" (Social - Stories of artisan mothers).
-- **Tuesday:** "Poemas Tejidos" (Storytelling of a specific piece).
-- **Wednesday:** "Gajes del Oficio" (Video of the weaving process or technique).
-- **Thursday:** "Children's/Youth Universe" (Focus on kids or minimalist accessories).
-- **Friday:** "Nature and Spirit" (Connecting pieces with spirituality/literature).
-- **Saturday:** "Culture in Motion" (Photos of clients in museums, recitals, or events in Cartagena).
-- **Sunday:** "Reflection and Color" (Meaning of colors and energy for the week).
+ ══════════════════════════════════════════════════════════════════════
+  🔄 OPERATIONAL FLOW
+ ══════════════════════════════════════════════════════════════════════
 
-_"Each piece is a poem that someone decides to carry with them."_
-  │
-         │  1. Uploads photos/videos         │                                   │
-         │     to Google Drive                │                                   │
-         └───────────────────────────────────►│                                   │
-                                              │  2. Analyzes new content         │
-                                              │     in Google Drive              │
-                                              │                                   │
-                                              │  3. Queries prompt bank          │
-                                              │     (RAG in Supabase)            │
-                                              │     for brand-voice              │
-                                              │     copywriting                  │
-                                              │                                   │
-                                              │  4. Trend scraping               │
-                                              │     (Firecrawl + Graph API)      │
-                                              │     for strategic hashtags       │
-                                              │                                   │
-                                              │  5. Generates optimized copy     │
-                                              │     + hashtags                   │
-                                              │                                   │
-         │  6. Sends preview via Telegram    │                                   │
-         ◄───────────────────────────────────│                                   │
-         │                                    │                                   │
-    APPROVAL                                 │                                   │
-         │                                    │                                   │
-    (Approve/Modify/Cancel)                  │                                   │
-         │                                    │                                   │
-         │  7. Confirms publication           │                                   │
-         └───────────────────────────────────►│                                   │
-                                              │  8. Sends task to n8n            │
-                                              │     (via API/Webhook)            │
-                                              └─────────────────────────────────►
-                                                                           │
-                                                                           │  9. Retrieves media from
-                                                                           │     Google Drive
-                                                                           │
-                                                                           │ 10. Converts image
-                                                                           │     (FB:1080x1080 / IG:1080x1350)
-                                                                           │
-                                                                           │ 11. Applies watermark
-                                                                           │     Nenufar (logo)
-                                                                           │
-                                                                           │ 12. Publishes on FB + IG
-                                                                           │     with copy and hashtags
-                                                                           │
-                                                                           │ 13. Logs analytics
-                                                                           │     in Supabase
-                                                                           │
-                                                                           │ 14. Notifies user
-                                                                           │     via Telegram
-                                                                           ▼
+  ① DRIVE SYNC     →  ② HEARTBEAT    →  ③ LUNA DRAFT    →  ④ APPROVAL
+     New media          Scan detected      RAG + Caption       Telegram
+                                                                Buttons
+                                                                    │
+  ⑤ REDIS PUSH     →  ⑥ n8n PULL    →  ⑦ IMAGE PROC    →  ⑧ PUBLISH
+     Queue task         Worker ready       Watermark/Resize     Meta API
+                                                                    │
+  ⑨ LOG (Supabase) →  ⑩ FEEDBACK (Telegram)  ✅ Done!
 ```
 
 ---
 
-## 🧩 Key Features
+## Tech Stack
 
-### ✅ Anti-Hallucination Copywriting (RAG)
-
-The system uses **Retrieval-Augmented Generation** to ensure all copy is consistent with the brand voice:
-
-- The prompt bank in Supabase contains verified templates for:
-  - Product storytelling
-  - Artisan heritage narratives
-  - Collection launches
-  - Educational content on materials/techniques
-
-- **Prevents:** Generic or off-brand generation
-
-```sql
--- Prompt bank structure in Supabase
-CREATE TABLE brand_prompts (
-    id UUID PRIMARY KEY,
-    category TEXT,           -- 'product_story', 'heritage', 'collection_launch', etc.
-    content TEXT,            -- Prompt template
-    examples TEXT[],         -- Successful copy examples
-    embedding VECTOR(768),  -- Gemini text-embedding-004 (768 dimensions)
-    created_at TIMESTAMP
-);
-```
-
-### 📈 Intelligent Hashtag Strategy
-
-**Scraping + Analysis:**
-
-| Tool | Purpose |
-|-------------|-----------|
-| **Firecrawl** | Extract trends from competitors and jewelry niche |
-| **Graph API** | Analyze top-performing posts in the niche |
-
-**Hashtag Combination:**
-- **Evergreen Niche:** #JoyeríaAncestral #Mostacilla #HechoEnCartagena #ArtisanJewelry
-- **Brand:** #NenufarJoyería #NenufarAncestral #Nenufar #JoyasConAlma
-- **Daily Trends:** Algorithmically optimized based on Scraping
-- **Campaign:** Specific tags for collections or launches
-
-### 📱 Platform-Optimized Publishing
-
-| Platform | Format | Watermark | Timing Strategy |
-|------------|---------|---------------|---------------------|
-| **Facebook Feed** | 1080x1080 (square) | Bottom right, 15% opacity | Peak engagement hours (9am-11am, 7pm-9pm) |
-| **Instagram Feed** | 1080x1350 (portrait) | Bottom right, 15% opacity | Peak engagement hours (same as FB) |
-| **Instagram Stories** | 1080x1920 (vertical) | Animated, corner | 24h cycle with reminders |
-| **Reels** | 1080x1920 (vertical) | Subtle, non-intrusive | Trending audio + educational value |
+| Layer | Technology | Purpose |
+|:------|:-----------|:--------|
+| **Brain** | OpenClaw (Luna) | AI agent with eco-poetic voice |
+| **LLM** | Gemini 2.5 Flash | Content generation + intent classification |
+| **RAG** | Supabase pgvector | Brand knowledge semantic search |
+| **Interface** | Telegram Bot | Human-in-the-loop approval |
+| **Broker** | Upstash Redis | Task queue between Brain and Arms |
+| **Workers** | n8n (GCP e2-micro) | Image processing, publishing, logging |
+| **Database** | Supabase PostgreSQL | Long-term memory + analytics |
+| **Assets** | Google Drive | Media storage |
+| **Publishing** | Meta Graph API | Instagram + Facebook |
 
 ---
 
-## 🛠️ Configuration and Deployment
+## Project Status
 
-### Prerequisites
-
-- [ ] Oracle Cloud account (Free Tier)
-- [ ] Google Cloud account (Free Tier)
-- [ ] Upstash Redis (Free tier)
-- [ ] Supabase (Free tier)
-- [ ] Telegram Bot Token (@BotFather)
-- [ ] Google Drive API credentials
-- [ ] Facebook & Instagram Developer access
-
-### Environment Variables
-
-See the original documentation for detailed environment variables.
+| Epic | Description | Status |
+|:-----|:------------|:-------|
+| **ip-001** | Infrastructure Setup | ✅ Completed |
+| **ip-002** | Brain — OpenClaw (Luna) + Telegram | 🔄 In Progress |
+| **ip-003** | Arms — n8n Workers | ⏳ Pending |
+| **ip-004** | Integration Testing | ⏳ Pending |
+| **ip-005** | Production Launch | ⏳ Pending |
 
 ---
 
-## 📊 Monitoring and Maintenance
-
-### Health Checks
-
-| Component | Endpoint/Command | Expected Response |
-|------------|------------------|-------------------|
-| OpenClaw | `GET /health` | `{ "status": "ok", "brand_loaded": true }` |
-| n8n | `GET /healthz` | `{ "status": "up" }` |
-| Redis | `redis-cli ping` | `PONG` |
-| Supabase | API health endpoint | `200 OK` |
-
----
-
-## 📜 Project Structure
+## Project Structure
 
 ```
 LobsterMarketing/
-├── README.md                    # This file
-├── SOUL.md                      # Agent identity and soul
-├── USER.md                      # User profile (Aleja)
-├── AGENTS.md                    # Agent workspace guide
-├── RAG_PROMPTS.md               # Prompt bank for copywriting
-├── TOOLS.md                     # Local tool notes
-├── HEARTBEAT.md                 # Heartbeat configuration
-├── MEMORY.md                    # Long-term memory
-├── IDENTITY.md                  # Agent identity
-├── specs/                       # Technical and brand specifications
-└── memory/                      # Daily logs
+├── README.md                           # This file
+├── SOUL.md                             # Luna's identity and brand voice
+├── USER.md                             # Aleja's profile and preferences
+├── AGENTS.md                           # Agent operating manual (rules)
+├── CONTRIBUTING.md                     # How this repo works (workflow)
+├── MEMORY.md                           # Long-term system memory
+├── IDENTITY.md                         # Agent identity config
+├── HEARTBEAT.md                        # Heartbeat configuration
+├── TOOLS.md                            # Local tool notes
+├── RAG_PROMPTS.md                      # Prompt bank reference
+├── TESTING_GUIDE.md                    # RAG + watermark testing guide
+│
+├── specs/                              # Technical & brand specifications
+│   ├── architecture.md                 # System architecture (Brain-Arms)
+│   ├── data_architecture.md            # Supabase schema & RPC functions
+│   ├── database_schema.sql             # Full SQL migration script
+│   ├── brand_essence.md                # Brand DNA, voice, keywords
+│   ├── product_catalog.md              # Materials, techniques, pricing
+│   ├── social_impact.md                # Artisan mothers mission
+│   ├── telegram_commands.md            # Bot command reference
+│   ├── rag_prompts_bank.md             # RAG prompt templates
+│   ├── rag_integration_summary.md      # RAG implementation details
+│   ├── user_engagement_system.md       # Engagement engine design
+│   ├── engagement_questions_library.md # Pre-approved daily questions
+│   ├── analytics_system.md             # Analytics & optimization
+│   ├── openclaw-n8n-integration-spike.md # Integration spike notes
+│   │
+│   ├── implementation_plan/            # Epic-based task breakdown
+│   │   ├── INDEX.md                    # Overview & status
+│   │   ├── ip-001-infrastructure.md
+│   │   ├── ip-002-luna-brain-interface.md
+│   │   ├── ip-003-n8n-workflows.md
+│   │   ├── ip-004-integration-testing.md
+│   │   └── ip-005-production-launch.md
+│   │
+│   └── tests/                          # E2E validation reports
+│       ├── test-ip-001.md
+│       └── test-standardization-architecture.md
+│
+├── scripts/                            # Utility scripts
+│   └── setup-vector-store.sql          # RAG vector store setup
+│
+├── memory/                             # Daily session logs
+└── workflows/                          # n8n workflow JSON files (TBD)
 ```
 
 ---
 
-**Created with 💛 for Nenufar - Colombian Ancestral Jewelry**
+## Brand Quick Reference
 
-*"Each piece carries a story. Our mission is to ensure that story is told well."*
+### Voice
+- **Tone:** Eco-poetico, cercano, profesional
+- **Language:** Espanol colombiano, siempre "tu"
+- **Narrative:** "Poemas tejidos" — cada pieza es un poema
+
+### Keywords
+Nenufar contigo · Tejiendo esperanzas · Tejiendo caminos · Punzadas de amor · Arte hecho a mano · Poemas tejidos · Gajes del oficio
+
+### 7-Day Content Strategy
+
+| Day | Theme | Focus |
+|:----|:------|:------|
+| Monday | Tejiendo Caminos | Social impact, artisan mothers |
+| Tuesday | Poemas Tejidos | Storytelling of a specific piece |
+| Wednesday | Gajes del Oficio | Weaving process & techniques |
+| Thursday | Universo Infantil | Kids & minimalist accessories |
+| Friday | Naturaleza y Espiritu | Spirituality & meaningful designs |
+| Saturday | Cultura en Movimiento | Clients at cultural events in Cartagena |
+| Sunday | Reflexion y Color | Color meanings & weekly energy |
+
+---
+
+**Built with 💛 for Nenufar — Colombian Ancestral Jewelry**
+
+_"Cada pieza lleva una historia. Nuestra mision es asegurarnos de que esa historia se cuente bien."_
