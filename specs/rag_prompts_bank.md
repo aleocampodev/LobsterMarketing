@@ -1,4 +1,6 @@
 # RAG Prompt Bank - Nenufar
+Version: v1.1
+<!-- v1.1: Fixed Spanglish "Punzadas of love" -> "Punzadas de amor". -->
 
 This document defines the prompt templates stored in Supabase for different marketing categories.
 
@@ -17,7 +19,7 @@ This document defines the prompt templates stored in Supabase for different mark
 **Template:**
 > "Focus on the human story behind this piece. Mention how the weaving technique is taught to head-of-household mothers. 
 > Tone: Empowerment and stable income. 
-> Keywords: 'Tejiendo esperanzas', 'Punzadas of love'."
+> Keywords: 'Tejiendo esperanzas', 'Punzadas de amor'."
 
 ## 3. Category: Educational / Behind the Scenes
 **Goal:** Share the 'Gajes del Oficio' (Tricks of the trade).

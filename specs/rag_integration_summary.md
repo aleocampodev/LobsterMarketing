@@ -1,4 +1,6 @@
 # RAG Integration Summary - Nenufar Marketing Automation
+Version: v1.2
+<!-- v1.2: Fixed embedding model contradiction — all embeddings use Gemini text-embedding-004 (not OpenAI). -->
 
 ## Overview
 This document summarizes the RAG (Retrieval-Augmented Generation) integration implemented for the Nenufar Marketing Automation System.
@@ -35,7 +37,7 @@ This document summarizes the RAG (Retrieval-Augmented Generation) integration im
      * SOUL (SOUL.md)
      * Product Catalog (specs/product_catalog.md)
      * Social Impact (specs/social_impact.md)
-   - Generates embeddings using OpenAI text-embedding-ada-002
+   - Generates embeddings using Gemini text-embedding-004
    - Stores vectors in Supabase Vector Store
 
 2. **Luna Semantic Search Workflow** (`workflows/luna-semantic-search.json`)
@@ -65,7 +67,7 @@ This document summarizes the RAG (Retrieval-Augmented Generation) integration im
 
 ### Step 2: Create Embeddings
 1. Import `workflows/luna-rag-knowledge-base.json` into n8n
-2. Configure OpenAI API credentials (Header Auth)
+2. Configure Google Generative AI API credentials (Gemini)
 3. Configure Supabase credentials
 4. Execute workflow manually to create embeddings
 5. Verify embeddings in Supabase:
@@ -124,10 +126,10 @@ This document summarizes the RAG (Retrieval-Augmented Generation) integration im
 ### Embedding Model
 - **Model:** Gemini text-embedding-004
 - **Provider:** Google Generative AI
-- **Cost:** GRATIS (más económico que OpenAI)
-- **Performance:** Excelente para búsqueda semántica
-- **Language:** Multilingual (soporta español perfectamente)
-- **API Key:** Configurada en n8n como "Google Generative AI"
+- **Cost:** Free (more economical than OpenAI)
+- **Performance:** Excellent for semantic search
+- **Language:** Multilingual (full Spanish support)
+- **API Key:** Configured in n8n as "Google Generative AI"
 
 ### API Integration
 - **Semantic Search Webhook:** `/webhook/luna-semantic-search`
@@ -165,7 +167,7 @@ This document summarizes the RAG (Retrieval-Augmented Generation) integration im
 ## Troubleshooting
 
 ### Issue: Embeddings not created
-**Solution:** Check OpenAI API credentials and quota
+**Solution:** Check Google Generative AI API credentials and quota
 
 ### Issue: Poor search results
 **Solution:** Adjust top_k parameter or improve document chunking

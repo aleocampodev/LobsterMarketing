@@ -1,19 +1,20 @@
-# Cómo Funciona Este Repositorio
+# How This Repository Works
 
-## Stack de Orquestación
-- **Luna/Droid** — escribe y modifica código/especificaciones
-- **Gemini CLI** — revisa cada commit automáticamente
-- **n8n** — workflows de automatización ejecutándose en VPS
+## Orchestration Stack
+- **OpenClaw (Luna)** — AI agent that writes and modifies code/specifications, operating as the Nenufar brand voice
+- **Factory Droid** — the IDE agent (Factory) that executes coding tasks and manages the repo
+- **Gemini CLI** — reviews each commit automatically
+- **n8n** — automation workflows running on VPS
 
-Ver `specs/architecture.md` para detalles completos de la arquitectura n8n-First y la integración con Google Cloud, Supabase y Upstash Redis.
+See `specs/architecture.md` for full details on the Brain-Arms Architecture and integration with Google Cloud, Supabase, and Upstash Redis.
 
-## Flujo de Trabajo
-1. Luna/Droid realiza cambios localmente
-2. `git commit` activa el revisor Gemini CLI (pre-commit hook)
-3. Gemini escribe tareas de mejora en `droid-tasks.md`
-4. Luna lee `droid-tasks.md` al inicio de la siguiente sesión
-5. Los commits aprobados se envían al VPS vía `git push`
+## Workflow
+1. Factory Droid makes local changes (following OpenClaw/Luna rules from AGENTS.md)
+2. `git commit` triggers the Gemini CLI reviewer (pre-commit hook)
+3. Gemini writes improvement tasks in `droid-tasks.md`
+4. OpenClaw reads `droid-tasks.md` at the start of the next session
+5. Approved commits are pushed to VPS via `git push`
 
-## Estrategia de Ramas
-- `main` — producción (VPS)
-- `feature/*` — trabajo en progreso de Luna/Droid
+## Branch Strategy
+- `main` — production (VPS)
+- `feature/*` — work in progress (OpenClaw + Factory Droid)

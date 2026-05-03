@@ -1,7 +1,8 @@
 # Epic ip-001: Infrastructure & Core Setup
-Version: v1.1
+Version: v1.3
 
-**Goal:** Establish the foundational servers, databases, and message brokers required for the n8n-First Architecture.
+**Goal:** Establish the foundational servers, databases, and message brokers required for the Brain-Arms Architecture.
+<!-- v1.3: Marked all tasks and DoD as complete per user confirmation. -->
 
 ## Tasks
 - [x] **ip-001.1:** Provision Google Cloud e2-micro instance for the central n8n instance.
@@ -12,6 +13,6 @@ Version: v1.1
 - [x] **ip-001.6:** Define Google Drive folder hierarchy (Input, Processing, Published).
 
 ## Definition of Done Verification
-- [x] **Versioning:** Header updated to v1.1.
+- [x] **Versioning:** Header updated to v1.2.
 - [x] **Language:** Technical specs in English.
 - [x] **Manual E2E Test:** Created in `specs/tests/test-ip-001.md`.

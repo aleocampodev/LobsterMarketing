@@ -1,4 +1,5 @@
 # Product Catalog & Technical Specs
+Version: v1.0
 
 ## Base Materials
 - Czech Beads (Mostacilla Checa)

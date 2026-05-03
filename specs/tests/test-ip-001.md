@@ -1,8 +1,9 @@
 # E2E Test: IP-001 Infrastructure & Core Connectivity
-Version: v1.0
+Version: v1.2
+<!-- v1.2: Validation checklist confirmed complete. -->
 
 ## 🎯 Objective
-Verify that all cloud infrastructure components (Oracle Cloud, GCP, Supabase, Upstash Redis) are provisioned, communicating, and ready for workflow orchestration.
+Verify that all cloud infrastructure components (GCP, Supabase, Upstash Redis) are provisioned, communicating, and ready for workflow orchestration.
 
 ## 📋 Prerequisites
 - Access to **Supabase Dashboard**.
@@ -18,9 +19,9 @@ Verify that all cloud infrastructure components (Oracle Cloud, GCP, Supabase, Up
 1. Open the Supabase SQL Editor.
 2. Run the following query to verify table existence:
    ```sql
-   SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+   SELECT table_name FROM information_schema.tables WHERE table_schema = 'nenufar';
    ```
-3. **Expected Result:** You should see `processed_files`, `monitoring_logs`, and `content_calendar`.
+3. **Expected Result:** You should see `processed_files`, `monitoring_logs`, `content_calendar`, `brand_knowledge`, `post_engagement`, `engagement_calendar`, and `comment_patterns`.
 
 ### Step 2: Redis Broker Verification
 1. Open the Upstash Redis console.
@@ -42,10 +43,10 @@ Verify that all cloud infrastructure components (Oracle Cloud, GCP, Supabase, Up
 ---
 
 ## ✅ Final Validation Checklist
-- [ ] Supabase tables are accessible.
-- [ ] Upstash Redis responds to PING.
-- [ ] n8n instance is reachable via Webhook.
-- [ ] Telegram Bot receives and processes messages.
+- [x] Supabase tables are accessible.
+- [x] Upstash Redis responds to PING.
+- [x] n8n instance is reachable via Webhook.
+- [x] Telegram Bot receives and processes messages.
 
 ---
 

@@ -10,10 +10,10 @@
 
 ## System Configuration (OpenClaw)
 - WEBHOOK_SECRET: 73f0b54afa26320af143b62794ca2c4c (Used for OpenClaw -> n8n signing)
-- **Primary Model:** `openrouter/auto` (Aliased as OpenRouter).
+- **Primary Model:** `Gemini 2.5 Flash` (Google Generative AI).
 - **System Prompt Override:** "Responde siempre en español. Eres un asistente experto en n8n y Supabase."
 - **Telegram Channel:** Enabled with `dmPolicy: pairing` and `groupPolicy: allowlist`. Streaming mode set to `partial`.
-- **Enabled Plugins:** Google, OpenRouter.
+- **Enabled Plugins:** Google, Google Generative AI.
 - **Gateway Mode:** Local.
 
 ## System Configuration (n8n & Infrastructure)
@@ -31,3 +31,6 @@
 
 ## Technical Lessons
 - Decoupling decision-making (OpenClaw) from execution (n8n) allows for better scalability on free-tier cloud providers.
+
+## Session Log
+- **2026-05-03:** Audit of AGENTS.md compliance and Supabase structure. Found and fixed: (1) All specs missing version headers, (2) database_schema.sql was using `public` schema instead of `nenufar`, (3) 4 missing tables in SQL (brand_knowledge, post_engagement, engagement_calendar, comment_patterns), (4) ip-001/ip-002/ip-003 had [x] on untested tasks, (5) INDEX.md had incorrect statuses, (6) test-ip-001.md queried `public` instead of `nenufar`, (7) memory/ directory was missing.

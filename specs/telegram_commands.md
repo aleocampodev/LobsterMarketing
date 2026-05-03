@@ -1,5 +1,6 @@
 # Telegram Commands for Luna - Nenufar Marketing
-Version: v1.1
+Version: v1.2
+<!-- v1.2: Fixed truncated /cleanup description, restored Interactive Workflow Examples section header. -->
 
 ## User Commands (Manual Control)
 
@@ -66,8 +67,6 @@ Version: v1.1
 ---
 
 ## Interactive Workflow Examples
-
-### 1. File Detection (Automatic Notification)
 ```
 🔔 **Nuevos archivos detectados**
 

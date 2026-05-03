@@ -1,4 +1,5 @@
 # Spike: OpenClaw & n8n Integration
+Version: v1.0
 
 ## Goal
 Verify the communication flow between OpenClaw (decision) and n8n (execution) using secure webhooks and payload signing.

@@ -1,12 +1,13 @@
 # Implementation Plan Index: Nenufar Marketing Automation
-Version: v1.1
+Version: v1.4
+<!-- v1.4: Corrected architecture. Brain = OpenClaw (Luna) via Telegram. Arms = n8n Workers. Updated model to Gemini 2.5 Flash. -->
 
 ## 🎯 Overview
-Automated marketing system for Nenufar that integrates AI content generation and workflow automation, orchestrated entirely in **n8n (n8n-First Architecture)**.
+Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenClaw (Luna) is the Brain that thinks and communicates via Telegram, and n8n Workers are the Arms that execute mechanical tasks.
 
-**Architecture:** n8n Orchestrator & Workers
-- **Orchestrator (The Brain):** Luna Multi-Agent System v2 (Gemini 1.5 Flash) handling strategy, copywriting, and human-in-the-loop approval via Telegram.
-- **Workers (The Arms):** Specialized sub-workflows for image processing, Meta publishing, and centralized logging via Upstash Redis queues.
+**Architecture:** Brain-Arms Pattern
+- **Brain:** OpenClaw (Luna) — AI agent using Gemini 2.5 Flash + RAG (Supabase pgvector), communicating with Aleja via Telegram for strategy, copywriting, and human-in-the-loop approval.
+- **Arms:** n8n Workers — Specialized sub-workflows for image processing, Meta publishing, and centralized logging, orchestrated via Upstash Redis queues.
 
 ---
 
@@ -19,16 +20,16 @@ Automated marketing system for Nenufar that integrates AI content generation and
 
 ---
 
-### ✅ ip-002: Luna's Brain & Interface (Orchestrator)
+### 🔄 ip-002: Luna's Brain & Interface
 - **File:** `ip-002-luna-brain-interface.md`
-- **Status:** Completed / In Optimization
-- **Goal:** Implement the intelligence layer (Luna) directly in n8n as the central mission control, including RAG and Telegram interface.
+- **Status:** In Progress
+- **Goal:** Implement the intelligence layer: OpenClaw (Luna) as the cognitive agent communicating via Telegram, with RAG knowledge base and approval workflow.
 
 ---
 
-### ✅ ip-003: The Arms - n8n Workers
+### 🔄 ip-003: The Arms - n8n Workers
 - **File:** `ip-003-n8n-workflows.md`
-- **Status:** Optimization Phase
+- **Status:** In Progress
 - **Goal:** Automate mechanical tasks: download from Drive, process (watermark/resize), and publish.
 
 ---
@@ -48,7 +49,6 @@ Automated marketing system for Nenufar that integrates AI content generation and
 ---
 
 ## 📝 Architectural Change Log
-**2026-04-27:** Full migration to n8n-First Architecture.
-- OpenClaw Brain (Oracle Cloud/Python) → **Deprecated** in favor of n8n Orchestration.
-- Luna Multi-Agent System v2 (n8n + Gemini 1.5 Flash) → **Active**.
-- Specialized Worker workflows (Queue Mode with Upstash Redis) → **Active**.
+**2026-05-03:** Architecture corrected to Brain-Arms pattern (v2.0). OpenClaw (Luna) = Brain via Telegram. n8n = Arms (workers). Model updated to Gemini 2.5 Flash.
+**2026-04-29:** Updated Architecture to v1.4 with Resilience patterns (DLQ, Circuit Breaker, Self-Healing).
+**2026-04-27:** Full migration to n8n-First Architecture. OpenClaw Brain (Oracle Cloud/Python) deprecated. Luna Multi-Agent System v2 active. Specialized Worker workflows (Queue Mode with Upstash Redis) active.

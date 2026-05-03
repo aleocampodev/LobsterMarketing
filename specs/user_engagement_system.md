@@ -91,7 +91,7 @@ The system uses an `engagement_calendar` table in Supabase to track types of que
 
 ### 🎯 Workflow: Automatic Daily Engagement
 1. **Determine Day & Theme:** Logic to select the appropriate theme template.
-2. **Generate Personalized Question:** Luna crafts the question using Gemini 1.5.
+2. **Generate Personalized Question:** Luna crafts the question using Gemini 2.5 Flash.
 3. **Interactive Elements:** Polls/Quizzes are added with emojis.
 4. **Multichannel Posting:** Instagram Stories + Feed via Meta API.
 5. **Monitoring & Follow-up:** Analyze engagement after 24h and generate personalized responses.

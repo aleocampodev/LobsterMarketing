@@ -120,7 +120,7 @@ CREATE TABLE brand_prompts (
     category TEXT,           -- 'product_story', 'heritage', 'collection_launch', etc.
     content TEXT,            -- Prompt template
     examples TEXT[],         -- Successful copy examples
-    embedding VECTOR(1536), -- For semantic similarity search
+    embedding VECTOR(768),  -- Gemini text-embedding-004 (768 dimensions)
     created_at TIMESTAMP
 );
 ```

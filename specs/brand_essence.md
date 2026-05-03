@@ -1,4 +1,5 @@
 # Brand Essence: Nenufar
+Version: v1.0
 
 ## Slogan
 "We enhance the beauty and style of men and women who embrace indigo art."
