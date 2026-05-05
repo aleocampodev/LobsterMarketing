@@ -5,55 +5,57 @@ Nenufar is an intelligent marketing automation system designed for Colombian Anc
 ---
 
 ## 🚀 Operational Flow
-         │  1. Uploads photos/videos         │                                   │
-         │     to Google Drive                │                                   │
-         └───────────────────────────────────►│                                   │
-                                              │  2. Analyzes new content         │
-                                              │     in Google Drive              │
-                                              │                                   │
-                                              │  3. Queries templates bank        │
-                                              │     (Supabase)                   │
-                                              │     for brand-voice              │
-                                              │     copywriting                  │
-                                              │                                   │
-                                              │  4. Trend scraping               │
-                                              │     (Firecrawl + Graph API)      │
-                                              │     for strategic hashtags       │
-                                              │                                   │
-                                              │  5. Generates optimized copy     │
-                                              │     + hashtags                   │
-                                              │                                   │
-         │  6. Sends preview via Telegram    │                                   │
-         ◄───────────────────────────────────│                                   │
-         │                                    │                                   │
-    APPROVAL                                 │                                   │
-         │                                    │                                   │
-    (Approve/Modify/Cancel)                  │                                   │
-         │                                    │                                   │
-         │  7. Confirms publication           │                                   │
-         └───────────────────────────────────►│                                   │
-                                              │  8. Sends task to n8n            │
-                                              │     (via API/Webhook)            │
-                                              └─────────────────────────────────►
-                                                                           │
-                                                                           │  9. Retrieves media from
-                                                                           │     Google Drive
-                                                                           │
-                                                                           │ 10. Converts image
-                                                                           │     (FB:1080x1080 / IG:1080x1350)
-                                                                           │
-                                                                           │ 11. Applies watermark
-                                                                           │     Nenufar (logo)
-                                                                           │
-                                                                           │ 12. Publishes on FB + IG
-                                                                           │     with copy and hashtags
-                                                                           │
-                                                                           │ 13. Logs analytics
-                                                                           │     in Supabase
-                                                                           │
-                                                                           │ 14. Notifies user
-                                                                           │     via Telegram
-                                                                           ▼
+
+```text
+                                              │  1. Uploads photos/videos         │
+                                              │     to Google Drive                │
+                                              └───────────────────────────────────►│
+                                                                                   │  2. Analyzes new content
+                                                                                   │     in Google Drive
+                                                                                   │
+                                                                                   │  3. Queries templates bank
+                                                                                   │     (Supabase)
+                                                                                   │     for brand-voice
+                                                                                   │     copywriting
+                                                                                   │
+                                                                                   │  4. Trend scraping
+                                                                                   │     (Firecrawl + Graph API)
+                                                                                   │     for strategic hashtags
+                                                                                   │
+                                                                                   │  5. Generates optimized copy
+                                                                                   │     + hashtags
+                                                                                   │
+                                              │  6. Sends preview via Telegram    │
+                                              ◄───────────────────────────────────│
+                                              │                                    │
+                                         APPROVAL                                 │
+                                              │                                    │
+                                         (Approve/Modify/Cancel)                  │
+                                              │                                    │
+                                              │  7. Confirms publication           │
+                                              └───────────────────────────────────►│
+                                                                                   │  8. Sends task to n8n
+                                                                                   │     (via API/Webhook)
+                                                                                   └─────────────────────────────────►
+                                                                                                                │
+                                                                                                                │  9. Retrieves media from
+                                                                                                                │     Google Drive
+                                                                                                                │
+                                                                                                                │ 10. Converts image
+                                                                                                                │     (FB:1080x1080 / IG:1080x1350)
+                                                                                                                │
+                                                                                                                │ 11. Applies watermark
+                                                                                                                │     Nenufar (logo)
+                                                                                                                │
+                                                                                                                │ 12. Publishes on FB + IG
+                                                                                                                │     with copy and hashtags
+                                                                                                                │
+                                                                                                                │ 13. Logs analytics
+                                                                                                                │     in Supabase
+                                                                                                                │
+                                                                                                                │ 14. Notifies user
+                                                                                                                │     via Telegram
+                                                                                                                ▼
 ```
 
 ---
@@ -94,12 +96,6 @@ CREATE TABLE nenufar.templates_bank (
 | **Firecrawl** | Extract trends from competitors and jewelry niche |
 | **Graph API** | Analyze top-performing posts in the niche |
 
-**Hashtag Combination:**
-- **Evergreen Niche:** #JoyeríaAncestral #Mostacilla #HechoEnCartagena #ArtisanJewelry
-- **Brand:** #NenufarJoyería #NenufarAncestral #Nenufar #JoyasConAlma
-- **Daily Trends:** Algorithmically optimized based on Scraping
-- **Campaign:** Specific tags for collections or launches
-
 ### 📱 Platform-Optimized Publishing
 
 | Platform | Format | Watermark | Timing Strategy |
@@ -111,34 +107,32 @@ CREATE TABLE nenufar.templates_bank (
 
 ---
 
-## 🛠️ Configuration and Deployment
+## 🛠️ Tech Stack
 
-### Prerequisites
-
-- [ ] Oracle Cloud account (Free Tier)
-- [ ] Google Cloud account (Free Tier)
-- [ ] Upstash Redis (Free tier)
-- [ ] Supabase (Free tier)
-- [ ] Telegram Bot Token (@BotFather)
-- [ ] Google Drive API credentials
-- [ ] Facebook & Instagram Developer access
-
-### Environment Variables
-
-See the original documentation for detailed environment variables.
+| Layer | Technology | Purpose |
+|:------|:-----------|:--------|
+| **Brain** | OpenClaw (Luna) | AI agent with eco-poetic voice |
+| **LLM** | Gemini 2.0 Flash | Content generation + intent classification |
+| **Templates** | Supabase / Markdown | Brand knowledge & pre-defined copy |
+| **Interface** | Telegram Bot | Human-in-the-loop approval |
+| **Broker** | Upstash Redis | Task queue between Brain and Arms |
+| **Workers** | n8n (GCP e2-micro) | Image processing, publishing, logging |
+| **Database** | Supabase PostgreSQL | Long-term memory + analytics |
+| **Assets** | Google Drive | Media storage |
+| **Publishing** | Meta Graph API | Instagram + Facebook |
 
 ---
 
-## 📊 Monitoring and Maintenance
+## 📊 Project Status
 
-### Health Checks
-
-| Component | Endpoint/Command | Expected Response |
-|------------|------------------|-------------------|
-| OpenClaw | `GET /health` | `{ "status": "ok", "brand_loaded": true }` |
-| n8n | `GET /healthz` | `{ "status": "up" }` |
-| Redis | `redis-cli ping` | `PONG` |
-| Supabase | API health endpoint | `200 OK` |
+| Epic | Description | Status |
+|:-----|:------------|:-------|
+| **ip-001** | Infrastructure Setup | ✅ Completed |
+| **ip-002** | Brain — OpenClaw (Luna) + Telegram | 🔄 In Progress |
+| **ip-003** | Arms — n8n Workers | 🔄 In Progress |
+| **ip-004** | Integration Testing | ⏳ Pending |
+| **ip-005** | Production Launch | ⏳ Pending |
+| **ip-006** | Supabase Improvements | ✅ Completed |
 
 ---
 
@@ -160,6 +154,30 @@ LobsterMarketing/
 
 ---
 
-**Created with 💛 for Nenufar - Colombian Ancestral Jewelry**
+## 🌸 Brand Quick Reference
 
-*"Each piece carries a story. Our mission is to ensure that story is told well."*
+### Voice
+- **Tone:** Eco-poetic, close, professional
+- **Language:** Colombian Spanish, always "tú"
+- **Narrative:** "Poemas tejidos" (Woven poems) — each piece is a poem
+
+### Keywords
+Nenúfar contigo · Tejiendo esperanzas · Tejiendo caminos · Punzadas de amor · Arte hecho a mano · Poemas tejidos · Gajes del oficio
+
+### 7-Day Content Strategy
+
+| Day | Theme | Focus |
+|:----|:------|:------|
+| Monday | Tejiendo Caminos | Social impact, artisan mothers |
+| Tuesday | Poemas Tejidos | Storytelling of a specific piece |
+| Wednesday | Gajes del Oficio | Weaving process & techniques |
+| Thursday | Universo Infantil | Kids & minimalist accessories |
+| Friday | Naturaleza y Espíritu | Spirituality & meaningful designs |
+| Saturday | Cultura en Movimiento | Clients at cultural events in Cartagena |
+| Sunday | Reflexión y Color | Color meanings & weekly energy |
+
+---
+
+**Built with 💛 for Nenufar — Colombian Ancestral Jewelry**
+
+_"Each piece carries a story. Our mission is to ensure that story is told well."_
