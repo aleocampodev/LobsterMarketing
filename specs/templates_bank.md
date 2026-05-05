@@ -7,6 +7,7 @@ This document centralizes the copy templates for content generation. Instead of 
 - `{{product_name}}`: Product name.
 - `{{artisan_name}}`: Name of the artisan.
 - `{{material}}`: Main material (e.g., iraca palm, arrow cane).
+- `{{technique}}`: Weaving technique (e.g., Peyote, Telar).
 - `{{price}}`: Price (only if necessary, avoid offer tone).
 - `{{day_theme}}`: Theme of the day (e.g., Gratitude, Nature).
 
@@ -21,7 +22,14 @@ This document centralizes the copy templates for content generation. Instead of 
 **ID:** `story_artisan_02`
 > "Tejer es un acto de resistencia y amor. **{{artisan_name}}** dedica horas a entrelazar sueños en este **{{product_name}}**. Al llevarlo, llevas contigo la herencia de nuestras ancestras. 🌸 #TejidoConPropósito"
 
-### 2. Catalog and Product (Aesthetic Focus)
+### 2. Heritage Narratives (Cultural Focus)
+**ID:** `heritage_indigenous_01`
+> "Antes de que fuera moda, fue lenguaje. 🍃 Nuestros ancestros indígenas usaban los colores y las formas para contar los secretos del universo. Al llevar este **{{product_name}}**, no solo luces una joya, mantienes vivo un dialecto milenario tejido en **{{material}}**. 🤎"
+
+**ID:** `heritage_indigenous_02`
+> "Cada puntada en la técnica **{{technique}}** es un puente hacia el pasado. Nuestras abuelas indígenas nos enseñaron que tejer es meditar. Este **{{product_name}}** es un homenaje a esa sabiduría antigua, creado para las almas que respetan sus raíces. 🌿✨"
+
+### 3. Catalog and Product (Aesthetic Focus)
 **ID:** `product_showcase_01`
 > "✨ **{{product_name}}** ✨ | Una danza de texturas y colores. Creado con **{{material}}** recolectada de forma sostenible. Una pieza que respira naturaleza. ¿Qué rincón de tu hogar espera por esta belleza? 🌿"
 
