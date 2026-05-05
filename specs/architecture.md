@@ -257,3 +257,21 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 | **Processing**| User Approval| Redis Queue -> Image Processor | Watermarked image |
 | **Publishing**| Worker Success| Social Publisher -> Meta API | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
+
+---
+
+## 6. Content Freshness Engine
+
+To ensure that automated content remains varied and engaging without repetitive patterns, the system utilizes a **Content Freshness Engine** composed of four strategic pillars:
+
+### 6.1 Real Inventory Integration (Drive Sync)
+Luna does not guess what to publish. By analyzing the filenames and metadata of new media uploaded to Google Drive (e.g., `aretes_telar_rojo.jpg`), the system extracts the actual materials, colors, and techniques currently in stock. This ensures the narrative is always grounded in real, available products.
+
+### 6.2 Seasonal & Temporal Context
+During the workflow execution, n8n injects the current date and upcoming seasonal events (e.g., Mother's Day, Holy Week in Cartagena) as context for Gemini. This allows Luna to adapt the `{{day_theme}}` variable with timely and relevant narratives.
+
+### 6.3 Forced Template Rotation
+The system tracks every published post in the `nenufar.content_calendar` table, including the `template_id` used. Before selecting a new template, Luna queries this history to ensure that the same structure is not repeated within a 7-day window, forcing a variety of "emotions" and "formats."
+
+### 6.4 The Weekly Seed (Human-in-the-Loop)
+Every week (e.g., Sunday night), the user provides a short voice or text note via Telegram (the `/seed` command). This "Seed" sets the creative focus for the next 7 days (e.g., "focus on the ocean and Marta's patience"). This context is stored in Supabase and influences every caption generated that week, ensuring a unique, human-led narrative that changes over time.

@@ -27,6 +27,14 @@ Version: v1.2
 - Published today: 2
 - System status: ✅ Active
 
+### `/seed [text/audio]`
+**Description:** Set the creative "Seed" for the week. This context influences all captions for the next 7 days.
+**Example:** `/seed Esta semana nos enfocamos en la paciencia y el color azul.`
+**Workflow:**
+1. Luna transcribes audio (if provided) and summarizes the intent.
+2. Context is stored in Supabase.
+3. Luna confirms: "Semilla guardada. Esta semana floreceremos con [resumen]."
+
 ### `/cancel [task_id]`
 **Description:** Cancel a running or queued processing task.
 **Example:** `/cancel task_12345`
