@@ -21,7 +21,7 @@ Verify that all cloud infrastructure components (GCP, Supabase, Upstash Redis) a
    ```sql
    SELECT table_name FROM information_schema.tables WHERE table_schema = 'nenufar';
    ```
-3. **Expected Result:** You should see `processed_files`, `monitoring_logs`, `content_calendar`, `brand_knowledge`, `post_engagement`, `engagement_calendar`, and `comment_patterns`.
+3. **Expected Result:** You should see `processed_files`, `monitoring_logs`, `content_calendar`, `templates_bank`, `post_engagement`, `engagement_calendar`, and `comment_patterns`.
 
 ### Step 2: Redis Broker Verification
 1. Open the Upstash Redis console.
