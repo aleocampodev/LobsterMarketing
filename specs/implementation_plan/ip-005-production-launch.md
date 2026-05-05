@@ -12,7 +12,7 @@ Version: v1.2
 ## 1. Quality & Compliance Audit
 *Ref: specs/brand_essence.md*
 
-- [ ] **ip-005.1:** Conduct a final audit of RAG-generated content to ensure zero usage of prohibited words (e.g., *barato*, *oferta*).
+- [ ] **ip-005.1:** Conduct a final audit of `templates_bank` content to ensure zero usage of prohibited words (e.g., *barato*, *oferta*).
 - [ ] **ip-005.2:** Verify that all published media includes the correct Nenufar watermark.
 
 ---

@@ -77,15 +77,15 @@ This document provides a pre-approved repository of interactive questions for th
 
 ### Poll Results (Story Example)
 ```text
-🎯 Resultados de la Encuesta:
-¿Qué técnica te interesa más?
+🎯 Poll Results:
+Which technique interests you the most?
 A) Peyote: 45% 🔥
-B) Telar: 30%
+B) Loom: 30%
 ```
 
 ### User Feature (Highlight Example)
 ```text
 🌟 Nenufar Storyteller:
-@usuario compartió: "Mis Nenúfares me recordaron a mi abuela..."
-💛 Sube tu foto con #NenufarStoryteller
+@user shared: "Mis Nenúfares me recordaron a mi abuela..."
+💛 Upload your photo with #NenufarStoryteller
 ```

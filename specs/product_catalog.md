@@ -1,34 +1,34 @@
 # Product Catalog & Technical Specs
-Version: v1.0
+Version: v1.1
 
 ## Base Materials
-- Czech Beads (Mostacilla Checa)
-- Apta Thread
-- Stainless steel
-- Natural stones
+- Mostacilla Checa (Czech Beads)
+- Hilo Apta
+- Acero inoxidable
+- Piedras naturales
 
 ## Crafting Techniques
-- Freehand weaving
-- Loom weaving
-- Peyote technique
-- Brick technique (Ladrillo)
-- Tubular technique
+- Tejido a mano alzada
+- Tejido en telar
+- Técnica Peyote
+- Técnica Ladrillo (Brick)
+- Técnica Tubular
 
 ## Production
-- **Frequency:** New pieces every week.
-- **Capacity:** Up to 5 pairs of simple earrings per day.
-- **Exclusivity:** Mostly repeated pieces with color variations upon request; also custom designs.
+- **Frequency:** Nuevas piezas cada semana.
+- **Capacity:** Hasta 5 pares de aretes sencillos por día.
+- **Exclusivity:** Mayormente piezas repetidas con variaciones de color bajo pedido; también diseños personalizados.
 
 ## Price Range
 $15,000 - $400,000 COP
 
 ## Color Symbolism
-- **Gold:** Power and luminosity.
-- **Red:** Strength.
-- **Yellow:** Joy and enthusiasm for starting a new day.
+- **Dorado:** Poder y luminosidad.
+- **Rojo:** Fuerza.
+- **Amarillo:** Alegría y entusiasmo por empezar un nuevo día.
 
 ## Ideal Usage Contexts
-- Cultural events.
-- Poetry recitals.
-- Museums.
-- Musical stages (especially in Cartagena).
+- Eventos culturales.
+- Recitales de poesía.
+- Museos.
+- Escenarios musicales (especialmente en Cartagena).

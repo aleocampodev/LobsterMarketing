@@ -9,7 +9,7 @@ Version: v1.2
 **Example:** `/process earrings-blue.png`
 **Workflow:** 
 1. Luna searches for the file in Drive.
-2. Generates an eco-poetic caption using RAG.
+2. Generates an eco-poetic caption using Templates Bank.
 3. Shows a preview + asks for approval.
 4. Publishes after user approval.
 
@@ -68,14 +68,14 @@ Version: v1.2
 
 ## Interactive Workflow Examples
 ```
-🔔 **Nuevos archivos detectados**
+🔔 **New files detected**
 
 📸 aretes-azul.png (2.3 MB)
 📸 collar-rojo.jpg (1.8 MB)
 📄 video-tejido.mp4 (15.2 MB)
 
-¿Deseas procesar alguno de estos archivos?
-Usa: /process [nombre del archivo]
+Do you want to process any of these files?
+Use: /process [file_name]
 ```
 
 ### 2. Processing Request & Approval
@@ -103,7 +103,7 @@ Te invito a descubrir mis poemas tejidos...
 📤 Publicando en Facebook e Instagram
 ✅ ¡Publicado exitosamente!
    
-📊 Estadísticas:
+📊 Statistics:
 - Facebook: https://facebook.com/post/123
 - Instagram: https://instagram.com/p/456"
 ```

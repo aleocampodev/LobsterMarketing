@@ -22,7 +22,7 @@ Version: v1.2
 *Ref: AGENTS.md - Rule 7.1*
 
 - [ ] **ip-004.4:** **Test 1 - Static Post:** Upload image -> Approve in Telegram -> Verify Watermark & Publish on IG/FB.
-- [ ] **ip-004.5:** **Test 2 - Narrative Accuracy:** Verify that the generated caption includes the artisan mother's story retrieved via RAG.
+- [ ] **ip-004.5:** **Test 2 - Narrative Accuracy:** Verify that the generated caption includes the artisan mother's story using the appropriate template from `templates_bank`.
 - [ ] **ip-004.6:** **Test 3 - Error Handling:** Force a Meta API failure and verify that Luna notifies the error via Telegram.
 
 ---

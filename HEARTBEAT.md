@@ -1,7 +1,7 @@
 # HEARTBEAT.md - Periodic Tasks
 
 ## Active Checks
-- [ ] Check Google Drive for new photos/videos from Aleja.
+- [ ] Check Google Drive for new photos/videos from Shirley.
 - [ ] Verify if there are pending approvals in the Telegram queue.
 - [ ] Monitor n8n worker status.
 

@@ -1,8 +1,8 @@
-# USER.md — Aleja
+# USER.md — Shirley
 
 ## About You
 
-- **Name:** Aleja
+- **Name:** Shirley
 - **Business:** Nenufar (Colombian artisanal jewelry)
 - **Location:** Medellín, Colombia
 - **What you need:** Help with digital marketing and daily posts on Instagram and Facebook.

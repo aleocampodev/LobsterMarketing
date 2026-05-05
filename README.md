@@ -1,59 +1,18 @@
-# SOUL.md — Nenufar
+# Nenufar Marketing Automation
 
-## Agent Identity
-You are **Luna**, the digital voice of Nenufar. Your purpose is to connect the art of ancestral weaving with people's hearts, communicating not only the beauty of the pieces but also the social impact behind them.
+Nenufar is an intelligent marketing automation system designed for Colombian Ancestral Jewelry. It follows a **Brain-Arms pattern**, utilizing **OpenClaw (Luna)** as the creative brain and **n8n** as the execution arms to manage content creation, image processing, and social media publishing.
 
-**IMPORTANT:**
-- **Language:** ALWAYS respond and write in Spanish. 🇪🇸
-- **Tone:** Use "tú" (informal) when addressing the customer.
-- **Emojis:** Use them ONLY at the end of each message or paragraph. 🛑
+---
 
-## Brand Soul (DNA)
-> "We enhance the beauty and style of men and women who embrace indigo art."
-
-**Social Mission:**
-Nenufar is not just jewelry; it is a driver of change. We train working mothers in weaving techniques so they can create from their homes, balancing family care with generating sustainable income.
-
-**Brand Personality:**
-Lover of nature and meaningful details. We value creativity and the sacred time invested in every handcrafted stitch. We are a space of tolerance and respect for diversity.
-
-## Target Audience (Segments)
-1. **Childhood:** Minimalist accessories, cute designs, or favorite characters (cartoons).
-2. **Empowered/Bold Woman:** Striking designs, nature insignias, and pieces that highlight a powerful personality.
-3. **Conservative Woman:** Simple and meaningful designs connecting with literature, nature, or spirituality.
-
-## Tone and Style
-- **Poetic Echo:** We talk about the process as "woven poems."
-- **Educational:** We share the "tricks of the trade" and the value of the crafting process.
-- **Close and Human:** We are not a mass store; we are art to be worn.
-
-## Golden Rules (Copywriting)
-- **Words we LOVE:** Nenúfar contigo, tejiendo esperanzas, tejiendo caminos, punzadas de amor, arte hecho a mano, poemas tejidos, gajes del oficio.
-- **PROHIBITED Words:** "Cheap" (barato), "Aggressive offer", "Low cost".
-- **Color Meaning:**
-    - 🟡 **Gold:** Power and luminosity.
-    - 🔴 **Red:** Strength.
-    - 🟡 **Yellow:** Joy and enthusiasm for a new day.
-
-## Content Strategy (7 Days)
-- **Monday:** "Tejiendo Caminos" (Social - Stories of artisan mothers).
-- **Tuesday:** "Poemas Tejidos" (Storytelling of a specific piece).
-- **Wednesday:** "Gajes del Oficio" (Video of the weaving process or technique).
-- **Thursday:** "Children's/Youth Universe" (Focus on kids or minimalist accessories).
-- **Friday:** "Nature and Spirit" (Connecting pieces with spirituality/literature).
-- **Saturday:** "Culture in Motion" (Photos of clients in museums, recitals, or events in Cartagena).
-- **Sunday:** "Reflection and Color" (Meaning of colors and energy for the week).
-
-_"Each piece is a poem that someone decides to carry with them."_
-  │
+## 🚀 Operational Flow
          │  1. Uploads photos/videos         │                                   │
          │     to Google Drive                │                                   │
          └───────────────────────────────────►│                                   │
                                               │  2. Analyzes new content         │
                                               │     in Google Drive              │
                                               │                                   │
-                                              │  3. Queries prompt bank          │
-                                              │     (RAG in Supabase)            │
+                                              │  3. Queries templates bank        │
+                                              │     (Supabase)                   │
                                               │     for brand-voice              │
                                               │     copywriting                  │
                                               │                                   │
@@ -101,27 +60,28 @@ _"Each piece is a poem that someone decides to carry with them."_
 
 ## 🧩 Key Features
 
-### ✅ Anti-Hallucination Copywriting (RAG)
+### ✅ Consistent Copywriting (Templates Bank)
 
-The system uses **Retrieval-Augmented Generation** to ensure all copy is consistent with the brand voice:
+The system uses a **Templates Bank** approach to ensure all copy is consistent with the brand voice and optimized for token usage:
 
-- The prompt bank in Supabase contains verified templates for:
+- The templates bank in Supabase contains verified structures for:
   - Product storytelling
   - Artisan heritage narratives
   - Collection launches
   - Educational content on materials/techniques
 
-- **Prevents:** Generic or off-brand generation
+- **Prevents:** Generic or off-brand generation and Hallucination.
 
 ```sql
--- Prompt bank structure in Supabase
-CREATE TABLE brand_prompts (
-    id UUID PRIMARY KEY,
-    category TEXT,           -- 'product_story', 'heritage', 'collection_launch', etc.
-    content TEXT,            -- Prompt template
-    examples TEXT[],         -- Successful copy examples
-    embedding VECTOR(768),  -- Gemini text-embedding-004 (768 dimensions)
-    created_at TIMESTAMP
+-- Templates bank structure in Supabase
+CREATE TABLE nenufar.templates_bank (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_id TEXT UNIQUE NOT NULL,           -- e.g., 'story_artisan_01'
+    category TEXT NOT NULL,                     -- story, product, engagement, fallback
+    content TEXT NOT NULL,                      -- Template with {{variables}}
+    variables TEXT[],                           -- List of expected variables
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
@@ -188,9 +148,8 @@ See the original documentation for detailed environment variables.
 LobsterMarketing/
 ├── README.md                    # This file
 ├── SOUL.md                      # Agent identity and soul
-├── USER.md                      # User profile (Aleja)
-├── AGENTS.md                    # Agent workspace guide
-├── RAG_PROMPTS.md               # Prompt bank for copywriting
+├── USER.md                      # User profile (Shirley)
+├── AGENTS.md                    # Agent workspace guide (v1.1)
 ├── TOOLS.md                     # Local tool notes
 ├── HEARTBEAT.md                 # Heartbeat configuration
 ├── MEMORY.md                    # Long-term memory

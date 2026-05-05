@@ -1,8 +1,9 @@
 # Epic ip-002: Luna's Brain & Interface
-Version: v1.3
-<!-- v1.3: Corrected architecture — Brain is OpenClaw (Luna), not n8n. n8n is the Arms (workers). -->
+Version: v1.5
+<!-- v1.5: Updated Gemini version to 2.0 Flash for consistency. -->
+<!-- v1.4: Optimization: Replaced RAG with Templates Bank to save tokens. Updated sub-agent roles. -->
 
-**Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Aleja via Telegram, uses Gemini 2.5 Flash + RAG for content generation, and dispatches tasks to n8n workers.
+**Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.0 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
 
 **Status:** 🔨 In Progress
 **Estimated Effort:** 4 days
@@ -10,25 +11,24 @@ Version: v1.3
 ---
 
 ## 1. Multi-Agent Architecture (The Brain)
-*Ref: specs/architecture.md v1.4*
+*Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-002.1:** Create the "Luna Multi-Agent System" workflow (ID: `TasuK8cfPqa2ob8O`).
 - [ ] **ip-002.2:** Implement specialized Sub-Agents:
-    - **Nenufar Brand Agent:** Handles RAG queries and brand memory.
-    - **Nenufar Content Agent:** Crafts "Eco Poético" captions using the standard structure.
+    - **Nenufar Brand Agent:** Manages the **Templates Bank** and variable interpolation.
+    - **Nenufar Content Agent:** Selects the best template and crafts "Eco Poético" captions.
     - **Nenufar Approval Agent:** Manages task payloads and user validation.
-- [ ] **ip-002.3:** Configure "Luna Ultimate Assistant" as the main orchestrator (Gemini 2.5 Flash).
+- [ ] **ip-002.3:** Configure "Luna Ultimate Assistant" as the main orchestrator (Gemini 2.0 Flash).
 - [ ] **ip-002.4:** Integrate Buffer Window memory for context-aware conversations.
 
 ---
 
-## 2. RAG & Brand Assets Integration
+## 2. Templates & Brand Assets Integration
 *Ref: specs/brand_essence.md & specs/product_catalog.md*
 
-- [ ] **ip-002.5:** Setup Supabase Vector Store (`brand_knowledge` table).
-- [ ] **ip-002.6:** Implement the `luna-rag-knowledge-base` ingestion workflow.
-- [ ] **ip-002.7:** Standardize the Prompt Bank:
-    - Poetic Hooks, Social Impact statements, and Technical data (Czech Beads, Apta Thread, etc.).
+- [ ] **ip-002.5:** Setup Supabase Templates Store (`templates_bank` table).
+- [ ] **ip-002.6:** Seed the `templates_bank` with initial data from `specs/templates_bank.md`.
+- [ ] **ip-002.7:** Implement the **Edge Case** fallbacks for missing variables (Ref: `specs/edge_cases.md`).
 - [ ] **ip-002.8:** Implement the 7-day content strategy (Tejiendo Caminos, Poemas Tejidos, etc.).
 
 ---

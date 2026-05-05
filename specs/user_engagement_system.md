@@ -20,16 +20,16 @@ Version: v1.1
 
 **Daily Question Example:**
 ```
-🧵 **Pregunta del Día:**
+🧵 **Daily Question:**
    
-"¿Cuál es la artesania colombiana que más te inspira?
+"Which Colombian craft inspires you the most?
    
-A) Tejido en mostacilla
-B) Cerámica tradicional  
-C) Tejido en palma
-D) Hilos de lana
+A) Bead weaving
+B) Traditional ceramics  
+C) Palm weaving
+D) Wool threads
    
-Cuéntanos en los comentarios y comparte si has conocido alguna artesana trabajando desde su hogar 🏠✨"
+Tell us in the comments and share if you have met any artisan working from home 🏠✨"
 ```
 
 ### 📖 Theme 2: "Poemas Tejidos" (Tuesdays)
@@ -37,18 +37,18 @@ Cuéntanos en los comentarios y comparte si has conocido alguna artesana trabaja
 
 **Daily Question Example:**
 ```
-📜 **Poema del Día + Pregunta:**
+📜 **Poem of the Day + Question:**
    
-"Cada puntada es un paso hacia la estabilidad de una familia colombiana"
+"Each stitch is a step towards the stability of a Colombian family"
    
-💬 **Para ti:** ¿Qué palabra representa tu estilo personal?
+💬 **For you:** What word represents your personal style?
    
-A) Esperanza 🌟
-B) Fuerza 💪
-C) Alegría ☀️
-D) Amor ❤️
+A) Hope 🌟
+B) Strength 💪
+C) Joy ☀️
+D) Love ❤️
    
-"Comenta tu palabra y te recomendamos una pieza que la representa"
+"Comment your word and we will recommend a piece that represents it"
 ```
 
 ### 🎨 Theme 3: "Gajes del Oficio" (Wednesdays)
@@ -56,18 +56,18 @@ D) Amor ❤️
 
 **Daily Question Example:**
 ```
-🔍 **¿Sabías qué? + Quiz:**
+🔍 **Did you know? + Quiz:**
    
-"¿Sabías que la mostacilla checa es el corazón de nuestras creaciones?
+"Did you know that Czech beads are the heart of our creations?
    
-💡 **Pregunta técnica:** ¿Qué técnica te gustaría aprender?
+💡 **Technical question:** Which technique would you like to learn?
    
-A) Técnica Peyote (punto por punto)
-B) Tejido en telar
-C) Labores de aguja
-D) Tejido en ladrillo
+A) Peyote Technique (stitch by stitch)
+B) Loom weaving
+C) Needlework
+D) Brick stitch weaving
    
-"Los votantes ganan un tutorial exclusivo en stories 🎓"
+"Voters win an exclusive tutorial in stories 🎓"
 ```
 
 ### 🧒 Theme 4: "Universo Infantil/Juvenil" (Thursdays)

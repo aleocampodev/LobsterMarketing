@@ -1,12 +1,12 @@
 # Implementation Plan Index: Nenufar Marketing Automation
-Version: v1.4
-<!-- v1.4: Corrected architecture. Brain = OpenClaw (Luna) via Telegram. Arms = n8n Workers. Updated model to Gemini 2.5 Flash. -->
+Version: v1.5
+<!-- v1.5: Optimization: Replaced RAG with Templates Bank. -->
 
 ## 🎯 Overview
 Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenClaw (Luna) is the Brain that thinks and communicates via Telegram, and n8n Workers are the Arms that execute mechanical tasks.
 
 **Architecture:** Brain-Arms Pattern
-- **Brain:** OpenClaw (Luna) — AI agent using Gemini 2.5 Flash + RAG (Supabase pgvector), communicating with Aleja via Telegram for strategy, copywriting, and human-in-the-loop approval.
+- **Brain:** OpenClaw (Luna) — AI agent using Gemini 2.5 Flash + Templates Bank, communicating with Shirley via Telegram for strategy, copywriting, and human-in-the-loop approval.
 - **Arms:** n8n Workers — Specialized sub-workflows for image processing, Meta publishing, and centralized logging, orchestrated via Upstash Redis queues.
 
 ---
@@ -23,7 +23,7 @@ Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenC
 ### 🔄 ip-002: Luna's Brain & Interface
 - **File:** `ip-002-luna-brain-interface.md`
 - **Status:** In Progress
-- **Goal:** Implement the intelligence layer: OpenClaw (Luna) as the cognitive agent communicating via Telegram, with RAG knowledge base and approval workflow.
+- **Goal:** Implement the intelligence layer: OpenClaw (Luna) as the cognitive agent communicating via Telegram, with Templates Bank and approval workflow.
 
 ---
 
@@ -48,7 +48,15 @@ Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenC
 
 ---
 
+### ✅ ip-006: Supabase Improvements
+- **File:** `ip-006-supabase-improvements.md`
+- **Status:** Completed
+- **Goal:** Fix schema omissions, implement log rotation, and self-healing heartbeat.
+
+---
+
 ## 📝 Architectural Change Log
+**2026-05-03:** Optimization: Shifted from RAG to Templates Bank (v2.1) to reduce token consumption. OpenClaw (Luna) Brain updated to handle template interpolation.
 **2026-05-03:** Architecture corrected to Brain-Arms pattern (v2.0). OpenClaw (Luna) = Brain via Telegram. n8n = Arms (workers). Model updated to Gemini 2.5 Flash.
 **2026-04-29:** Updated Architecture to v1.4 with Resilience patterns (DLQ, Circuit Breaker, Self-Healing).
 **2026-04-27:** Full migration to n8n-First Architecture. OpenClaw Brain (Oracle Cloud/Python) deprecated. Luna Multi-Agent System v2 active. Specialized Worker workflows (Queue Mode with Upstash Redis) active.

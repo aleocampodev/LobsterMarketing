@@ -7,7 +7,7 @@ Version: v1.3
 ## Tasks
 - [x] **ip-001.1:** Provision Google Cloud e2-micro instance for the central n8n instance.
 - [x] **ip-001.2:** Deploy n8n via Docker Compose on GCP with Queue Mode enabled.
-- [x] **ip-001.3:** Setup Supabase project (PostgreSQL + pgvector extension for RAG).
+- [x] **ip-001.3:** Setup Supabase project (PostgreSQL).
 - [x] **ip-001.4:** Configure Upstash Redis cluster for n8n worker queue management.
 - [x] **ip-001.5:** Setup DNS and SSL certificates (`n8n-stack-prod-dev.duckdns.org`).
 - [x] **ip-001.6:** Define Google Drive folder hierarchy (Input, Processing, Published).

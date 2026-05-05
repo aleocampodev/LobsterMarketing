@@ -16,7 +16,7 @@ Version: v1.3
 - [ ] **ip-003.1:** Implement the secure `Luna Webhook Receiver` (ID: `EPslgKTzkbLcxdrs`).
 - [ ] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
 - [ ] **ip-003.3:** Setup Redis Queue nodes with **Exponential Backoff** (3 attempts).
-- [ ] **ip-003.14:** **DLQ Notification:** Configure Luna to notify Aleja via Telegram when a task is moved to the `dead_letter_queue` after 3 failed attempts. (ETA: 1h)
+- [ ] **ip-003.14:** **DLQ Notification:** Configure Luna to notify Shirley via Telegram when a task is moved to the `dead_letter_queue` after 3 failed attempts. (ETA: 1h)
 
 ---
 
@@ -47,7 +47,7 @@ Version: v1.3
 
 - [ ] **ip-003.11:** Implement `Luna Feedback and Logging Worker` (ID: `v7j1Dv1mgO5ZUgmG`).
 - [ ] **ip-003.12:** Log every execution step into Supabase `processed_files` and `monitoring_logs`.
-- [ ] **ip-003.13:** Send final success/failure notification to Aleja via Telegram with the live URL.
+- [ ] **ip-003.13:** Send final success/failure notification to Shirley via Telegram with the live URL.
 
 ---
 

@@ -1,16 +1,14 @@
 -- ============================================
 -- Nenufar Marketing Automation - Database Schema
--- Version: v1.2
+-- Version: v1.3
 -- All tables, indexes, and functions scoped to `nenufar` schema.
+-- v1.3: Removed RAG and vector dependencies (ADR-002).
 -- v1.2: Migrated to nenufar schema. Added brand_knowledge, post_engagement,
 --        engagement_calendar, comment_patterns tables.
 -- ============================================
 
 -- Create schema if not exists
 CREATE SCHEMA IF NOT EXISTS nenufar;
-
--- Enable pgvector extension for RAG
-CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ============================================
 -- Table: nenufar.processed_files (Asset Lifecycle)
@@ -67,19 +65,21 @@ CREATE TABLE IF NOT EXISTS nenufar.content_calendar (
 );
 
 -- ============================================
--- Table: nenufar.brand_knowledge (RAG Knowledge Base)
--- Ref: specs/data_architecture.md v1.2 - Section 1.3
+-- Table: nenufar.templates_bank (Content Generation)
+-- Ref: specs/templates_bank.md v1.0
 -- ============================================
-CREATE TABLE IF NOT EXISTS nenufar.brand_knowledge (
+CREATE TABLE IF NOT EXISTS nenufar.templates_bank (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    content TEXT NOT NULL,
-    embedding vector(768),                      -- Gemini 2.5 Flash embeddings
-    source TEXT,                                -- e.g., 'product_catalog', 'brand_essence', 'social_impact'
-    metadata JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    template_id TEXT UNIQUE NOT NULL,           -- e.g., 'story_artisan_01'
+    category TEXT NOT NULL,                     -- story, product, engagement, fallback
+    content TEXT NOT NULL,                      -- Template with {{variables}}
+    variables TEXT[],                           -- List of expected variables
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_bk_embedding ON nenufar.brand_knowledge USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_tb_category ON nenufar.templates_bank(category);
+CREATE INDEX IF NOT EXISTS idx_tb_template_id ON nenufar.templates_bank(template_id);
 
 -- ============================================
 -- Table: nenufar.post_engagement (Analytics)
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS nenufar.comment_patterns (
 ALTER TABLE nenufar.processed_files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.monitoring_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.content_calendar ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nenufar.brand_knowledge ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nenufar.templates_bank ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.post_engagement ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.engagement_calendar ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.comment_patterns ENABLE ROW LEVEL SECURITY;
@@ -161,6 +161,7 @@ GRANT USAGE ON SCHEMA nenufar TO service_role;
 -- Anon: Read-only
 GRANT USAGE ON SCHEMA nenufar TO anon;
 GRANT SELECT ON ALL TABLES IN SCHEMA nenufar TO anon;
+
 
 -- ============================================
 -- Helper Functions (Scoped to nenufar schema)
@@ -220,6 +221,51 @@ BEGIN
     RETURN FOUND;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Cleanup monitoring logs older than 30 days (Log Rotation)
+CREATE OR REPLACE FUNCTION nenufar.cleanup_monitoring_logs()
+RETURNS INTEGER AS $$
+DECLARE
+    v_deleted_count INTEGER;
+BEGIN
+    DELETE FROM nenufar.monitoring_logs
+    WHERE timestamp < NOW() - INTERVAL '30 days';
+    
+    GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+    RETURN v_deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Self-Healing Heartbeat: Re-queue stalled tasks
+CREATE OR REPLACE FUNCTION nenufar.requeue_stalled_tasks()
+RETURNS INTEGER AS $$
+DECLARE
+    v_updated_count INTEGER;
+BEGIN
+    UPDATE nenufar.processed_files
+    SET status = 'pending',
+        error_message = 'Auto-requeued by Heartbeat (stalled > 1h)'
+    WHERE status = 'processing'
+    AND processed_at < NOW() - INTERVAL '1 hour';
+    
+    GET DIAGNOSTICS v_updated_count = ROW_COUNT;
+    RETURN v_updated_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- Scheduled Tasks (CRON)
+-- Requires `pg_cron` extension to be enabled in Supabase.
+-- ============================================
+
+-- Enable pg_cron if not already enabled (requires Superuser)
+-- CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Schedule: Cleanup logs every day at 00:00
+-- SELECT cron.schedule('cleanup-nenufar-logs', '0 0 * * *', 'SELECT nenufar.cleanup_monitoring_logs()');
+
+-- Schedule: Re-queue stalled tasks every hour
+-- SELECT cron.schedule('requeue-stalled-tasks', '0 * * * *', 'SELECT nenufar.requeue_stalled_tasks()');
 
 -- ============================================
 -- Migration Helper: Move public tables to nenufar schema

@@ -1,9 +1,9 @@
 # Data Architecture & Supabase Integration
-Version: v1.3
-<!-- v1.3: Added brand_knowledge, post_engagement, engagement_calendar, comment_patterns tables. Aligned with database_schema.sql v1.2. -->
+Version: v1.4
+<!-- v1.4: Replaced brand_knowledge (RAG) with templates_bank. Removed pgvector dependency from primary flow. -->
 
 ## Overview
-The Nenufar Marketing Automation System uses Supabase (PostgreSQL + pgvector) as its centralized data brain. All tables and functions are scoped under the **`nenufar` schema** (not `public`). It handles task tracking, semantic search (RAG), content strategy persistence, and duplicate detection.
+The Nenufar Marketing Automation System uses Supabase (PostgreSQL) as its centralized data brain. All tables and functions are scoped under the **`nenufar` schema** (not `public`). It handles task tracking, content generation via **Templates Bank**, content strategy persistence, and duplicate detection.
 
 ---
 
@@ -37,15 +37,15 @@ Manages the 7-day thematic cycle.
 - **`caption`, `hashtags`, `platforms`:** Generated content data.
 - **`status`:** `planned`, `published`, `skipped`.
 
-### 1.3 `nenufar.brand_knowledge` (RAG Knowledge Base)
-Stores document embeddings for semantic retrieval.
+### 1.3 `nenufar.templates_bank` (Content Generation)
+Stores pre-defined copy structures with placeholders for variable interpolation.
 - **`id`**: UUID (PK).
-- **`content`:** Text chunks from catalog and mission.
-- **`embedding`:** 768-dimensional vector (Gemini text-embedding-004).
-- **`source`:** Origin document (e.g., `product_catalog`, `brand_essence`, `social_impact`).
-- **`metadata`:** JSONB for extensible data.
+- **`template_id` (Unique):** Identifier for the template (e.g., `story_artisan_01`).
+- **`category`:** story, product, engagement, fallback.
+- **`content`:** Text with `{{variables}}` placeholders.
+- **`variables`:** Array of strings (expected placeholders).
 
-**Index:** `idx_bk_embedding` (IVFFlat, cosine ops).
+**Indexes:** `idx_tb_category`, `idx_tb_template_id`.
 
 ### 1.4 `nenufar.monitoring_logs` (Operational Audit)
 Tracks every monitoring run and system health check.
@@ -130,6 +130,7 @@ SUPABASE_SERVICE_ROLE_KEY=[secret-key]  # Used ONLY by Workers
 ---
 
 ## 4. Change Log
+- **v1.4 (2026-05-03):** Replaced `brand_knowledge` (RAG) with `templates_bank`. Removed `pgvector` dependency from primary flow to optimize token usage.
 - **v1.3 (2026-05-03):** Added `post_engagement`, `engagement_calendar`, `comment_patterns` tables. Added `brand_knowledge` full field docs. Aligned with `database_schema.sql` v1.2.
 - **v1.2 (2026-05-03):** Migrated all tables to `nenufar` schema. Added `monitoring_logs` table. Added `Accept-Profile` header documentation for n8n integration.
 - **v1.1:** Initial data architecture with `public` schema.
@@ -138,7 +139,7 @@ SUPABASE_SERVICE_ROLE_KEY=[secret-key]  # Used ONLY by Workers
 
 ## Success Criteria
 - [x] Schema prevents duplicate processing of the same Drive File ID.
-- [x] RAG queries return relevant brand context in < 500ms.
+- [x] Template retrieval returns relevant brand context in < 100ms.
 - [x] All database operations are versioned and documented in English.
 - [x] `nenufar` schema isolates all Nenufar data from `public`.
 - [x] Duplicate detection integrated in n8n Proactive Drive Check workflow.
