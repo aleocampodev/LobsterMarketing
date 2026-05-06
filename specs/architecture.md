@@ -47,7 +47,7 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  🦾  THE ARMS — n8n WORKERS                                 │
  │                                                             │
  │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                  │
- │  [ 🎨 PROCESSOR ]  Download from Drive + Sharp Watermark    │
+ │  [ 🎨 PROCESSOR ]  Download from Drive + Watermark/Codec    │
  │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)    │
  │  [ 📝 SCRIBE    ]  Log Status & Notify User (Supabase)      │
  └─────────────────────────────────────────────────────────────┘
