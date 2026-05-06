@@ -1,7 +1,6 @@
 # Epic ip-002: Luna's Brain & Interface
-Version: v1.7
-<!-- v1.7: Defined sub-agent prompts and rotation logic blueprints. -->
-<!-- v1.6: Marked templates store and seeding as completed. -->
+Version: v1.8
+<!-- v1.8: Total removal of RAG references. Updated per Droid feedback. -->
 
 **Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.0 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
 
@@ -13,7 +12,7 @@ Version: v1.7
 ## 1. Multi-Agent Architecture (The Brain)
 *Ref: specs/architecture.md v2.1*
 
-- [ ] **ip-002.1:** Create the "Luna Multi-Agent System" workflow (ID: `TasuK8cfPqa2ob8O`).
+- [ ] **ip-002.1:** Create the "Luna Multi-Agent System" workflow.
 - [x] **ip-002.2:** Implement specialized Sub-Agents: (Prompts defined in `specs/agent_prompts.md`)
     - **Nenufar Brand Agent:** Manages the **Templates Bank** and variable interpolation.
     - **Nenufar Content Agent:** Selects the best template and crafts "Eco Poético" captions.
@@ -52,7 +51,6 @@ Version: v1.7
 - [ ] **ip-002.13:** Generate secure HMAC signatures for worker payloads.
 - [ ] **ip-002.14:** Create the final JSON task structure with HMAC handshake.
 - [ ] **ip-002.15:** Integrate with the `Luna Webhook Receiver` via Upstash Redis.
-- [ ] **ip-002.16:** **Self-Healing Heartbeat:** Implement a routine to check for files stuck in `processing` state in Supabase for >1 hour and automatically re-queue them. (ETA: 2h)
 
 ---
 
@@ -64,5 +62,5 @@ Version: v1.7
 ## Success Criteria
 - [ ] Luna responds in Colombian Spanish with the "Eco Poético" tone.
 - [ ] No prohibited words (barato, aggressive offers) are generated.
-- [ ] All specifications are versioned (v1.2) and technical documentation is in English.
+- [ ] All specifications are versioned (v1.8) and technical documentation is in English.
 - [ ] Manual E2E tests for the Brain are documented in `specs/tests/`.
