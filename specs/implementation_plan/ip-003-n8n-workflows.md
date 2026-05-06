@@ -24,14 +24,14 @@ Version: v1.5
 
 ---
 
-## 2. Image Processing (The Artisan)
+## 2. Media Processing (The Artisan)
 *Ref: specs/implementation_plan/ip-002.6-brand-assets.md*
 
-- [ ] **ip-003.4:** Implement `Luna Image Processor Worker v2` (ID: `3JGieW6MBlANnaud`).
+- [ ] **ip-003.4:** Implement `Luna Media Processor Worker v2` (ID: `3JGieW6MBlANnaud`).
 - [ ] **ip-003.5:** Automate media download from Google Drive using the `media_path` (file_id).
-- [ ] **ip-003.6:** Image Transformation Logic:
-    - Resize to 1080x1350 for Instagram.
-    - Resize to 1080x1080 for Facebook.
+- [ ] **ip-003.6:** Media Transformation Logic:
+    - Resize and optimize images for Instagram/Facebook.
+    - Process video files (.mp4) for Reels and Stories (Resize, Codec optimization).
 - [ ] **ip-003.7:** Watermarking: Fetch the Nenufar logo from Google Drive and apply it with 20% opacity at the bottom-right corner.
 
 ---

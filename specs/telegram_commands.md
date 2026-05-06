@@ -1,6 +1,6 @@
 # Telegram Commands for Luna - Nenufar Marketing
 Version: v1.3
-<!-- v1.3: Added Interactive Classification and Proactive Heartbeat workflows to optimize tokens and schedule posts. -->
+<!-- v1.3: Added Interactive Classification and Proactive Heartbeat workflows to optimize tokens and schedule posts. Supports Photo and Video. -->
 <!-- v1.2: Fixed truncated /cleanup description, restored Interactive Workflow Examples section header. -->
 
 ## User Commands (Manual Control)
@@ -79,10 +79,10 @@ Version: v1.3
 
 ### 1. Interactive Classification (Token Optimization)
 ```
-🔔 **Nueva foto detectada en Drive:**
-📸 aretes-azul.png (2.3 MB)
+🔔 **Nuevo archivo (Foto/Video) detectado en Drive:**
+📸 collar-indigo.mp4 (8.5 MB)
 
-🤖 Luna: "¡Hola Shirley! Veo que subiste una nueva foto. Para no gastar mi energía mágica (tokens) adivinando, ¿me confirmas qué tipo de pieza es?"
+🤖 Luna: "¡Hola Shirley! Veo que subiste un nuevo video. Para no gastar mi energía mágica (tokens) adivinando, ¿me confirmas qué tipo de pieza es?"
    
 [Collar] | [Aretes] | [Pulsera] | [Otro]
 ```
@@ -114,18 +114,18 @@ Te invito a descubrir mis poemas tejidos...
 
 🤖 Luna: "¡Perfecto! El post ha sido aprobado. 🌸
    
-✅ Procesando imagen con marca de agua (Logo desde Drive)
-🕒 Programado para publicación hoy a las 18:00 (Hora pico)
+✅ Procesando video con marca de agua (Logo desde Drive)
+🕒 Programado para publicación hoy a las 18:30 (Hora pico)
    
 Puedes usar /calendar para ver la estrategia de la semana."
 ```
 
-### 4. Proactive Heartbeat (Empty Pipeline)
+### 4. Proactive Heartbeat (Daily Check)
 ```
-*(Si no hay posts programados para las próximas 24 horas)*
+*(Activado a las 9:00 AM si no hay material)*
 
-🤖 Luna: "🌸 ¡Hola Shirley! He revisado nuestro calendario y veo que no tenemos ningún poema tejido programado para mañana. 
-¿Tienes alguna creación nueva en tu taller que te gustaría que compartamos con el mundo?"
+🤖 Luna: "🌸 ¡Hola Shirley! He revisado nuestro calendario para hoy y no tenemos nada programado, tampoco vi nuevas creaciones en nuestra carpeta. 
+¿Tienes alguna foto o video de tu taller que te gustaría que tejamos hoy?"
 ```
 
 ---

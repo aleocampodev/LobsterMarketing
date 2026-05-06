@@ -1,10 +1,11 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.2
+Version: v2.3
+<!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
 <!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
 <!-- v2.1: Major architectural correction. Brain = OpenClaw (Luna) communicating via Telegram with Gemini. Optimization: Shifted from RAG to Templates Bank to save tokens. Arms = n8n Workers. -->
 
 ## Overview
-The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain — the cognitive agent that thinks, selects the best content strategy, and communicates with the user via Telegram using Gemini 2.5 Flash + **Templates Bank**. **n8n** is the Arms — the execution layer that handles mechanical tasks (image processing, publishing, logging) via workers orchestrated through Upstash Redis. This separation ensures intelligence stays in the agent while automation stays in the workflows.
+The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain — the cognitive agent that thinks, selects the best content strategy, and communicates with the user via Telegram using Gemini 2.5 Flash + **Templates Bank**. **n8n** is the Arms — the execution layer that handles mechanical tasks (media processing, publishing, logging) via workers orchestrated through Upstash Redis. This separation ensures intelligence stays in the agent while automation stays in the workflows.
 
 ---
 
@@ -81,9 +82,9 @@ graph TD
 
     subgraph ArmsSub["🦾 THE ARMS — n8n Workers"]
         Redis -- "Task Data" --> Receiver["🛡️ Webhook Receiver"]
-        Receiver --> IPW["🎨 Image Processor"]
-        IPW --> Drive["📁 Google Drive API"]
-        IPW --> Watermark["💧 Watermark Engine"]
+        Receiver --> MPW["🎨 Media Processor"]
+        MPW --> Drive["📁 Google Drive API"]
+        MPW --> Watermark["💧 Watermark Engine"]
         Watermark --> SPW["📡 Social Publisher"]
         SPW --> Meta["📸 Instagram / Facebook<br/>Graph API"]
         SPW --> FLW["📝 Feedback & Logging"]
@@ -119,7 +120,7 @@ sequenceDiagram
     participant O as 🧠 OpenClaw / Luna (Brain)
     participant R as 🔀 Redis Queue
     participant W as 🛡️ Webhook Receiver
-    participant IP as 🎨 Image Processor
+    participant MP as 🎨 Media Processor
     participant SP as 📡 Social Publisher
     participant FL as 📝 Feedback/Logging
 
@@ -128,8 +129,8 @@ sequenceDiagram
     O->>R: Push Payload (Signed Task JSON)
     Note over R: Task queued — Resilience layer
     R->>W: Pull Task (Worker ready)
-    W->>IP: Download from Drive + Watermark
-    IP->>SP: Upload to Instagram / Facebook
+    W->>MP: Download from Drive + Watermark
+    MP->>SP: Upload to Instagram / Facebook
     SP->>FL: Log success in Supabase
     FL->>T: "Poem successfully published! 🌸"
 ```
@@ -198,12 +199,12 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 
 ### 4.1 The Cognitive Engine — OpenClaw (Luna) + Gemini 2.5 Flash
 - **Consistency:** OpenClaw uses the Templates Bank to ensure brand-aligned copy while saving tokens.
-- **Multimodal Perception:** Luna "sees" images (via Drive metadata/previews) and "hears" voice notes (via transcription) to understand the full context of a marketing task.
+- **Multimodal Perception:** Luna "sees" media (images/videos via Drive metadata/previews) and "hears" voice notes (via transcription) to understand the full context of a marketing task.
 - **Intent Classification:** Every message is classified into intents (Chat, Publish, Status, Help) before choosing the appropriate workflow path.
 - **Communication:** OpenClaw interacts with Shirley exclusively via Telegram, serving as the conversational and creative interface.
 
 ### 4.2 The Execution Layer — n8n Workers
-- **Mechanical Tasks:** Image processing (watermark, resize), social media publishing, and logging.
+- **Mechanical Tasks:** Media processing (watermark, resize), social media publishing, and logging.
 - **Resilience:** Workers operate independently, pulling tasks from Redis with retry logic and dead-letter queues.
 - **Handshake:** OpenClaw dispatches signed payloads (HMAC) to the Redis queue; n8n workers validate and execute.
 
@@ -228,7 +229,7 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 - **Role:** Execution layer for all mechanical tasks.
 - **Workers:**
     - **Webhook Receiver:** Validates HMAC signatures and pulls tasks from Redis.
-    - **Image Processor:** Downloads media from Google Drive, resizes, and applies Nenufar watermark.
+    - **Media Processor:** Downloads media from Google Drive, resizes, and applies Nenufar watermark. Supports both photos (.jpg, .png) and videos (.mp4).
     - **Social Publisher:** Publishes to Instagram/Facebook via Meta Graph API.
     - **Feedback & Logging:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
 
@@ -255,7 +256,7 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 | :--- | :--- | :--- | :--- |
 | **Pending** | Drive Sync | Record created in `processed_files` | Metadata in Supabase |
 | **Drafting** | Heartbeat | OpenClaw generates caption proposal | Message in Telegram |
-| **Processing**| User Approval| Redis Queue -> Image Processor | Watermarked image |
+| **Processing**| User Approval| Redis Queue -> Media Processor | Watermarked media |
 | **Publishing**| Worker Success| Social Publisher -> Meta API | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
@@ -284,13 +285,13 @@ Every week (e.g., Sunday night), the user provides a short voice or text note vi
 To maintain a balance between magical automation and operational cost, the system implements a hybrid flow that minimizes the use of token-heavy Vision AI:
 
 ### 7.1 Event-Driven Detection
-n8n monitors Google Drive folders. When a new file is detected, it does **not** automatically send the image to Gemini. Instead, it triggers a lightweight notification to Luna.
+n8n monitors Google Drive folders. When a new file is detected, it does **not** automatically send the media to Gemini. Instead, it triggers a lightweight notification to Luna.
 
 ### 7.2 Interactive Classification
-Luna sends a message to Shirley via Telegram: *"I've seen a new photo! Is this a [Necklace], [Earring], or [Bracelet]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
+Luna sends a message to Shirley via Telegram: *"I've seen a new photo or video! Is this a [Necklace], [Earring], or [Bracelet]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
 
 ### 7.3 Strategic Scheduling (The Chronological Arms)
 Approval does not mean immediate publication. n8n workers check the `content_calendar` and the current day's optimal posting hours. Approved tasks are queued in Redis with a "scheduled_at" timestamp, ensuring the post goes live when engagement is highest.
 
 ### 7.4 Pipeline Heartbeat (Proactivity)
-If the `content_calendar` shows no scheduled posts for the next 24 hours, n8n triggers Luna to proactively reach out to Shirley: *"🌸 Shirley, I don't have anything scheduled for tomorrow. Do you have any new creations you'd like me to weave a poem for?"*
+Once a day (e.g., 9:00 AM), n8n triggers the Discovery Mode. If the `content_calendar` shows no scheduled posts for the next 24 hours and no new media was detected in Drive, Luna proactively reaches out to Shirley: *"🌸 Shirley, I don't have anything scheduled for today and didn't see new creations in the folder. Do you have any new pieces you'd like me to weave a poem for?"*
