@@ -9,7 +9,7 @@ This document contains absolute mandates for the Gemini agent operating in this 
 
 ## 🏗️ Architectural Consistency
 - **Brain-Arms Pattern:** Always respect the separation between the "Brain" (OpenClaw/Luna for decision making) and the "Arms" (n8n workers for execution).
-- **Templates over RAG:** Prioritize using the `templates_bank.md` for content generation to optimize token usage.
+- **Templates Bank:** ALWAYS use the `templates_bank.md` for content generation to optimize token usage and ensure brand voice consistency.
 
 ## 📝 Documentation Standard
 - **Versioning:** Always include and increment version headers (`Version: v1.x`) in all specification and plan files.

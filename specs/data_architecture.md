@@ -1,6 +1,7 @@
 # Data Architecture & Supabase Integration
-Version: v1.4
-<!-- v1.4: Replaced brand_knowledge (RAG) with templates_bank. Removed pgvector dependency from primary flow. -->
+Version: v1.6
+<!-- v1.6: Removed all residual RAG and pgvector mentions. -->
+<!-- v1.5: Documented template_used column and 15-template dual-axis strategy. Updated schema v1.4. -->
 
 ## Overview
 The Nenufar Marketing Automation System uses Supabase (PostgreSQL) as its centralized data brain. All tables and functions are scoped under the **`nenufar` schema** (not `public`). It handles task tracking, content generation via **Templates Bank**, content strategy persistence, and duplicate detection.
@@ -9,7 +10,7 @@ The Nenufar Marketing Automation System uses Supabase (PostgreSQL) as its centra
 
 ## 1. Schema: `nenufar`
 
-All tables, indexes, and RPC functions live under the `nenufar` schema. The migration script (`specs/database_schema.sql`) handles moving existing `public` tables into `nenufar` automatically.
+All tables, indexes, and RPC functions live under the `nenufar` schema. 
 
 ### 1.1 `nenufar.processed_files` (Asset Lifecycle)
 Tracks every media file from Google Drive to Meta.
@@ -19,6 +20,7 @@ Tracks every media file from Google Drive to Meta.
 - **`mime_type`:** MIME type (image/jpeg, video/mp4, etc.).
 - **`size`:** File size in bytes.
 - **`status`:** `pending`, `processing`, `published`, `failed`.
+- **`template_used` (v1.4):** Tracks the specific `template_id` used for generation.
 - **`platforms`:** Array of targeted social networks (`['instagram', 'facebook']`).
 - **`task_id`:** Execution task identifier.
 - **`webhook_response`:** JSONB with API response data.
@@ -40,10 +42,16 @@ Manages the 7-day thematic cycle.
 ### 1.3 `nenufar.templates_bank` (Content Generation)
 Stores pre-defined copy structures with placeholders for variable interpolation.
 - **`id`**: UUID (PK).
-- **`template_id` (Unique):** Identifier for the template (e.g., `story_artisan_01`).
-- **`category`:** story, product, engagement, fallback.
+- **`template_id` (Unique):** Identifier for the template (e.g., `reel_process_01`).
+- **`category`:** reel, photo, story, question.
 - **`content`:** Text with `{{variables}}` placeholders.
 - **`variables`:** Array of strings (expected placeholders).
+
+**Strategy (v1.6):** 15 boutique templates distributed as follows:
+*   **Photo:** 4 templates (Exclusive, Heritage, Gift, Local).
+*   **Reel:** 4 templates (Process, Artisan, Materials, Transformation).
+*   **Story:** 4 templates (BTS, Last Units, Client Love, Interactive).
+*   **Question:** 3 templates (Engagement, Poll, Co-create).
 
 **Indexes:** `idx_tb_category`, `idx_tb_template_id`.
 
@@ -95,10 +103,7 @@ Workers communicate with Supabase via secure RPC functions. All functions requir
 |---|---|---|
 | `nenufar.is_file_processed(file_id)` | Check if a Drive file was already processed or published | `BOOLEAN` |
 | `nenufar.mark_file_processed(...)` | Lock file for processing, prevent duplicates | `UUID` |
-| `nenufar.mark_file_published(...)` | Record final Meta URL and success timestamp | `BOOLEAN` |
-
-### n8n Integration Pattern
-The `Luna Proactive Drive Check` workflow (ID: `ok6QCES3fkdtfGEc`) calls `is_file_processed` via Supabase REST API to filter out already-processed files before notifying OpenClaw.
+| `nenufar.mark_file_published(...)` | Record final Meta URL, template used, and success timestamp | `BOOLEAN` |
 
 ---
 
@@ -117,22 +122,14 @@ SUPABASE_SERVICE_ROLE_KEY=[secret-key]  # Used ONLY by Workers
 4. **Anon Access:** Read-only (`SELECT`) on all tables for public-facing queries.
 5. **Audit Logs:** All monitoring runs are recorded in `nenufar.monitoring_logs`.
 
-### Required REST API Headers (for n8n HTTP Request nodes)
-```json
-{
-  "apikey": "<SUPABASE_SERVICE_ROLE_KEY>",
-  "Authorization": "Bearer <SUPABASE_SERVICE_ROLE_KEY>",
-  "Content-Type": "application/json",
-  "Accept-Profile": "nenufar"
-}
-```
-
 ---
 
 ## 4. Change Log
-- **v1.4 (2026-05-03):** Replaced `brand_knowledge` (RAG) with `templates_bank`. Removed `pgvector` dependency from primary flow to optimize token usage.
-- **v1.3 (2026-05-03):** Added `post_engagement`, `engagement_calendar`, `comment_patterns` tables. Added `brand_knowledge` full field docs. Aligned with `database_schema.sql` v1.2.
-- **v1.2 (2026-05-03):** Migrated all tables to `nenufar` schema. Added `monitoring_logs` table. Added `Accept-Profile` header documentation for n8n integration.
+- **v1.6 (2026-05-05):** Removed all residual RAG and pgvector mentions. Aligned with 100% Template-based architecture.
+- **v1.5 (2026-05-05):** Documented `template_used` column and the 15-template strategy. Updated RPC `mark_file_published` to include template tracking.
+- **v1.4 (2026-05-03):** Replaced `brand_knowledge` (RAG) with `templates_bank`. Removed `pgvector` dependency from primary flow.
+- **v1.3 (2026-05-03):** Added `post_engagement`, `engagement_calendar`, `comment_patterns` tables.
+- **v1.2 (2026-05-03):** Migrated all tables to `nenufar` schema.
 - **v1.1:** Initial data architecture with `public` schema.
 
 ---
@@ -142,4 +139,4 @@ SUPABASE_SERVICE_ROLE_KEY=[secret-key]  # Used ONLY by Workers
 - [x] Template retrieval returns relevant brand context in < 100ms.
 - [x] All database operations are versioned and documented in English.
 - [x] `nenufar` schema isolates all Nenufar data from `public`.
-- [x] Duplicate detection integrated in n8n Proactive Drive Check workflow.
+- [x] `template_used` correctly tracked for each published post.

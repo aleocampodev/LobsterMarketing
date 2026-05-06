@@ -1,5 +1,6 @@
 # Epic ip-005: Production Launch & Monitoring
-Version: v1.2
+Version: v1.3
+<!-- v1.3: Updated architecture reference to v2.1. -->
 
 **Goal:** Formally hand over the n8n system for daily autonomous operation, ensuring production-grade stability and brand voice compliance.
 
@@ -18,7 +19,7 @@ Version: v1.2
 ---
 
 ## 2. Infrastructure Hardening
-*Ref: specs/architecture.md v1.4*
+*Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-005.3:** Set up automated daily backups for the Supabase PostgreSQL database.
 - [ ] **ip-005.4:** Implement a log rotation/cleanup routine in Supabase to maintain storage limits.

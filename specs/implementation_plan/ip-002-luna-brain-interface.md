@@ -1,7 +1,7 @@
 # Epic ip-002: Luna's Brain & Interface
-Version: v1.5
-<!-- v1.5: Updated Gemini version to 2.0 Flash for consistency. -->
-<!-- v1.4: Optimization: Replaced RAG with Templates Bank to save tokens. Updated sub-agent roles. -->
+Version: v1.7
+<!-- v1.7: Defined sub-agent prompts and rotation logic blueprints. -->
+<!-- v1.6: Marked templates store and seeding as completed. -->
 
 **Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.0 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
 
@@ -14,7 +14,7 @@ Version: v1.5
 *Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-002.1:** Create the "Luna Multi-Agent System" workflow (ID: `TasuK8cfPqa2ob8O`).
-- [ ] **ip-002.2:** Implement specialized Sub-Agents:
+- [x] **ip-002.2:** Implement specialized Sub-Agents: (Prompts defined in `specs/agent_prompts.md`)
     - **Nenufar Brand Agent:** Manages the **Templates Bank** and variable interpolation.
     - **Nenufar Content Agent:** Selects the best template and crafts "Eco Poético" captions.
     - **Nenufar Approval Agent:** Manages task payloads and user validation.
@@ -26,10 +26,10 @@ Version: v1.5
 ## 2. Templates & Brand Assets Integration
 *Ref: specs/brand_essence.md & specs/product_catalog.md*
 
-- [ ] **ip-002.5:** Setup Supabase Templates Store (`templates_bank` table).
-- [ ] **ip-002.6:** Seed the `templates_bank` with initial data from `specs/templates_bank.md`.
-- [ ] **ip-002.7:** Implement the **Edge Case** fallbacks for missing variables (Ref: `specs/edge_cases.md`).
-- [ ] **ip-002.8:** Implement the 7-day content strategy (Tejiendo Caminos, Poemas Tejidos, etc.).
+- [x] **ip-002.5:** Setup Supabase Templates Store (`templates_bank` table). (Completed: 2026-05-05)
+- [x] **ip-002.6:** Seed the `templates_bank` with initial data from `specs/templates_bank.md`. (Completed: 2026-05-05)
+- [x] **ip-002.7:** Implement the **Edge Case** fallbacks for missing variables (Defined in `specs/agent_prompts.md` & `specs/edge_cases.md`).
+- [x] **ip-002.8:** Implement the 7-day content strategy (Logic defined in `specs/template_rotation_logic.md`).
 
 ---
 
@@ -47,7 +47,7 @@ Version: v1.5
 ---
 
 ## 4. Execution & Resilience (New)
-*Ref: specs/architecture.md v1.4 - State Recovery*
+*Ref: specs/architecture.md v2.1 - State Recovery*
 
 - [ ] **ip-002.13:** Generate secure HMAC signatures for worker payloads.
 - [ ] **ip-002.14:** Create the final JSON task structure with HMAC handshake.

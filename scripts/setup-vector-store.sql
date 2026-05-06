@@ -1,8 +1,0 @@
--- DEPRECATED: setup-vector-store.sql
--- This script is no longer used in the Nenufar project.
--- As per ADR-002 (Shift from RAG to Templates Bank), the system has moved away 
--- from vector embeddings and similarity search in favor of a Template-based approach 
--- to optimize token usage and maintain architectural simplicity.
---
--- Date Deprecated: 2024-05-05
--- Reference: specs/adrs/ADR-002-Shift-from-RAG-to-Templates-Bank.md

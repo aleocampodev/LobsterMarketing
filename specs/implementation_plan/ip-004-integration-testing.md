@@ -1,5 +1,6 @@
 # Epic ip-004: Integration & E2E Testing
-Version: v1.2
+Version: v1.3
+<!-- v1.3: Updated architecture reference to v2.1. -->
 
 **Goal:** Ensure the Brain (Orchestrator) and the Arms (Workers) communicate securely and reliably via the Redis broker, ensuring 100% data integrity.
 
@@ -10,7 +11,7 @@ Version: v1.2
 ---
 
 ## 1. Internal Integration Spike
-*Ref: specs/architecture.md v1.4 - HMAC Handshake*
+*Ref: specs/architecture.md v2.1 - HMAC Handshake*
 
 - [ ] **ip-004.1:** Validate HMAC signature handshake between the Multi-Agent System and the Webhook Receiver.
 - [ ] **ip-004.2:** Verify that task payloads are correctly pushed to and pulled from the Upstash Redis queue.
@@ -33,7 +34,7 @@ Version: v1.2
 ---
 
 ## 4. Resilience Testing (New)
-*Ref: specs/architecture.md v1.4 - Resilience*
+*Ref: specs/architecture.md v2.1 - Resilience*
 
 - [ ] **ip-004.8:** **Test 5 - DLQ Flow:** Mock 3 consecutive worker failures and verify task is moved to `dead_letter_queue` with Telegram notification. (ETA: 2h)
 - [ ] **ip-004.9:** **Test 6 - Circuit Breaker:** Mock 5 Meta API errors and verify that the Social Publisher worker pauses for 30m. (ETA: 2h)

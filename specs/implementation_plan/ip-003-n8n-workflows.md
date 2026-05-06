@@ -1,6 +1,7 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.3
+Version: v1.4
+<!-- v1.4: Updated architecture reference to v2.1. -->
 <!-- v1.3: Reverted all [x] to [ ] — tasks have not been tested/validated yet per DoD -->
 
 **Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n Queue Mode and dedicated worker containers.
@@ -11,7 +12,7 @@ Version: v1.3
 ---
 
 ## 1. Orchestration & Queue Management
-*Ref: specs/architecture.md v1.4*
+*Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-003.1:** Implement the secure `Luna Webhook Receiver` (ID: `EPslgKTzkbLcxdrs`).
 - [ ] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
@@ -33,7 +34,7 @@ Version: v1.3
 ---
 
 ## 3. Social Publishing & Circuit Breakers (New)
-*Ref: specs/architecture.md v1.4*
+*Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-003.8:** Implement `Luna Social Publisher Worker` (ID: `dENMnialkmtgKCo7`).
 - [ ] **ip-003.9:** Configure Instagram Graph API nodes for direct photo/video publishing.

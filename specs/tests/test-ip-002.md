@@ -2,7 +2,7 @@
 Version: v1.0
 
 ## 1. Objective
-Validate the integration between the OpenClaw (Luna) brain and the user interface (Telegram), ensuring that Luna can receive messages, process them using the Brain-Arms pattern (without RAG, using Templates Bank), and request user approval.
+Validate the integration between the OpenClaw (Luna) brain and the user interface (Telegram), ensuring that Luna can receive messages, process them using the Brain-Arms pattern with the Templates Bank, and request user approval.
 
 ## 2. Validation Summary
 - **Status:** [ ] Pending Verification
