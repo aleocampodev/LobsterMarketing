@@ -1,5 +1,6 @@
 # Epic ip-004: Integration & E2E Testing
-Version: v1.3
+Version: v1.4
+<!-- v1.4: Added tests for Interactive Classification, Strategic Scheduling, and Proactive Heartbeat. -->
 <!-- v1.3: Updated architecture reference to v2.1. -->
 
 **Goal:** Ensure the Brain (Orchestrator) and the Arms (Workers) communicate securely and reliably via the Redis broker, ensuring 100% data integrity.
@@ -25,6 +26,9 @@ Version: v1.3
 - [ ] **ip-004.4:** **Test 1 - Static Post:** Upload image -> Approve in Telegram -> Verify Watermark & Publish on IG/FB.
 - [ ] **ip-004.5:** **Test 2 - Narrative Accuracy:** Verify that the generated caption includes the artisan mother's story using the appropriate template from `templates_bank`.
 - [ ] **ip-004.6:** **Test 3 - Error Handling:** Force a Meta API failure and verify that Luna notifies the error via Telegram.
+- [ ] **ip-004.12:** **Test 8 - Interactive Classification:** Upload image -> Receive Telegram buttons -> Select piece type -> Verify Supabase metadata update.
+- [ ] **ip-004.13:** **Test 9 - Strategic Scheduling:** Approve a post and verify it is queued in Redis with a future `scheduled_at` timestamp aligned with peak hours.
+- [ ] **ip-004.14:** **Test 10 - Proactive Heartbeat:** Clear the scheduled queue and verify that the Pipeline Heartbeat triggers Luna to request content.
 
 ---
 

@@ -1,5 +1,6 @@
 # Telegram Commands for Luna - Nenufar Marketing
-Version: v1.2
+Version: v1.3
+<!-- v1.3: Added Interactive Classification and Proactive Heartbeat workflows to optimize tokens and schedule posts. -->
 <!-- v1.2: Fixed truncated /cleanup description, restored Interactive Workflow Examples section header. -->
 
 ## User Commands (Manual Control)
@@ -75,20 +76,26 @@ Version: v1.2
 ---
 
 ## Interactive Workflow Examples
+
+### 1. Interactive Classification (Token Optimization)
 ```
-🔔 **New files detected**
-
+🔔 **Nueva foto detectada en Drive:**
 📸 aretes-azul.png (2.3 MB)
-📸 collar-rojo.jpg (1.8 MB)
-📄 video-tejido.mp4 (15.2 MB)
 
-Do you want to process any of these files?
-Use: /process [file_name]
+🤖 Luna: "¡Hola Shirley! Veo que subiste una nueva foto. Para no gastar mi energía mágica (tokens) adivinando, ¿me confirmas qué tipo de pieza es?"
+   
+[Collar] | [Aretes] | [Pulsera] | [Otro]
+```
+*(Después de seleccionar "Aretes")*
+```
+🤖 Luna: "¡Perfecto! ¿De qué colección o técnica estamos hablando?"
+
+[Macramé] | [Mostacilla] | [Telar] | [Resina]
 ```
 
 ### 2. Processing Request & Approval
 ```
-👤 User: /process aretes-azul.png
+👤 User: /process aretes-azul.png (O se inicia automáticamente tras la clasificación)
 
 🤖 Luna: "Procesando aretes-azul.png...
    
@@ -101,19 +108,24 @@ Te invito a descubrir mis poemas tejidos...
 ✅ Aprobar | 🔄 Ajustar | ❌ Descartar"
 ```
 
-### 3. Final Confirmation
+### 3. Scheduled Confirmation (The Chronological Arms)
 ```
 👤 User: ✅ Aprobar
 
-🤖 Luna: "¡Perfecto! Iniciando publicación...
+🤖 Luna: "¡Perfecto! El post ha sido aprobado. 🌸
    
-✅ Procesando imagen con marca de agua
-📤 Publicando en Facebook e Instagram
-✅ ¡Publicado exitosamente!
+✅ Procesando imagen con marca de agua (Logo desde Drive)
+🕒 Programado para publicación hoy a las 18:00 (Hora pico)
    
-📊 Statistics:
-- Facebook: https://facebook.com/post/123
-- Instagram: https://instagram.com/p/456"
+Puedes usar /calendar para ver la estrategia de la semana."
+```
+
+### 4. Proactive Heartbeat (Empty Pipeline)
+```
+*(Si no hay posts programados para las próximas 24 horas)*
+
+🤖 Luna: "🌸 ¡Hola Shirley! He revisado nuestro calendario y veo que no tenemos ningún poema tejido programado para mañana. 
+¿Tienes alguna creación nueva en tu taller que te gustaría que compartamos con el mundo?"
 ```
 
 ---

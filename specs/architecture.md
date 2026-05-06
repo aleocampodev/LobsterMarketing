@@ -1,5 +1,6 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.1
+Version: v2.2
+<!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
 <!-- v2.1: Major architectural correction. Brain = OpenClaw (Luna) communicating via Telegram with Gemini. Optimization: Shifted from RAG to Templates Bank to save tokens. Arms = n8n Workers. -->
 
 ## Overview
@@ -275,3 +276,21 @@ The system tracks every published post in the `nenufar.content_calendar` table, 
 
 ### 6.4 The Weekly Seed (Human-in-the-Loop)
 Every week (e.g., Sunday night), the user provides a short voice or text note via Telegram (the `/seed` command). This "Seed" sets the creative focus for the next 7 days (e.g., "focus on the ocean and Marta's patience"). This context is stored in Supabase and influences every caption generated that week, ensuring a unique, human-led narrative that changes over time.
+
+---
+
+## 7. Proactive Hybrid Flow (Token Optimization)
+
+To maintain a balance between magical automation and operational cost, the system implements a hybrid flow that minimizes the use of token-heavy Vision AI:
+
+### 7.1 Event-Driven Detection
+n8n monitors Google Drive folders. When a new file is detected, it does **not** automatically send the image to Gemini. Instead, it triggers a lightweight notification to Luna.
+
+### 7.2 Interactive Classification
+Luna sends a message to Shirley via Telegram: *"I've seen a new photo! Is this a [Necklace], [Earring], or [Bracelet]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
+
+### 7.3 Strategic Scheduling (The Chronological Arms)
+Approval does not mean immediate publication. n8n workers check the `content_calendar` and the current day's optimal posting hours. Approved tasks are queued in Redis with a "scheduled_at" timestamp, ensuring the post goes live when engagement is highest.
+
+### 7.4 Pipeline Heartbeat (Proactivity)
+If the `content_calendar` shows no scheduled posts for the next 24 hours, n8n triggers Luna to proactively reach out to Shirley: *"🌸 Shirley, I don't have anything scheduled for tomorrow. Do you have any new creations you'd like me to weave a poem for?"*

@@ -1,5 +1,6 @@
 # Epic ip-005: Production Launch & Monitoring
-Version: v1.3
+Version: v1.4
+<!-- v1.4: Updated observation phase and added Scheduling verification. -->
 <!-- v1.3: Updated architecture reference to v2.1. -->
 
 **Goal:** Formally hand over the n8n system for daily autonomous operation, ensuring production-grade stability and brand voice compliance.
@@ -29,8 +30,9 @@ Version: v1.3
 
 ## 3. Official Launch & Handover
 - [ ] **ip-005.6:** **Day 0 Launch:** Execute the first scheduled publication from the automated queue.
-- [ ] **ip-005.7:** **24-Hour Observation:** Monitor the Proactive Discovery Mode (Heartbeat) to ensure it triggers correctly at 9:00 AM.
+- [ ] **ip-005.7:** **24-Hour Observation:** Monitor the Proactive Discovery Mode (Heartbeat) and the new **Pipeline Heartbeat** to ensure both asset detection and proactivity triggers are working correctly.
 - [ ] **ip-005.8:** Project hand-off: Final documentation of workflow IDs and credentials management.
+- [ ] **ip-005.10:** **Scheduling Verification:** Confirm that posts approved outside peak hours are correctly delayed and released by n8n according to the rotation logic.
 
 ---
 

@@ -1,6 +1,7 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.4
+Version: v1.5
+<!-- v1.5: Added Strategic Scheduling and Pipeline Heartbeat. Clarified Watermark source. -->
 <!-- v1.4: Updated architecture reference to v2.1. -->
 <!-- v1.3: Reverted all [x] to [ ] — tasks have not been tested/validated yet per DoD -->
 
@@ -18,6 +19,8 @@ Version: v1.4
 - [ ] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
 - [ ] **ip-003.3:** Setup Redis Queue nodes with **Exponential Backoff** (3 attempts).
 - [ ] **ip-003.14:** **DLQ Notification:** Configure Luna to notify Shirley via Telegram when a task is moved to the `dead_letter_queue` after 3 failed attempts. (ETA: 1h)
+- [ ] **ip-003.17:** Implement **Strategic Delay/Scheduling** nodes to queue posts for optimal publishing hours.
+- [ ] **ip-003.18:** Implement a **Pipeline Heartbeat** (Cron) to trigger Luna if no content is scheduled for the next 24 hours.
 
 ---
 
@@ -29,7 +32,7 @@ Version: v1.4
 - [ ] **ip-003.6:** Image Transformation Logic:
     - Resize to 1080x1350 for Instagram.
     - Resize to 1080x1080 for Facebook.
-- [ ] **ip-003.7:** Watermarking: Apply the Nenufar logo with 20% opacity at the bottom-right corner.
+- [ ] **ip-003.7:** Watermarking: Fetch the Nenufar logo from Google Drive and apply it with 20% opacity at the bottom-right corner.
 
 ---
 
@@ -60,4 +63,4 @@ Version: v1.4
 ## Success Criteria
 - [ ] All heavy processing (image resizing) happens in worker containers.
 - [ ] Supabase correctly reflects the state of every post (Pending -> Published).
-- [ ] Version header updated to v1.3 and technical specs in English.
+- [ ] Version header updated to v1.5 and technical specs in English.

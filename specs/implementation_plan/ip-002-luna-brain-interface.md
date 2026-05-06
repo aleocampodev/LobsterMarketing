@@ -1,5 +1,6 @@
 # Epic ip-002: Luna's Brain & Interface
-Version: v1.8
+Version: v1.9
+<!-- v1.9: Added Interactive Classification (Token Saving) and Proactivity handlers. -->
 <!-- v1.8: Total removal of RAG references. Updated per Droid feedback. -->
 
 **Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.0 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
@@ -42,6 +43,8 @@ Version: v1.8
     - 🔄 **Adjust:** Triggers feedback loop for caption regeneration.
     - ❌ **Reject:** Cancels the current task.
 - [ ] **ip-002.12:** Implement basic command handlers: `/status`, `/process`, `/list`.
+- [ ] **ip-002.16:** Implement **Interactive Classification Buttons** (e.g., [Collar], [Aretes]) triggered by n8n media detection to avoid Vision AI costs.
+- [ ] **ip-002.18:** Implement **Proactive Prompt Handlers** to request content from Shirley when the pipeline is empty.
 
 ---
 
@@ -62,5 +65,5 @@ Version: v1.8
 ## Success Criteria
 - [ ] Luna responds in Colombian Spanish with the "Eco Poético" tone.
 - [ ] No prohibited words (barato, aggressive offers) are generated.
-- [ ] All specifications are versioned (v1.8) and technical documentation is in English.
+- [ ] All specifications are versioned (v1.9) and technical documentation is in English.
 - [ ] Manual E2E tests for the Brain are documented in `specs/tests/`.
