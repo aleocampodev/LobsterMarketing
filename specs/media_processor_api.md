@@ -1,5 +1,6 @@
 # Media Processor API — Oracle Cloud Worker
-Version: v1.0
+Version: v1.1
+<!-- v1.1: Updated response — n8n uploads processed files to Drive /Procesadas/. Oracle returns binary. -->
 <!-- v1.0: Initial spec for Oracle Cloud Media Processor replacing local n8n image processing. -->
 
 ## 1. Overview
@@ -458,30 +459,20 @@ const signature = crypto
 
 ## 4. n8n Integration (GCP Side)
 
-In the n8n Media Processor workflow, replace the local Sharp/Image processing nodes with an **HTTP Request node** that calls the Oracle worker:
+The n8n Drive Monitor workflow handles the full lifecycle:
 
-```json
-{
-  "node": "n8n-nodes-base.httpRequest",
-  "parameters": {
-    "method": "POST",
-    "url": "http://<oracle-vm-ip>:3001/process",
-    "headers": {
-      "x-luna-signature": "={{$json.hmac_signature}}"
-    },
-    "body": {
-      "file_url": "={{$json.drive_download_url}}",
-      "file_id": "={{$json.file_id}}",
-      "operations": {
-        "resize": "portrait",
-        "watermark": true,
-        "watermark_opacity": 0.15,
-        "format": "jpeg"
-      }
-    }
-  }
-}
+1. **Scan Drive `/Input/`** — Detect new files uploaded by Shirley
+2. **Filter new files** — Compare against `processed_files` in Supabase
+3. **Call Oracle Media Processor** — HTTP POST with file URL and operations
+4. **Upload to Drive `/Procesadas/`** — Google Drive upload node saves the processed image
+5. **Update Supabase** — Store `processed_file_id` and `processed_file_name` in `metadata`
+
+**Flow:**
 ```
+Drive /Input/ → Oracle (resize + watermark) → Drive /Procesadas/ → Supabase metadata
+```
+
+**Important:** Oracle returns the processed image as base64. n8n is responsible for uploading it to Google Drive `/Procesadas/` and recording the file ID in Supabase. Oracle does NOT upload to Drive directly.
 
 ---
 

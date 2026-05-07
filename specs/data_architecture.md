@@ -1,7 +1,7 @@
 # Data Architecture & Supabase Integration
-Version: v1.7
+Version: v1.8
+<!-- v1.8: Documented processed file metadata fields for Drive /Procesadas/ references. -->
 <!-- v1.7: Added Supabase Storage bucket for watermark logo. -->
-<!-- v1.6: Removed all residual RAG and pgvector mentions. -->
 <!-- v1.5: Documented template_used column and 15-template dual-axis strategy. Updated schema v1.4. -->
 
 ## Overview
@@ -26,7 +26,14 @@ Tracks every media file from Google Drive to Meta.
 - **`task_id`:** Execution task identifier.
 - **`webhook_response`:** JSONB with API response data.
 - **`error_message`:** Error details if failed.
-- **`metadata`:** JSONB for extensible data.
+- **`metadata`:** JSONB for extensible data. **Structure (v1.8):**
+    ```json
+    {
+      "processed_file_id": "google-drive-file-id-of-watermarked-version",
+      "processed_file_name": "collar_rojo_wm.jpg",
+      "original_file_id": "google-drive-file-id-of-original"
+    }
+    ```
 - **`created_at`, `processed_at`, `published_at`:** Timestamps.
 
 **Indexes:** `idx_pf_file_id`, `idx_pf_status`, `idx_pf_created_at`.
@@ -141,8 +148,8 @@ Stores static brand assets used by the Media Processor.
 ---
 
 ## 4. Change Log
-- **v1.7 (2026-05-07):** Added `nenufar-assets` Storage bucket for watermark logo. Updated security protocols to include Media Processor.
-- **v1.6 (2026-05-05):** Removed all residual RAG and pgvector mentions. Aligned with 100% Template-based architecture.
+- **v1.8 (2026-05-07):** Documented `metadata` JSONB structure for Drive `/Procesadas/` file references. Original and processed file IDs tracked.
+- **v1.7 (2026-05-07):** Added `nenufar-assets` Storage bucket for watermark logo. Updated security protocols to include Media Processor. Aligned with 100% Template-based architecture.
 - **v1.5 (2026-05-05):** Documented `template_used` column and the 15-template strategy. Updated RPC `mark_file_published` to include template tracking.
 - **v1.4 (2026-05-03):** Replaced `brand_knowledge` (RAG) with `templates_bank`. Removed `pgvector` dependency from primary flow.
 - **v1.3 (2026-05-03):** Added `post_engagement`, `engagement_calendar`, `comment_patterns` tables.

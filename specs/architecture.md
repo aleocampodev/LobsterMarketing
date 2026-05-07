@@ -1,7 +1,7 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.6
+Version: v2.7
+<!-- v2.7: Defined Drive folder structure (Input + Procesadas). Processed images stored in Drive, not Supabase. -->
 <!-- v2.6: Fixed media flow — new files auto-processed without Telegram. Heartbeat only notifies if pipeline is empty. Logo from Drive. -->
-<!-- v2.5: Added Oracle Cloud Media Processor for heavy media operations (ADR-004). -->
 <!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
 <!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
 <!-- v2.1: Major architectural correction. Brain = OpenClaw (Luna) communicating via Telegram with Gemini. Optimization: Shifted from RAG to Templates Bank to save tokens. Arms = n8n Workers. -->
@@ -54,11 +54,17 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  💪  MEDIA PROCESSOR — Oracle Cloud (ARM A1)                │
  │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
  │                                                             │
- │  [ 📥 DOWNLOAD  ]  Fetch media from Google Drive                  │
- │  [ 📥 LOGO      ]  Fetch watermark logo from Supabase Storage     │
+ │  [ 📥 DOWNLOAD  ]  Fetch media from Google Drive /Input/   │
+ │  [ 📥 LOGO      ]  Fetch watermark logo from Supabase     │
  │  [ 🎨 PROCESS   ]  Resize + Watermark + Format Conversion  │
- │  [ 📤 RETURN    ]  Base64 result → n8n → Supabase           │
+ │  [ 📤 RETURN    ]  Processed bytes → n8n → Drive/Procesadas│
  │  ⚠️  FULLY AUTOMATIC — No Telegram notification             │
+ │                                                             │
+ │  STORAGE LAYOUT:                                            │
+ │  Drive /Input/      ← Shirley uploads originals here       │
+ │  Drive /Procesadas/ ← System uploads watermarked here      │
+ │  Supabase DB        ← Metadata + references (no binaries)  │
+ │  Supabase Storage   ← Watermark logo only (~KB)            │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -258,10 +264,13 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 - **Security:** HMAC signature validation on every request (same `WEBHOOK_SECRET`).
 - **API Contract:** See `specs/media_processor_api.md` for full endpoint specification.
 
-### 5.4 The Infrastructure (GCP + OCI + Supabase)
+### 5.4 The Infrastructure (GCP + OCI + Supabase + Drive)
 - **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode. Lightweight router only.
 - **Media Processor (OCI ARM A1):** Node.js API for heavy media processing. Shares VM with OpenClaw.
-- **Supabase:** Acts as the "Long-Term Memory" (LTM) and source of truth for task state.
+- **Supabase:** PostgreSQL for metadata and references. Storage bucket `nenufar-assets` for watermark logo only.
+- **Google Drive:** Binary file storage for original and processed media.
+    - `/Input/` — Original files uploaded by Shirley (monitored by heartbeat).
+    - `/Procesadas/` — Watermarked/resized files uploaded by the system. Used by Social Publisher for Meta API.
     - `processed_files`: Tracks every asset's lifecycle.
     - `content_calendar`: Stores the 7-day marketing strategy.
     - `monitoring_logs`: System health metrics.
@@ -271,9 +280,10 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 ## 5. Operational Modes & Lifecycle
 
 ### 5.1 Automatic Media Ingestion (Event-Driven)
-- **Drive Monitor:** n8n monitors Google Drive for new files (images/videos).
+- **Drive Monitor:** n8n monitors the `/Input/` folder in Google Drive for new files (images/videos).
 - **Auto-Processing:** When a new file is detected, n8n immediately sends it to the Oracle Media Processor for resize, watermark, and format conversion. **No Telegram notification at this stage** — processing is fully automatic.
-- **Supabase Record:** The processed file is stored and its status is set to `processed` in `processed_files`. It is now ready and waiting for Shirley to request content generation.
+- **Upload to Procesadas:** After processing, n8n uploads the watermarked file to the `/Procesadas/` subfolder in Google Drive.
+- **Supabase Record:** The file metadata (original `file_id`, processed `file_id`, status) is stored in `processed_files`. Status is set to `processed`. The image is ready for content generation whenever Shirley is ready.
 
 ### 5.2 Content Generation (On-Demand, Human-in-the-Loop)
 - **Trigger:** Shirley sends a message to Luna via Telegram requesting content (e.g., "publica el collar nuevo", or Luna drafts from the processed queue).
@@ -290,11 +300,11 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 
 | State | Trigger | System Action | Output |
 | :--- | :--- | :--- | :--- |
-| **Detected** | Drive Sync | n8n detects new file in Drive | Record in `processed_files` |
-| **Processing**| Auto (no human) | n8n -> Oracle Media Processor | Watermarked/resized media |
-| **Processed** | Oracle Success | Status set to `processed`, ready for content | Supabase record updated |
+| **Detected** | Drive Scan /Input/ | n8n detects new file | Record in `processed_files` |
+| **Processing**| Auto (no human) | Oracle: resize + watermark | Processed bytes |
+| **Processed** | Upload success | n8n uploads to Drive /Procesadas/, Supabase updated | `metadata.processed_file_id` |
 | **Drafting** | Shirley Request | OpenClaw generates caption proposal | Message in Telegram |
-| **Publishing**| User Approval | Social Publisher -> Meta API | Live post URL |
+| **Publishing**| User Approval | Social Publisher reads from Drive /Procesadas/ | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
 ---
