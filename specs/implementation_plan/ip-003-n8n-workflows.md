@@ -1,20 +1,21 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.6
+Version: v1.7
+<!-- v1.7: Added Oracle Cloud Media Processor — heavy media delegated from n8n (ADR-004). -->
 <!-- v1.6: Removed Redis — direct HMAC webhook architecture (ADR-003). ip-003.3 superseded. -->
 <!-- v1.5: Added Strategic Scheduling and Pipeline Heartbeat. Clarified Watermark source. -->
 <!-- v1.4: Updated architecture reference to v2.1. -->
 <!-- v1.3: Reverted all [x] to [ ] — tasks have not been tested/validated yet per DoD -->
 
-**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n Regular Mode with direct HMAC webhook triggers.
+**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n as a lightweight router that delegates heavy media processing to the Oracle Cloud Media Processor API.
 
 **Status:** 🔄 In Progress
 **Estimated Effort:** 3 days
 
 ---
 
-## 1. Orchestration & Queue Management
-*Ref: specs/architecture.md v2.1*
+## 1. Orchestration & Task Routing
+*Ref: specs/architecture.md v2.5*
 
 - [ ] **ip-003.1:** Implement the secure `Luna Webhook Receiver` (ID: `EPslgKTzkbLcxdrs`).
 - [ ] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
@@ -25,15 +26,26 @@ Version: v1.6
 
 ---
 
-## 2. Media Processing (The Artisan)
-*Ref: specs/implementation_plan/ip-002.6-brand-assets.md*
+## 2. Oracle Media Processor Integration (New)
+*Ref: specs/media_processor_api.md*
 
-- [ ] **ip-003.4:** Implement `Luna Media Processor Worker v2` (ID: `3JGieW6MBlANnaud`).
-- [ ] **ip-003.5:** Automate media download from Google Drive using the `media_path` (file_id).
-- [ ] **ip-003.6:** Media Transformation Logic:
-    - Resize and optimize images for Instagram/Facebook.
-    - Process video files (.mp4) for Reels and Stories (Resize, Codec optimization).
-- [ ] **ip-003.7:** Watermarking: Fetch the Nenufar logo from Google Drive and apply it with 20% opacity at the bottom-right corner.
+- [ ] **ip-003.19:** Deploy the Media Processor API on Oracle Cloud VM (`/opt/media-processor/server.js`).
+- [ ] **ip-003.20:** Configure OCI firewall (iptables + Security List) to expose port 3001.
+- [ ] **ip-003.21:** Implement n8n HTTP Request node that calls `POST /process` on Oracle with HMAC-signed payload.
+- [ ] **ip-003.22:** Configure the response handler to extract base64 processed image and pass to Social Publisher.
+
+---
+
+## 3. Media Processing — Delegated to Oracle (Updated)
+*Ref: specs/media_processor_api.md*
+
+- [ ] **ip-003.4:** Implement n8n task routing: receive approved payload -> call Oracle Media Processor.
+- [ ] **ip-003.5:** Configure Google Drive download URL construction for Oracle (`/uc?export=download&id=FILE_ID`).
+- [ ] **ip-003.6:** Image Operations (handled by Oracle Media Processor):
+    - Resize to 1080x1350 (portrait), 1080x1080 (square), or 1080x566 (landscape).
+    - Apply Nenufar watermark at 15% opacity (bottom-right).
+    - Format conversion (HEIC/PNG -> JPEG for Meta API compatibility).
+- [ ] **ip-003.7:** (Moved to Oracle) Watermark application is now handled by the Oracle Media Processor API.
 
 ---
 

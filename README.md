@@ -116,7 +116,8 @@ CREATE TABLE nenufar.templates_bank (
 | **Templates** | Supabase / Markdown | Brand knowledge & pre-defined copy |
 | **Interface** | Telegram Bot | Human-in-the-loop approval |
 | **Broker** | Direct HMAC Webhook | Task dispatch between Brain and Arms |
-| **Workers** | n8n (GCP e2-micro) | Image processing, publishing, logging |
+| **Workers** | n8n (GCP e2-micro) | Lightweight routing, publishing, logging |
+| **Media** | Oracle Cloud (ARM A1) | Heavy image/video processing (Sharp + ffmpeg) |
 | **Database** | Supabase PostgreSQL | Long-term memory + analytics |
 | **Assets** | Google Drive | Media storage |
 | **Publishing** | Meta Graph API | Instagram + Facebook |

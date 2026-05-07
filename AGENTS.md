@@ -58,13 +58,13 @@ Every generated Instagram/Facebook caption MUST contain:
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
 ║       🌸  LUNA SYSTEM ARCHITECTURE — NENUFAR  🌸                 ║
-║       Brain = OpenClaw (Luna) · Arms = n8n Workers               ║
+║       Brain = OpenClaw (Luna) · Arms = n8n + Oracle Worker       ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
 
  ┌──────────────────────────────────────────────────────────────┐
- │  🧠  THE BRAIN — OPENCLAW (LUNA)                            │
+ │  🧠  THE BRAIN — OPENCLAW (LUNA)      [Oracle Cloud VM]     │
  │     AI Agent · Gemini 2.0 Flash · Telegram Interface        │
  │                                                              │
  │  ① LISTEN    Telegram Messages (Voice, Text, Media)          │
@@ -92,16 +92,16 @@ Every generated Instagram/Facebook caption MUST contain:
   └─────────┘    └──────────┘    └───────────┘    └──────┬─────┘
                                                               │
   ┌─────────┐    ┌──────────┐    ┌───────────┐    ┌─────────┴───┐
-  │ ⑤ HMAC  │───►│ ⑥ n8n    │───►│ ⑦ IMAGE  │───►│ ⑧ PUBLISH  │
-  │ WEBHOOK │    │  RECEIVE │    │  PROC.    │    │ Meta API    │
-  │ Dispatch│    │ & Route  │    │ Watermark │    │ (IG / FB)   │
+  │ ⑤ HMAC  │───►│ ⑥ n8n    │───►│ ⑦ ORACLE │───►│ ⑧ PUBLISH  │
+  │ WEBHOOK │    │  ROUTE   │    │  MEDIA   │    │ Meta API    │
+  │ Dispatch│    │ & DELEG  │    │ PROC.    │    │ (IG / FB)   │
   └────┬────┘    └──────────┘    └───────────┘    └─────────────┘
-       │
-       ▼
-  ┌─────────┐    ┌──────────┐
-  │ ⑨ LOG   │───►│ ⑩ FEED   │───► 📱 Notify Shirley via Telegram
-  │ Supabase│    │ BACK     │     (Success / Error)
-  └─────────┘    └──────────┘
+       │              ▲                              │
+       │              │                              ▼
+  ┌─────────┐    ┌──────────┐              ┌──────────────────┐
+  │ ⑨ LOG   │───►│ ⑩ FEED   │───► 📱      │ Oracle = Heavy   │
+  │ Supabase│    │ BACK     │   Notify     │ GCP = Lightweight│
+  └─────────┘    └──────────┘   Shirley     └──────────────────┘
 ```
 
 ### 3.2 The Brain — OpenClaw (Luna)
@@ -115,14 +115,15 @@ Every generated Instagram/Facebook caption MUST contain:
     4. Presents draft to user with approval buttons.
     5. Upon approval, dispatches signed payload via direct HMAC webhook to n8n workers.
 
-### 3.3 The Arms — n8n Workers
-- **Environment:** n8n Instance | Docker (Regular Mode).
-- **Role:** Execution layer for all mechanical tasks.
+### 3.3 The Arms — n8n (GCP) + Oracle Cloud (Media Processor)
+- **n8n (GCP e2-micro):** Lightweight router — validates webhooks, delegates heavy work to Oracle, publishes to Meta.
+- **Oracle Cloud (ARM A1):** Media Processor API — resize, watermark, format conversion via Sharp. Shares VM with OpenClaw.
 - **Task Distribution:**
-    - **Webhook Receiver:** Validates HMAC signatures on incoming webhook payloads.
-    - **Image Processor Worker v2:** Downloads media from Google Drive, resizes, and applies the Nenufar watermark.
-    - **Social Publisher Worker:** Publishes to Instagram/Facebook via Meta Graph API.
-    - **Feedback & Logging Worker:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
+    - **Webhook Receiver (n8n):** Validates HMAC signatures on incoming webhook payloads.
+    - **Task Router (n8n):** Delegates media processing to Oracle Media Processor via HTTP POST.
+    - **Media Processor (Oracle):** Downloads from Drive, resizes, applies watermark, returns processed image.
+    - **Social Publisher (n8n):** Publishes to Instagram/Facebook via Meta Graph API.
+    - **Feedback & Logging (n8n):** Persists metadata in Supabase and notifies OpenClaw via Telegram.
 
 ---
 

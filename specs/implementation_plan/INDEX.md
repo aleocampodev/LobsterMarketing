@@ -1,5 +1,6 @@
 # Implementation Plan Index: Nenufar Marketing Automation
-Version: v1.8
+Version: v1.9
+<!-- v1.9: Added Oracle Cloud Media Processor (ADR-004). Heavy media delegated from n8n. -->
 <!-- v1.8: Removed Redis/Upstash — direct HMAC webhook architecture (ADR-003). -->
 <!-- v1.7: Added Proactive Hybrid Flow (v2.2) to Overview and Change Log. -->
 <!-- v1.6: Updated architecture description to include Supervisor Pattern. -->
@@ -10,7 +11,7 @@ Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenC
 
 **Architecture:** Brain-Arms Pattern (Supervisor & Modular Sub-workflows)
 - **Brain:** OpenClaw (Luna) — AI agent using Gemini 2.5 Flash + Templates Bank, communicating with Shirley via Telegram for strategy, copywriting, and human-in-the-loop approval. Operates under a **Supervisor Pattern** orchestrating specialized sub-workflows.
-- **Arms:** n8n Workers — Specialized sub-workflows for image processing, Meta publishing, and centralized logging, triggered via direct HMAC webhooks. **Strategic Scheduling** delays post publication until peak engagement hours.
+- **Arms:** n8n Workers (GCP e2-micro) — Lightweight router that validates webhooks and delegates to **Oracle Cloud Media Processor** for heavy image/video operations (resize, watermark, format conversion via Sharp/ffmpeg). Publishing and logging handled by n8n.
 - **Hybrid Flow:** Token-efficient interactive classification (Human-in-the-Loop) and proactive pipeline monitoring via Heartbeats.
 
 ---
@@ -60,6 +61,7 @@ Automated marketing system for Nenufar with a **Brain-Arms architecture**: OpenC
 ---
 
 ## 📝 Architectural Change Log
+**2026-05-07:** Added Oracle Cloud Media Processor (ADR-004). n8n on e2-micro delegates all heavy media operations to a Node.js API on Oracle VM. Enables future video support without OOM risk on e2-micro.
 **2026-05-07:** Removed Upstash Redis (ADR-003). Switched n8n from Queue Mode to Regular Mode. Brain→Arms communication is now direct HMAC webhook. Reduces complexity and RAM usage on e2-micro.
 **2026-05-06:** Adopted **Proactive Hybrid Flow** (v2.2): Token-efficient interactive classification via Telegram and strategic scheduling (n8n delay) for optimal engagement.
 **2026-05-05:** Adopted **Supervisor Pattern** (v2.1): Modular architecture with a main Supervisor workflow delegating to specialized sub-workflows (Brand, Content, Approval).

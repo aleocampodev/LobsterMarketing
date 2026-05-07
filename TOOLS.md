@@ -2,7 +2,7 @@
 
 ## Environment Specifics
 - **Primary Language:** Spanish (Colombia) for all user-facing content.
-- **Hosting:** Oracle Cloud (Brain) & Google Cloud (Arms).
+- **Hosting:** Oracle Cloud (Brain + Media Processor) & Google Cloud (n8n Router).
 - **Database:** Supabase (PostgreSQL).
 - **Communication:** Telegram Bot API for human-in-the-loop approvals.
 

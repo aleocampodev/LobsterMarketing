@@ -17,13 +17,13 @@
 - **Gateway Mode:** Local.
 
 ## System Configuration (n8n & Infrastructure)
-- WEBHOOK_SECRET: ******************************** (Used for OpenClaw -> n8n signing)
-- **Domain:** `n8n-stack-prod-dev.duckdns.org` (HTTPS).
-- **Execution Mode:** `regular` (Direct webhook dispatch, no message broker).
+- WEBHOOK_SECRET: ******************************** (Used for OpenClaw -> n8n -> Oracle signing)
+- **n8n (GCP e2-micro):** `n8n-stack-prod-dev.duckdns.org` (HTTPS). Regular Mode. Lightweight router only.
+- **Media Processor (Oracle Cloud ARM A1):** Port 3001. Heavy media processing (Sharp + ffmpeg). Same VM as OpenClaw.
 - **Database Store:** Supabase PostgreSQL (via Transaction Pooler, port 6543).
 - **Memory Optimization:** `max-old-space-size=512MB` (Optimized for GCP e2-micro).
 - **Persistence:** Local volume `./n8n-persistence`.
-- **Note (2026-05-07):** Removed Upstash Redis (ADR-003). n8n switched from Queue Mode to Regular Mode. Brain→Arms communication is now direct HMAC webhook. Supabase remains source of truth for task state and recovery.
+- **Note (2026-05-07):** Added Oracle Cloud Media Processor (ADR-004). n8n on e2-micro now delegates all heavy media operations to Oracle. Brain + Media Processor share the same OCI VM.
 
 ## Brand Insights
 - Nenufar's mission is deeply rooted in social impact, specifically empowering working mothers in Cartagena.
@@ -33,5 +33,6 @@
 - Decoupling decision-making (OpenClaw) from execution (n8n) allows for better scalability on free-tier cloud providers.
 
 ## Session Log
+- **2026-05-07:** Added Oracle Cloud Media Processor (ADR-004). n8n on e2-micro delegates heavy image/video processing to a Node.js API on the Oracle VM (same as OpenClaw). This solves the OOM risk on e2-micro and enables future video support. Updated: architecture.md v2.5, AGENTS.md, ip-003 v1.7, MEMORY.md. Created: media_processor_api.md, ADR-004.
 - **2026-05-07:** Removed Upstash Redis from architecture (ADR-003). Rationale: Redis was an unnecessary intermediary between Brain and Arms at 1-3 posts/day volume. Direct HMAC webhook is simpler, matches existing code, and reduces RAM usage on e2-micro. ADR-001 (Queue Mode) superseded. Updated: architecture.md v2.4, AGENTS.md, ip-002 v2.2, MEMORY.md.
 - **2026-05-03:** Audit of AGENTS.md compliance and Supabase structure. Found and fixed: (1) All specs missing version headers, (2) database_schema.sql was using `public` schema instead of `nenufar`, (3) 4 missing tables in SQL (brand_knowledge, post_engagement, engagement_calendar, comment_patterns), (4) ip-001/ip-002/ip-003 had [x] on untested tasks, (5) INDEX.md had incorrect statuses, (6) test-ip-001.md queried `public` instead of `nenufar`, (7) memory/ directory was missing.

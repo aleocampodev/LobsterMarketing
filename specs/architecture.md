@@ -1,5 +1,6 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.4
+Version: v2.5
+<!-- v2.5: Added Oracle Cloud Media Processor for heavy media operations (ADR-004). -->
 <!-- v2.4: Removed Redis/Upstash — direct HMAC webhook architecture (ADR-003). -->
 <!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
 <!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
@@ -15,11 +16,11 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
 ### 1.1 Visual Workflow Architecture (ASCII)
 ```text
 ╔═══════════════════════════════════════════════════════════════╗
-║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v2.4  🌸            ║
+║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v2.5  🌸            ║
 ╚═══════════════════════════════════════════════════════════════╝
 
  ┌─────────────────────────────────────────────────────────────┐
- │  🧠  THE BRAIN — OPENCLAW (LUNA)                           │
+ │  🧠  THE BRAIN — OPENCLAW (LUNA)     [Oracle Cloud VM]     │
  │     AI Agent via Telegram · Gemini + Templates Bank        │
  │                                                             │
  │  ① LISTEN    Telegram Messages (Voice, Text, Media)         │
@@ -40,12 +41,22 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
                HMAC-Signed HTTP POST         │
                                              ▼
  ┌─────────────────────────────────────────────────────────────┐
- │  🦾  THE ARMS — n8n WORKERS (Regular Mode)                  │
+ │  🦾  THE ARMS — n8n (GCP e2-micro) — Lightweight Router     │
  │                                                             │
  │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                  │
- │  [ 🎨 PROCESSOR ]  Download from Drive + Watermark/Codec    │
+ │  [ 🔀 ROUTER    ]  Delegate heavy work to Oracle Worker     │
  │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)    │
  │  [ 📝 SCRIBE    ]  Log Status & Notify User (Supabase)      │
+ └──────────┬──────────────────────────────────────────────────┘
+            │ HTTP POST /process
+            ▼
+ ┌─────────────────────────────────────────────────────────────┐
+ │  💪  MEDIA PROCESSOR — Oracle Cloud (ARM A1)                │
+ │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
+ │                                                             │
+ │  [ 📥 DOWNLOAD  ]  Fetch from Google Drive                  │
+ │  [ 🎨 PROCESS   ]  Resize + Watermark + Format Conversion  │
+ │  [ 📤 RETURN    ]  Base64 result → n8n                      │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,14 +87,21 @@ graph TD
 
     Brain -- "① Intent & HMAC Payload" --> Webhook(("🛡️ n8n Webhook<br/>Receiver"))
 
-    subgraph ArmsSub["🦾 THE ARMS — n8n Workers (Regular Mode)"]
-        Webhook --> MPW["🎨 Media Processor"]
-        MPW --> Drive["📁 Google Drive API"]
-        MPW --> Watermark["💧 Watermark Engine"]
-        Watermark --> SPW["📡 Social Publisher"]
+    subgraph ArmsSub["🦾 THE ARMS — n8n (GCP e2-micro)"]
+        Webhook --> Router["🔀 Task Router"]
+        Router --> Oracle["💪 Oracle Media<br/>Processor API"]
+        Oracle --> SPW["📡 Social Publisher"]
         SPW --> Meta["📸 Instagram / Facebook<br/>Graph API"]
         SPW --> FLW["📝 Feedback & Logging"]
     end
+
+    subgraph OracleSub["💪 ORACLE CLOUD (ARM A1)"]
+        OracleAPI["Media Processor<br/>(Sharp + ffmpeg)"]
+        OracleDrive["📁 Google Drive"]
+    end
+
+    Oracle -.-> OracleAPI
+    OracleAPI --> OracleDrive
 
     FLW --> Supabase[("🗄️ Supabase DB<br/>(Long-Term Memory)")]
     FLW -- "✅ Success / ❌ Error" --> Telegram
@@ -113,8 +131,8 @@ This diagram shows how asynchronous processes communicate with each other to gua
 sequenceDiagram
     participant T as 📱 Telegram (Shirley)
     participant O as 🧠 OpenClaw / Luna (Brain)
-    participant W as 🛡️ Webhook Receiver
-    participant MP as 🎨 Media Processor
+    participant W as 🛡️ n8n Webhook (GCP)
+    participant MP as 💪 Oracle Media Proc.
     participant SP as 📡 Social Publisher
     participant FL as 📝 Feedback/Logging
 
@@ -122,8 +140,10 @@ sequenceDiagram
     O->>O: Processes Intent (Templates + Gemini 2.5 Flash)
     O->>W: HMAC-Signed HTTP POST (Task JSON)
     Note over W: Signature validated — task authorized
-    W->>MP: Download from Drive + Watermark
-    MP->>SP: Upload to Instagram / Facebook
+    W->>MP: POST /process (file_url, operations)
+    MP->>MP: Download from Drive + Resize + Watermark
+    MP-->>W: Return processed image (base64)
+    W->>SP: Upload to Instagram / Facebook
     SP->>FL: Log success in Supabase
     FL->>T: "Poem successfully published! 🌸"
 ```
@@ -217,17 +237,28 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
     5. **Human-in-the-Loop:** Presents the content and media preview to Shirley for approval.
     6. **Dispatch:** Upon approval, sends a signed payload (HMAC) directly to the n8n Webhook Receiver for execution.
 
-### 5.2 The Arms — n8n Workers
+### 5.2 The Arms — n8n (GCP e2-micro, Lightweight Router)
 - **Environment:** n8n Instance on GCP (Docker, Regular Mode).
-- **Role:** Execution layer for all mechanical tasks.
+- **Role:** Lightweight orchestration layer — validates webhooks, routes tasks, delegates heavy processing to Oracle.
 - **Workers:**
     - **Webhook Receiver:** Validates HMAC signatures on incoming webhook payloads.
-    - **Media Processor:** Downloads media from Google Drive, resizes, and applies Nenufar watermark. Supports both photos (.jpg, .png) and videos (.mp4).
+    - **Task Router:** Delegates media processing to the Oracle Media Processor API via HTTP.
     - **Social Publisher:** Publishes to Instagram/Facebook via Meta Graph API.
     - **Feedback & Logging:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
+- **Key Principle:** The e2-micro instance never processes heavy media. All CPU/RAM-intensive operations are delegated to Oracle Cloud.
 
-### 5.3 The Infrastructure (GCP + Supabase)
-- **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode.
+### 5.3 Media Processor — Oracle Cloud (ARM A1)
+- **Environment:** Node.js micro-service on the same OCI VM as OpenClaw.
+- **Role:** Heavy compute worker for all media operations.
+- **Capabilities:**
+    - **Image Processing:** Resize (1080x1350, 1080x1080, 1080x566), watermark (Nenufar logo at 15% opacity), format conversion (JPEG, PNG, WebP) via Sharp.
+    - **Video Processing (Future):** Compression, resize, codec optimization via ffmpeg.
+- **Security:** HMAC signature validation on every request (same `WEBHOOK_SECRET`).
+- **API Contract:** See `specs/media_processor_api.md` for full endpoint specification.
+
+### 5.4 The Infrastructure (GCP + OCI + Supabase)
+- **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode. Lightweight router only.
+- **Media Processor (OCI ARM A1):** Node.js API for heavy media processing. Shares VM with OpenClaw.
 - **Supabase:** Acts as the "Long-Term Memory" (LTM) and source of truth for task state.
     - `processed_files`: Tracks every asset's lifecycle.
     - `content_calendar`: Stores the 7-day marketing strategy.
@@ -248,7 +279,7 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 | :--- | :--- | :--- | :--- |
 | **Pending** | Drive Sync | Record created in `processed_files` | Metadata in Supabase |
 | **Drafting** | Heartbeat | OpenClaw generates caption proposal | Message in Telegram |
-| **Processing**| User Approval| HMAC Webhook -> Media Processor | Watermarked media |
+| **Processing**| User Approval| n8n -> Oracle Media Processor | Watermarked media |
 | **Publishing**| Worker Success| Social Publisher -> Meta API | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
