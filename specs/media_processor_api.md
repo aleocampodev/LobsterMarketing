@@ -79,13 +79,25 @@ npm install sharp express crypto
 mkdir -p temp logo
 ```
 
-### 2.5 Download the Nenufar Watermark Logo
+### 2.5 Configure the Watermark Logo Source
+
+The Nenufar watermark logo is stored in **Google Drive** — it is NOT stored locally on the Oracle VM. The Media Processor downloads it dynamically from Drive when needed.
+
+To configure:
+
+1. Upload the logo to Google Drive (e.g., `Nenufar_Media/Assets/nenufar-logo.png`)
+2. Note the **Google Drive File ID** from the sharing URL
+3. Add it to the environment configuration
+
+Update `/opt/media-processor/.env`:
 
 ```bash
-# Download the watermark logo to the logo directory
-# Replace with the actual Google Drive file ID or URL
-curl -L -o logo/nenufar-logo.png "<WATERMARK_DOWNLOAD_URL>"
+MEDIA_PROCESSOR_PORT=3001
+WEBHOOK_SECRET=<same-secret-as-n8n-and-openclaw>
+WATERMARK_DRIVE_FILE_ID=<google-drive-file-id-for-logo>
 ```
+
+The server code (section 2.6) downloads the logo from Drive on first use and caches it in `/opt/media-processor/logo/` for subsequent requests.
 
 ### 2.6 Create the Service
 
@@ -106,6 +118,7 @@ app.use(express.json({ limit: '50mb' }));
 // --- Configuration ---
 const PORT = process.env.MEDIA_PROCESSOR_PORT || 3001;
 const HMAC_SECRET = process.env.WEBHOOK_SECRET || 'your-webhook-secret';
+const WATERMARK_DRIVE_FILE_ID = process.env.WATERMARK_DRIVE_FILE_ID || '';
 const WATERMARK_PATH = path.join(__dirname, 'logo', 'nenufar-logo.png');
 const TEMP_DIR = path.join(__dirname, 'temp');
 
@@ -157,6 +170,24 @@ function downloadFile(url) {
   });
 }
 
+// --- Ensure watermark logo is available (download from Drive if missing) ---
+let logoDownloaded = false;
+async function ensureWatermarkLogo() {
+  if (logoDownloaded && fs.existsSync(WATERMARK_PATH)) return;
+
+  const logoDir = path.dirname(WATERMARK_PATH);
+  if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
+
+  if (WATERMARK_DRIVE_FILE_ID) {
+    const logoUrl = `https://drive.google.com/uc?export=download&id=${WATERMARK_DRIVE_FILE_ID}`;
+    const tmpPath = await downloadFile(logoUrl);
+    fs.renameSync(tmpPath, WATERMARK_PATH);
+    logoDownloaded = true;
+  } else {
+    throw new Error('WATERMARK_DRIVE_FILE_ID not configured');
+  }
+}
+
 // --- Process Image ---
 async function processImage(inputPath, operations) {
   let pipeline = sharp(inputPath);
@@ -179,6 +210,7 @@ async function processImage(inputPath, operations) {
 
   // Apply watermark
   if (operations.watermark) {
+    await ensureWatermarkLogo();
     const opacity = operations.watermark_opacity || 0.15;
     const resizedImage = await pipeline.toBuffer();
 

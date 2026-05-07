@@ -1,7 +1,7 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.5
+Version: v2.6
+<!-- v2.6: Fixed media flow — new files auto-processed without Telegram. Heartbeat only notifies if pipeline is empty. Logo from Drive. -->
 <!-- v2.5: Added Oracle Cloud Media Processor for heavy media operations (ADR-004). -->
-<!-- v2.4: Removed Redis/Upstash — direct HMAC webhook architecture (ADR-003). -->
 <!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
 <!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
 <!-- v2.1: Major architectural correction. Brain = OpenClaw (Luna) communicating via Telegram with Gemini. Optimization: Shifted from RAG to Templates Bank to save tokens. Arms = n8n Workers. -->
@@ -55,8 +55,10 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
  │                                                             │
  │  [ 📥 DOWNLOAD  ]  Fetch from Google Drive                  │
+ │  [ 📥 LOGO      ]  Fetch watermark logo from Google Drive   │
  │  [ 🎨 PROCESS   ]  Resize + Watermark + Format Conversion  │
- │  [ 📤 RETURN    ]  Base64 result → n8n                      │
+ │  [ 📤 RETURN    ]  Base64 result → n8n → Supabase           │
+ │  ⚠️  FULLY AUTOMATIC — No Telegram notification             │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -268,19 +270,31 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 
 ## 5. Operational Modes & Lifecycle
 
-### 5.1 Proactive Discovery Mode (Heartbeat Triggered)
-- **Drive Scan:** `luna-drive-monitor` scans for new assets.
-- **Strategy Alignment:** OpenClaw (Luna) queries the `content_calendar`.
-- **Curation:** OpenClaw (Luna) selects and proposes content.
+### 5.1 Automatic Media Ingestion (Event-Driven)
+- **Drive Monitor:** n8n monitors Google Drive for new files (images/videos).
+- **Auto-Processing:** When a new file is detected, n8n immediately sends it to the Oracle Media Processor for resize, watermark, and format conversion. **No Telegram notification at this stage** — processing is fully automatic.
+- **Supabase Record:** The processed file is stored and its status is set to `processed` in `processed_files`. It is now ready and waiting for Shirley to request content generation.
+
+### 5.2 Content Generation (On-Demand, Human-in-the-Loop)
+- **Trigger:** Shirley sends a message to Luna via Telegram requesting content (e.g., "publica el collar nuevo", or Luna drafts from the processed queue).
+- **Classification:** If metadata is missing, Luna asks Shirley to classify the piece via inline buttons ( Necklace, Earring, etc.).
+- **Drafting:** Luna generates a caption proposal using Templates Bank + Gemini.
+- **Approval:** Luna presents the draft with ✅/🔄/❌ buttons for Shirley's approval.
+
+### 5.3 Pipeline Heartbeat (Proactivity — Only When Empty)
+- **Schedule:** Once a day at 9:00 AM.
+- **Check:** If the `content_calendar` shows no scheduled posts for the next 24 hours AND no new media was detected in Drive, Luna proactively reaches out to Shirley via Telegram: *"🌸 Shirley, no tengo nada programado para hoy y no vi nuevas creaciones en la carpeta. ¿Tienes alguna pieza nueva para que le teja un poema?"*
+- **Silent When Active:** If there are processed files or scheduled posts, the heartbeat completes silently (`HEARTBEAT_OK`).
 
 ### 5.2 Lifecycle States Table
 
 | State | Trigger | System Action | Output |
 | :--- | :--- | :--- | :--- |
-| **Pending** | Drive Sync | Record created in `processed_files` | Metadata in Supabase |
-| **Drafting** | Heartbeat | OpenClaw generates caption proposal | Message in Telegram |
-| **Processing**| User Approval| n8n -> Oracle Media Processor | Watermarked media |
-| **Publishing**| Worker Success| Social Publisher -> Meta API | Live post URL |
+| **Detected** | Drive Sync | n8n detects new file in Drive | Record in `processed_files` |
+| **Processing**| Auto (no human) | n8n -> Oracle Media Processor | Watermarked/resized media |
+| **Processed** | Oracle Success | Status set to `processed`, ready for content | Supabase record updated |
+| **Drafting** | Shirley Request | OpenClaw generates caption proposal | Message in Telegram |
+| **Publishing**| User Approval | Social Publisher -> Meta API | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
 ---
@@ -307,14 +321,14 @@ Every week (e.g., Sunday night), the user provides a short voice or text note vi
 
 To maintain a balance between magical automation and operational cost, the system implements a hybrid flow that minimizes the use of token-heavy Vision AI:
 
-### 7.1 Event-Driven Detection
-n8n monitors Google Drive folders. When a new file is detected, it does **not** automatically send the media to Gemini. Instead, it triggers a lightweight notification to Luna.
+### 7.1 Automatic Media Processing (No Human Needed)
+n8n monitors Google Drive folders. When a new file is detected, it **automatically** sends the file to the Oracle Media Processor for resize, watermark, and format conversion. No Telegram notification. No human interaction. The processed file is stored and marked as `processed` in Supabase, ready for content generation whenever Shirley is ready.
 
-### 7.2 Interactive Classification
-Luna sends a message to Shirley via Telegram: *"I've seen a new photo or video! Is this a [Necklace], [Earring], or [Bracelet]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
+### 7.2 Interactive Classification (On-Demand)
+When Shirley requests content for a processed file, if the metadata (product type, materials, technique) is missing, Luna asks via Telegram: *"Vi una nueva foto. ¿Es un [Collar], [Aretes], o [Pulsera]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
 
 ### 7.3 Strategic Scheduling (The Chronological Arms)
 Approval does not mean immediate publication. n8n workers check the `content_calendar` and the current day's optimal posting hours. Approved tasks are dispatched to n8n with a "scheduled_at" timestamp, ensuring the post goes live when engagement is highest.
 
-### 7.4 Pipeline Heartbeat (Proactivity)
-Once a day (e.g., 9:00 AM), n8n triggers the Discovery Mode. If the `content_calendar` shows no scheduled posts for the next 24 hours and no new media was detected in Drive, Luna proactively reaches out to Shirley: *"🌸 Shirley, I don't have anything scheduled for today and didn't see new creations in the folder. Do you have any new pieces you'd like me to weave a poem for?"*
+### 7.4 Pipeline Heartbeat (Only When Pipeline Is Empty)
+Once a day at 9:00 AM, n8n checks the pipeline. **If** the `content_calendar` shows no scheduled posts for the next 24 hours AND no new media was detected in Drive, Luna proactively reaches out to Shirley: *"🌸 Shirley, no tengo nada programado para hoy y no vi nuevas creaciones en la carpeta. ¿Tienes alguna pieza nueva para que le teja un poema?"* If there is content in the pipeline, the heartbeat completes silently (`HEARTBEAT_OK`).

@@ -139,9 +139,11 @@ Every generated Instagram/Facebook caption MUST contain:
 ## 5. Proactive Behavior (Heartbeats)
 
 When triggered by a system heartbeat, agents should:
-1. **Check Queue:** Are there pending approvals in Telegram?
+1. **Check Pipeline:** Are there processed files ready for content generation?
 2. **Check Inbox:** Is there new, unprocessed media in Google Drive?
 3. **Review Strategy:** Does the planned content for today align with the 7-day strategy?
+
+**Key Rule:** New files detected in Drive are automatically processed (resize, watermark) by Oracle Media Processor without notifying Telegram. The heartbeat only notifies Shirley if the pipeline is empty (no scheduled posts AND no new media).
 
 If proactive action is required, notify the user concisely in Spanish. Otherwise, remain silent (`HEARTBEAT_OK`).
 
