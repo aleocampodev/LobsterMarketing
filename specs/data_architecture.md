@@ -1,5 +1,6 @@
 # Data Architecture & Supabase Integration
-Version: v1.6
+Version: v1.7
+<!-- v1.7: Added Supabase Storage bucket for watermark logo. -->
 <!-- v1.6: Removed all residual RAG and pgvector mentions. -->
 <!-- v1.5: Documented template_used column and 15-template dual-axis strategy. Updated schema v1.4. -->
 
@@ -118,13 +119,29 @@ SUPABASE_SERVICE_ROLE_KEY=[secret-key]  # Used ONLY by Workers
 ### Security Protocols
 1. **Schema Isolation:** All Nenufar data lives in the `nenufar` schema, separate from `public`.
 2. **Row Level Security (RLS):** Enabled for all tables.
-3. **Service Role:** n8n Workers use the `service_role` key to bypass RLS for system operations.
+3. **Service Role:** n8n Workers and Media Processor use the `service_role` key to bypass RLS for system operations.
 4. **Anon Access:** Read-only (`SELECT`) on all tables for public-facing queries.
 5. **Audit Logs:** All monitoring runs are recorded in `nenufar.monitoring_logs`.
 
 ---
 
+## 3.5 Supabase Storage Buckets
+
+### `nenufar-assets` (Private)
+Stores static brand assets used by the Media Processor.
+
+| File | Purpose | Used By |
+|---|---|---|
+| `nenufar-logo.png` | Watermark overlay for published images | Oracle Media Processor API |
+
+**Access:** Private bucket. The Media Processor downloads via public URL (service_role key). The logo is cached locally on Oracle VM after first download.
+
+**Configuration:** The file path is set via `WATERMARK_STORAGE_PATH` env var (default: `nenufar-assets/nenufar-logo.png`).
+
+---
+
 ## 4. Change Log
+- **v1.7 (2026-05-07):** Added `nenufar-assets` Storage bucket for watermark logo. Updated security protocols to include Media Processor.
 - **v1.6 (2026-05-05):** Removed all residual RAG and pgvector mentions. Aligned with 100% Template-based architecture.
 - **v1.5 (2026-05-05):** Documented `template_used` column and the 15-template strategy. Updated RPC `mark_file_published` to include template tracking.
 - **v1.4 (2026-05-03):** Replaced `brand_knowledge` (RAG) with `templates_bank`. Removed `pgvector` dependency from primary flow.

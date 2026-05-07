@@ -79,25 +79,34 @@ npm install sharp express crypto
 mkdir -p temp logo
 ```
 
-### 2.5 Configure the Watermark Logo Source
+### 2.5 Configure the Watermark Logo Source (Supabase Storage)
 
-The Nenufar watermark logo is stored in **Google Drive** — it is NOT stored locally on the Oracle VM. The Media Processor downloads it dynamically from Drive when needed.
+The Nenufar watermark logo is stored in **Supabase Storage** — it is NOT stored locally on the Oracle VM. The Media Processor downloads it from Supabase Storage on first use and caches it locally.
 
-To configure:
+#### Step 1: Create the Storage Bucket in Supabase
 
-1. Upload the logo to Google Drive (e.g., `Nenufar_Media/Assets/nenufar-logo.png`)
-2. Note the **Google Drive File ID** from the sharing URL
-3. Add it to the environment configuration
+1. Go to **Supabase Dashboard** -> **Storage**
+2. Create a new bucket: `nenufar-assets`
+3. Set it as **Private** (accessed via signed URL with service_role key)
+4. Upload the logo file: `nenufar-logo.png`
+
+#### Step 2: Note the file path
+
+After uploading, the file path will be: `nenufar-assets/nenufar-logo.png`
+
+#### Step 3: Configure environment variables
 
 Update `/opt/media-processor/.env`:
 
 ```bash
 MEDIA_PROCESSOR_PORT=3001
 WEBHOOK_SECRET=<same-secret-as-n8n-and-openclaw>
-WATERMARK_DRIVE_FILE_ID=<google-drive-file-id-for-logo>
+SUPABASE_URL=https://<project-id>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+WATERMARK_STORAGE_PATH=nenufar-assets/nenufar-logo.png
 ```
 
-The server code (section 2.6) downloads the logo from Drive on first use and caches it in `/opt/media-processor/logo/` for subsequent requests.
+The server code (section 2.6) downloads the logo from Supabase Storage on first use using a signed URL and caches it in `/opt/media-processor/logo/` for subsequent requests.
 
 ### 2.6 Create the Service
 
@@ -118,7 +127,9 @@ app.use(express.json({ limit: '50mb' }));
 // --- Configuration ---
 const PORT = process.env.MEDIA_PROCESSOR_PORT || 3001;
 const HMAC_SECRET = process.env.WEBHOOK_SECRET || 'your-webhook-secret';
-const WATERMARK_DRIVE_FILE_ID = process.env.WATERMARK_DRIVE_FILE_ID || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const WATERMARK_STORAGE_PATH = process.env.WATERMARK_STORAGE_PATH || 'nenufar-assets/nenufar-logo.png';
 const WATERMARK_PATH = path.join(__dirname, 'logo', 'nenufar-logo.png');
 const TEMP_DIR = path.join(__dirname, 'temp');
 
@@ -170,7 +181,7 @@ function downloadFile(url) {
   });
 }
 
-// --- Ensure watermark logo is available (download from Drive if missing) ---
+// --- Ensure watermark logo is available (download from Supabase Storage if missing) ---
 let logoDownloaded = false;
 async function ensureWatermarkLogo() {
   if (logoDownloaded && fs.existsSync(WATERMARK_PATH)) return;
@@ -178,13 +189,16 @@ async function ensureWatermarkLogo() {
   const logoDir = path.dirname(WATERMARK_PATH);
   if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
 
-  if (WATERMARK_DRIVE_FILE_ID) {
-    const logoUrl = `https://drive.google.com/uc?export=download&id=${WATERMARK_DRIVE_FILE_ID}`;
-    const tmpPath = await downloadFile(logoUrl);
+  if (SUPABASE_URL && SUPABASE_KEY && WATERMARK_STORAGE_PATH) {
+    // Download from Supabase Storage using signed URL
+    const [bucket, ...pathParts] = WATERMARK_STORAGE_PATH.split('/');
+    const filePath = pathParts.join('/');
+    const signedUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filePath}`;
+    const tmpPath = await downloadFile(signedUrl);
     fs.renameSync(tmpPath, WATERMARK_PATH);
     logoDownloaded = true;
   } else {
-    throw new Error('WATERMARK_DRIVE_FILE_ID not configured');
+    throw new Error('Supabase Storage credentials not configured for watermark logo');
   }
 }
 

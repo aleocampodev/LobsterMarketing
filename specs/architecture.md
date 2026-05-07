@@ -54,8 +54,8 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  💪  MEDIA PROCESSOR — Oracle Cloud (ARM A1)                │
  │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
  │                                                             │
- │  [ 📥 DOWNLOAD  ]  Fetch from Google Drive                  │
- │  [ 📥 LOGO      ]  Fetch watermark logo from Google Drive   │
+ │  [ 📥 DOWNLOAD  ]  Fetch media from Google Drive                  │
+ │  [ 📥 LOGO      ]  Fetch watermark logo from Supabase Storage     │
  │  [ 🎨 PROCESS   ]  Resize + Watermark + Format Conversion  │
  │  [ 📤 RETURN    ]  Base64 result → n8n → Supabase           │
  │  ⚠️  FULLY AUTOMATIC — No Telegram notification             │
