@@ -72,8 +72,8 @@ To prevent malicious token depletion from massive requests to Gemini, validation
 - **Action (n8n Filter):** Evaluate the message length.
 - **Strategy:** Reject messages with more than 500 characters or less than 2 characters without processing them through the LLM. **Cost: 0 tokens.**
 
-### 5.3 Rate Limiting (with Upstash Redis)
+### 5.3 Rate Limiting (Application-Level)
 **Scenario:** A user sends dozens of messages in a few seconds (spam/DDoS attack).
-- **Action (n8n Filter + Redis):** Increment a counter in Redis `user:{id}:msgs` with a 60-second expiration.
-- **Strategy:** If the counter exceeds 5 messages per minute, stop the flow and ignore subsequent messages until the limit resets. **Cost: 0 tokens.**
+- **Action (n8n Filter + Supabase):** Track message timestamps per user in Supabase. Count messages within the last 60 seconds.
+- **Strategy:** If the count exceeds 5 messages per minute, stop the flow and ignore subsequent messages until the limit resets. **Cost: 0 tokens.**
 

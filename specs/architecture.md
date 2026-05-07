@@ -1,11 +1,12 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.3
+Version: v2.4
+<!-- v2.4: Removed Redis/Upstash — direct HMAC webhook architecture (ADR-003). -->
 <!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
 <!-- v2.2: Added Proactive Hybrid Flow section. Optimized for token saving. -->
 <!-- v2.1: Major architectural correction. Brain = OpenClaw (Luna) communicating via Telegram with Gemini. Optimization: Shifted from RAG to Templates Bank to save tokens. Arms = n8n Workers. -->
 
 ## Overview
-The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain — the cognitive agent that thinks, selects the best content strategy, and communicates with the user via Telegram using Gemini 2.5 Flash + **Templates Bank**. **n8n** is the Arms — the execution layer that handles mechanical tasks (media processing, publishing, logging) via workers orchestrated through Upstash Redis. This separation ensures intelligence stays in the agent while automation stays in the workflows.
+The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain — the cognitive agent that thinks, selects the best content strategy, and communicates with the user via Telegram using Gemini 2.5 Flash + **Templates Bank**. **n8n** is the Arms — the execution layer that handles mechanical tasks (media processing, publishing, logging) via direct HMAC-signed webhooks. This separation ensures intelligence stays in the agent while automation stays in the workflows.
 
 ---
 
@@ -14,7 +15,7 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
 ### 1.1 Visual Workflow Architecture (ASCII)
 ```text
 ╔═══════════════════════════════════════════════════════════════╗
-║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v2.0  🌸            ║
+║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v2.4  🌸            ║
 ╚═══════════════════════════════════════════════════════════════╝
 
  ┌─────────────────────────────────────────────────────────────┐
@@ -25,26 +26,21 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  ② THINK     Gemini 2.5 Flash + Templates Bank             │
  │  ③ CRAFT     "Poemas Tejidos" (Variable Interpolation)      │
  │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)   │
- │  ⑤ DISPATCH  Sign Payload (HMAC) → Push to Redis Queue     │
+ │  ⑤ DISPATCH  Sign Payload (HMAC) → Direct Webhook to n8n   │
  └──────────────────────────┬──────────────────────────────────┘
                             │
           ┌─────────────────┼─────────────────┐
           │                 │                 │
-          ▼                 ▼                 ▼
- ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
- │  📱 TELEGRAM  │  │ 🗄️ SUPABASE  │  │  🔀 REDIS    │
- │  Bot API      │  │ (Memory/DB)  │  │  Queue       │
- └──────────────┘  └──────────────┘  └──────┬───────┘
+          ▼                 ▼                 │
+ ┌──────────────┐  ┌──────────────┐          │
+ │  📱 TELEGRAM  │  │ 🗄️ SUPABASE  │          │
+ │  Bot API      │  │ (Memory/DB)  │          │
+ └──────────────┘  └──────────────┘          │
                                              │
+               HMAC-Signed HTTP POST         │
                                              ▼
  ┌─────────────────────────────────────────────────────────────┐
- │  🔀  MESSAGE BROKER — UPSTASH REDIS                         │
- │     Task Persistence · Worker Distribution · Retry Queue    │
- └──────────────────────────┬──────────────────────────────────┘
-                            │
-                            ▼
- ┌─────────────────────────────────────────────────────────────┐
- │  🦾  THE ARMS — n8n WORKERS                                 │
+ │  🦾  THE ARMS — n8n WORKERS (Regular Mode)                  │
  │                                                             │
  │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                  │
  │  [ 🎨 PROCESSOR ]  Download from Drive + Watermark/Codec    │
@@ -78,11 +74,10 @@ graph TD
         Brain --> LLM["✨ Gemini 2.5 Flash"]
     end
 
-    Brain -- "① Intent & Approval" --> Redis(("🔀 Upstash<br/>Redis Queue"))
+    Brain -- "① Intent & HMAC Payload" --> Webhook(("🛡️ n8n Webhook<br/>Receiver"))
 
-    subgraph ArmsSub["🦾 THE ARMS — n8n Workers"]
-        Redis -- "Task Data" --> Receiver["🛡️ Webhook Receiver"]
-        Receiver --> MPW["🎨 Media Processor"]
+    subgraph ArmsSub["🦾 THE ARMS — n8n Workers (Regular Mode)"]
+        Webhook --> MPW["🎨 Media Processor"]
         MPW --> Drive["📁 Google Drive API"]
         MPW --> Watermark["💧 Watermark Engine"]
         Watermark --> SPW["📡 Social Publisher"]
@@ -118,7 +113,6 @@ This diagram shows how asynchronous processes communicate with each other to gua
 sequenceDiagram
     participant T as 📱 Telegram (Shirley)
     participant O as 🧠 OpenClaw / Luna (Brain)
-    participant R as 🔀 Redis Queue
     participant W as 🛡️ Webhook Receiver
     participant MP as 🎨 Media Processor
     participant SP as 📡 Social Publisher
@@ -126,9 +120,8 @@ sequenceDiagram
 
     T->>O: Sends Voice / Text or ✅ Approves
     O->>O: Processes Intent (Templates + Gemini 2.5 Flash)
-    O->>R: Push Payload (Signed Task JSON)
-    Note over R: Task queued — Resilience layer
-    R->>W: Pull Task (Worker ready)
+    O->>W: HMAC-Signed HTTP POST (Task JSON)
+    Note over W: Signature validated — task authorized
     W->>MP: Download from Drive + Watermark
     MP->>SP: Upload to Instagram / Facebook
     SP->>FL: Log success in Supabase
@@ -163,7 +156,7 @@ graph TD
     Gen --> Approval{"👤 Does Shirley Approve?"}
 
     Approval -- "🔄 No / Adjust" --> Gen
-    Approval -- "✅ Yes" --> Dispatch["🔀 Send to Redis Queue"]
+    Approval -- "✅ Yes" --> Dispatch["🛡️ Dispatch to n8n Webhook"]
 
     Chat --> Response["📱 Response in Telegram"]
     Stats --> Response
@@ -176,17 +169,17 @@ graph TD
 
 To ensure enterprise-grade stability on a lightweight infrastructure, the following architectural patterns are implemented:
 
-### 3.1 Dead Letter Queue (DLQ) & Retry Logic
-- **Exponential Backoff:** If a worker fails (e.g., Meta API temporary downtime), the task is re-queued with increasing delays.
-- **DLQ:** After 3 failed attempts, tasks are moved to a `dead_letter_queue` and OpenClaw notifies the user via Telegram for manual intervention.
+### 3.1 Retry Logic & Error Recovery
+- **Exponential Backoff:** If a worker fails (e.g., Meta API temporary downtime), n8n's built-in retry mechanism re-attempts with increasing delays.
+- **Supabase as Recovery Layer:** After 3 failed attempts, the task status in `processed_files` is set to `failed` and OpenClaw notifies the user via Telegram for manual intervention. The Self-Healing heartbeat re-queues stuck tasks automatically.
 
 ### 3.2 Circuit Breakers for External APIs
 - **Thresholds:** If the Meta Graph API returns >5 consecutive errors, the "Social Publisher" worker opens the circuit, pausing all publishing for 30 minutes to avoid account flagging.
 - **Notification:** OpenClaw alerts the user via Telegram: "System paused due to Meta API instability."
 
 ### 3.3 State Recovery (Supabase as Source of Truth)
-- **Persistence:** Even if the Redis queue is cleared, the `processed_files` table in Supabase tracks the status of every file.
-- **Recovery Workflow:** A "Self-Healing" heartbeat checks for files in `processing` state for >1 hour and automatically re-queues them.
+- **Persistence:** The `processed_files` table in Supabase tracks the status of every file as the single source of truth.
+- **Recovery Workflow:** A "Self-Healing" heartbeat checks for files in `processing` state for >1 hour and automatically re-dispatches them via webhook.
 
 ### 3.4 HMAC Signature Validation
 - **Security:** Every payload sent from the Brain to the Arms is signed with a `WEBHOOK_SECRET`. Workers reject any unsigned or incorrectly signed requests, preventing unauthorized execution.
@@ -205,8 +198,8 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 
 ### 4.2 The Execution Layer — n8n Workers
 - **Mechanical Tasks:** Media processing (watermark, resize), social media publishing, and logging.
-- **Resilience:** Workers operate independently, pulling tasks from Redis with retry logic and dead-letter queues.
-- **Handshake:** OpenClaw dispatches signed payloads (HMAC) to the Redis queue; n8n workers validate and execute.
+- **Resilience:** Workers operate with built-in retry logic and Supabase-backed state recovery via the Self-Healing heartbeat.
+- **Handshake:** OpenClaw dispatches signed payloads (HMAC) directly to n8n webhooks; n8n workers validate and execute.
 
 ---
 
@@ -222,21 +215,20 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
     3. **Template Selection:** Selects the best template from `templates_bank.md` based on the product and theme.
     4. **Generation:** Crafts a "Woven Poem" caption following the `specs/brand_essence.md` and template guidelines.
     5. **Human-in-the-Loop:** Presents the content and media preview to Shirley for approval.
-    6. **Dispatch:** Upon approval, sends a signed payload to the Redis Queue for n8n workers.
+    6. **Dispatch:** Upon approval, sends a signed payload (HMAC) directly to the n8n Webhook Receiver for execution.
 
 ### 5.2 The Arms — n8n Workers
-- **Environment:** n8n Instance on GCP (Docker, Queue Mode) + Upstash Redis.
+- **Environment:** n8n Instance on GCP (Docker, Regular Mode).
 - **Role:** Execution layer for all mechanical tasks.
 - **Workers:**
-    - **Webhook Receiver:** Validates HMAC signatures and pulls tasks from Redis.
+    - **Webhook Receiver:** Validates HMAC signatures on incoming webhook payloads.
     - **Media Processor:** Downloads media from Google Drive, resizes, and applies Nenufar watermark. Supports both photos (.jpg, .png) and videos (.mp4).
     - **Social Publisher:** Publishes to Instagram/Facebook via Meta Graph API.
     - **Feedback & Logging:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
 
-### 5.3 The Infrastructure (GCP + Supabase + Redis)
-- **n8n (GCP e2-micro):** Dockerized instance running in Queue Mode.
-- **Upstash Redis:** Message broker decoupling Brain from Arms.
-- **Supabase:** Acts as the "Long-Term Memory" (LTM).
+### 5.3 The Infrastructure (GCP + Supabase)
+- **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode.
+- **Supabase:** Acts as the "Long-Term Memory" (LTM) and source of truth for task state.
     - `processed_files`: Tracks every asset's lifecycle.
     - `content_calendar`: Stores the 7-day marketing strategy.
     - `monitoring_logs`: System health metrics.
@@ -256,7 +248,7 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 | :--- | :--- | :--- | :--- |
 | **Pending** | Drive Sync | Record created in `processed_files` | Metadata in Supabase |
 | **Drafting** | Heartbeat | OpenClaw generates caption proposal | Message in Telegram |
-| **Processing**| User Approval| Redis Queue -> Media Processor | Watermarked media |
+| **Processing**| User Approval| HMAC Webhook -> Media Processor | Watermarked media |
 | **Publishing**| Worker Success| Social Publisher -> Meta API | Live post URL |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
@@ -291,7 +283,7 @@ n8n monitors Google Drive folders. When a new file is detected, it does **not** 
 Luna sends a message to Shirley via Telegram: *"I've seen a new photo or video! Is this a [Necklace], [Earring], or [Bracelet]?"* Using interactive buttons, Shirley classifies the asset. This provides 100% accurate metadata at a fraction of the cost of multimodal analysis.
 
 ### 7.3 Strategic Scheduling (The Chronological Arms)
-Approval does not mean immediate publication. n8n workers check the `content_calendar` and the current day's optimal posting hours. Approved tasks are queued in Redis with a "scheduled_at" timestamp, ensuring the post goes live when engagement is highest.
+Approval does not mean immediate publication. n8n workers check the `content_calendar` and the current day's optimal posting hours. Approved tasks are dispatched to n8n with a "scheduled_at" timestamp, ensuring the post goes live when engagement is highest.
 
 ### 7.4 Pipeline Heartbeat (Proactivity)
 Once a day (e.g., 9:00 AM), n8n triggers the Discovery Mode. If the `content_calendar` shows no scheduled posts for the next 24 hours and no new media was detected in Drive, Luna proactively reaches out to Shirley: *"🌸 Shirley, I don't have anything scheduled for today and didn't see new creations in the folder. Do you have any new pieces you'd like me to weave a poem for?"*

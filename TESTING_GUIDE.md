@@ -50,7 +50,7 @@ Configured in n8n/OpenClaw: **"Google Generative AI"** (Gemini 2.0 Flash)
 
 3. **Approve Draft**
    - Click the ✅ (Approve) button.
-   - Verify that the task is dispatched to the Redis Queue.
+   - Verify that the task is dispatched via HMAC webhook to n8n.
 
 ---
 
@@ -105,7 +105,7 @@ Brain Integration:
 □ Templates Bank populated
 □ Eco-Poetic voice confirmed
 □ Telegram buttons functional
-□ Redis Queue dispatch working
+□ Webhook dispatch working
 
 Image Processing:
 □ Resize (1080x1350 / 1080x1080)

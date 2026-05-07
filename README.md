@@ -115,7 +115,7 @@ CREATE TABLE nenufar.templates_bank (
 | **LLM** | Gemini 2.0 Flash | Content generation + intent classification |
 | **Templates** | Supabase / Markdown | Brand knowledge & pre-defined copy |
 | **Interface** | Telegram Bot | Human-in-the-loop approval |
-| **Broker** | Upstash Redis | Task queue between Brain and Arms |
+| **Broker** | Direct HMAC Webhook | Task dispatch between Brain and Arms |
 | **Workers** | n8n (GCP e2-micro) | Image processing, publishing, logging |
 | **Database** | Supabase PostgreSQL | Long-term memory + analytics |
 | **Assets** | Google Drive | Media storage |

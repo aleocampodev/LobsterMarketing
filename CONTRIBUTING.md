@@ -6,7 +6,7 @@
 - **Gemini CLI** — reviews each commit automatically
 - **n8n** — automation workflows running on VPS
 
-See `specs/architecture.md` for full details on the Brain-Arms Architecture and integration with Google Cloud, Supabase, and Upstash Redis.
+See `specs/architecture.md` for full details on the Brain-Arms Architecture and integration with Google Cloud, Supabase, and n8n webhooks.
 
 ## Workflow
 1. Factory Droid makes local changes (following OpenClaw/Luna rules from AGENTS.md)

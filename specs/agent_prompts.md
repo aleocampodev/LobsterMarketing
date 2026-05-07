@@ -84,4 +84,4 @@ REGLAS DE ORO:
 3. **Interpolate (Brand Agent):** Fill variables.
 4. **Refine (Content Agent):** Apply Eco-Poetic voice.
 5. **Present (Approval Agent):** Send to Shirley.
-6. **Dispatch:** If Approved -> Sign HMAC -> Push to Redis.
+6. **Dispatch:** If Approved -> Sign HMAC -> Direct Webhook to n8n.

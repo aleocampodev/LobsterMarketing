@@ -1,11 +1,12 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.5
+Version: v1.6
+<!-- v1.6: Removed Redis — direct HMAC webhook architecture (ADR-003). ip-003.3 superseded. -->
 <!-- v1.5: Added Strategic Scheduling and Pipeline Heartbeat. Clarified Watermark source. -->
 <!-- v1.4: Updated architecture reference to v2.1. -->
 <!-- v1.3: Reverted all [x] to [ ] — tasks have not been tested/validated yet per DoD -->
 
-**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n Queue Mode and dedicated worker containers.
+**Goal:** Automate the mechanical tasks of fetching, processing, and publishing media using n8n Regular Mode with direct HMAC webhook triggers.
 
 **Status:** 🔄 In Progress
 **Estimated Effort:** 3 days
@@ -17,8 +18,8 @@ Version: v1.5
 
 - [ ] **ip-003.1:** Implement the secure `Luna Webhook Receiver` (ID: `EPslgKTzkbLcxdrs`).
 - [ ] **ip-003.2:** Configure HMAC signature validation for all incoming requests from the Brain.
-- [ ] **ip-003.3:** Setup Redis Queue nodes with **Exponential Backoff** (3 attempts).
-- [ ] **ip-003.14:** **DLQ Notification:** Configure Luna to notify Shirley via Telegram when a task is moved to the `dead_letter_queue` after 3 failed attempts. (ETA: 1h)
+- [ ] **ip-003.3:** Configure n8n built-in retry logic with **Exponential Backoff** (3 attempts) for failed executions.
+- [ ] **ip-003.14:** **Failed Task Notification:** Configure Luna to notify Shirley via Telegram when a task fails after 3 retry attempts. (ETA: 1h)
 - [ ] **ip-003.17:** Implement **Strategic Delay/Scheduling** nodes to queue posts for optimal publishing hours.
 - [ ] **ip-003.18:** Implement a **Pipeline Heartbeat** (Cron) to trigger Luna if no content is scheduled for the next 24 hours.
 

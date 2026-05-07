@@ -71,24 +71,14 @@ Every generated Instagram/Facebook caption MUST contain:
  │  ② THINK     Gemini 2.0 Flash + Templates Bank              │
  │  ③ CRAFT     "Poemas Tejidos" (Eco-Poetic Voice)            │
  │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)    │
- │  ⑤ DISPATCH  Sign Payload (HMAC) → Push to Redis Queue      │
- └───────┬──────────────┬──────────────────┬────────────────────┘
-         │              │                  │
-         ▼              ▼                  ▼
- ┌──────────────┐ ┌──────────────┐ ┌─────────────────┐
- │  📱 TELEGRAM  │ │ 🗄️ SUPABASE  │ │  🔀 REDIS QUEUE │
- │  Bot API      │ │ (Memory)     │ │  (Dispatch)     │
- └──────────────┘ └──────────────┘ └────────┬────────┘
-                                             │
-                                             ▼
- ┌──────────────────────────────────────────────────────────────┐
- │  🦾  THE ARMS — n8n WORKERS                                  │
- │                                                              │
- │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                   │
- │  [ 🎨 PROCESSOR ]  Download from Drive + Sharp Watermark     │
- │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)     │
- │  [ 📝 SCRIBE    ]  Log Status & Notify (Supabase + Telegram) │
- └──────────────────────────────────────────────────────────────┘
+ │  ⑤ DISPATCH  Sign Payload (HMAC) → Direct Webhook to n8n    │
+ └───────┬──────────────┬──────────────────────────────────────┘
+         │              │
+         ▼              ▼
+ ┌──────────────┐ ┌──────────────┐
+ │  📱 TELEGRAM  │ │ 🗄️ SUPABASE  │
+ │  Bot API      │ │ (Memory)     │
+ └──────────────┘ └──────────────┘
 
 
  ══════════════════════════════════════════════════════════════════
@@ -102,9 +92,9 @@ Every generated Instagram/Facebook caption MUST contain:
   └─────────┘    └──────────┘    └───────────┘    └──────┬─────┘
                                                               │
   ┌─────────┐    ┌──────────┐    ┌───────────┐    ┌─────────┴───┐
-  │ ⑤ REDIS │───►│ ⑥ n8n    │───►│ ⑦ IMAGE  │───►│ ⑧ PUBLISH  │
-  │  PUSH   │    │  PULL    │    │  PROC.    │    │ Meta API    │
-  │ Queue   │    │ Worker   │    │ Watermark │    │ (IG / FB)   │
+  │ ⑤ HMAC  │───►│ ⑥ n8n    │───►│ ⑦ IMAGE  │───►│ ⑧ PUBLISH  │
+  │ WEBHOOK │    │  RECEIVE │    │  PROC.    │    │ Meta API    │
+  │ Dispatch│    │ & Route  │    │ Watermark │    │ (IG / FB)   │
   └────┬────┘    └──────────┘    └───────────┘    └─────────────┘
        │
        ▼
@@ -123,13 +113,13 @@ Every generated Instagram/Facebook caption MUST contain:
     2. Processes intent using Gemini 2.0 Flash with Eco-poetic voice.
     3. Uses Templates Bank to generate brand-aligned content.
     4. Presents draft to user with approval buttons.
-    5. Upon approval, dispatches signed payload to Redis Queue for n8n workers.
+    5. Upon approval, dispatches signed payload via direct HMAC webhook to n8n workers.
 
 ### 3.3 The Arms — n8n Workers
-- **Environment:** n8n Instance | Docker (Queue Mode) | Upstash Redis.
+- **Environment:** n8n Instance | Docker (Regular Mode).
 - **Role:** Execution layer for all mechanical tasks.
 - **Task Distribution:**
-    - **Webhook Receiver:** Validates HMAC signatures and pulls tasks from Redis.
+    - **Webhook Receiver:** Validates HMAC signatures on incoming webhook payloads.
     - **Image Processor Worker v2:** Downloads media from Google Drive, resizes, and applies the Nenufar watermark.
     - **Social Publisher Worker:** Publishes to Instagram/Facebook via Meta Graph API.
     - **Feedback & Logging Worker:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
@@ -139,7 +129,7 @@ Every generated Instagram/Facebook caption MUST contain:
 ## 4. Memory & Context Management
 
 - **Session Startup:** Immediately read `SOUL.md`, `USER.md`, `CONTRIBUTING.md`, and recent files in `memory/`.
-- **Long-Term Memory (`MEMORY.md`):** Read to understand system configs (e.g., Supabase Postgres pooler on port 6543, Upstash Redis broker) and brand milestones.
+- **Long-Term Memory (`MEMORY.md`):** Read to understand system configs (e.g., Supabase Postgres pooler on port 6543) and brand milestones.
 - **Daily Logs:** Document actions, user feedback, or system errors in `memory/YYYY-MM-DD.md`.
 - **No "Mental Notes":** Rule or preference changes MUST be written to the appropriate markdown file (e.g., `specs/brand_essence.md`).
 

@@ -1,14 +1,14 @@
 # E2E Test: IP-001 Infrastructure & Core Connectivity
-Version: v1.2
+Version: v1.3
+<!-- v1.3: Removed Redis — direct HMAC webhook architecture (ADR-003). Step 2 updated. -->
 <!-- v1.2: Validation checklist confirmed complete. -->
 
 ## 🎯 Objective
-Verify that all cloud infrastructure components (GCP, Supabase, Upstash Redis) are provisioned, communicating, and ready for workflow orchestration.
+Verify that all cloud infrastructure components (GCP, Supabase, n8n) are provisioned, communicating, and ready for workflow orchestration.
 
 ## 📋 Prerequisites
 - Access to **Supabase Dashboard**.
 - Access to **n8n Instance** (GCP).
-- Access to **Upstash Console**.
 - **Telegram Bot** token configured in n8n.
 
 ---
@@ -23,13 +23,12 @@ Verify that all cloud infrastructure components (GCP, Supabase, Upstash Redis) a
    ```
 3. **Expected Result:** You should see `processed_files`, `monitoring_logs`, `content_calendar`, `templates_bank`, `post_engagement`, `engagement_calendar`, and `comment_patterns`.
 
-### Step 2: Redis Broker Verification
-1. Open the Upstash Redis console.
-2. Check the "Connections" tab.
-3. **Expected Result:** There should be at least one active connection (the n8n worker/orchestrator).
-4. Run `PING` in the CLI; result should be `PONG`.
+### Step 2: n8n Webhook Receiver Verification
+1. In n8n, verify the "Luna Webhook Receiver" workflow is active.
+2. Send a manual `POST` using curl to the webhook URL with a test HMAC-signed payload.
+3. **Expected Result:** The workflow should trigger and validate (or reject) the HMAC signature.
 
-### Step 3: n8n Workflow Readiness (Orchestrator-Worker)
+### Step 3: n8n Workflow Readiness (Webhook Processing)
 1. In n8n, go to the "Luna Webhook Receiver" workflow.
 2. Click "Listen for test event".
 3. Send a manual `POST` using curl or Postman to the production/test webhook URL with an empty JSON `{}`.
@@ -44,7 +43,7 @@ Verify that all cloud infrastructure components (GCP, Supabase, Upstash Redis) a
 
 ## ✅ Final Validation Checklist
 - [x] Supabase tables are accessible.
-- [x] Upstash Redis responds to PING.
+- [x] n8n webhook receiver responds to test events.
 - [x] n8n instance is reachable via Webhook.
 - [x] Telegram Bot receives and processes messages.
 

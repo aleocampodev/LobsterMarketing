@@ -37,4 +37,4 @@ It was decided to implement **Option 3 (Queue Mode)** using **Upstash Redis** (S
 *   **Security:** Payloads must be signed (e.g., with HMAC) to guarantee that workers only process legitimate tasks sent by the "Brain" (Luna).
 
 ## 6. Status
-Accepted / Implemented (Architecture v2.1)
+**Superseded** by ADR-003 (2026-05-07). Redis removed — direct HMAC webhook architecture adopted.

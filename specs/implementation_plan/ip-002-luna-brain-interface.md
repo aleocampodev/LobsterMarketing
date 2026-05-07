@@ -1,9 +1,12 @@
 # Epic ip-002: Luna's Brain & Interface
-Version: v1.9
+Version: v2.2
+<!-- v2.2: Removed Redis/Upstash — direct HMAC webhook architecture (ADR-003). -->
+<!-- v2.1: Reverted checkmarks per DoD - only tasks with passing tests stay [x]. Updated goal to Gemini 2.5 Flash. -->
+<!-- v2.0: Implemented inline approval buttons, classification buttons, callback routing, and proactive handlers. -->
 <!-- v1.9: Added Interactive Classification (Token Saving) and Proactivity handlers. -->
 <!-- v1.8: Total removal of RAG references. Updated per Droid feedback. -->
 
-**Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.0 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
+**Goal:** Implement the central intelligence layer: OpenClaw (Luna) as the AI agent that communicates with Shirley via Telegram, uses Gemini 2.5 Flash + **Templates Bank** for content generation, and dispatches tasks to n8n workers.
 
 **Status:** 🔨 In Progress
 **Estimated Effort:** 4 days
@@ -18,7 +21,7 @@ Version: v1.9
     - **Nenufar Brand Agent:** Manages the **Templates Bank** and variable interpolation.
     - **Nenufar Content Agent:** Selects the best template and crafts "Eco Poético" captions.
     - **Nenufar Approval Agent:** Manages task payloads and user validation.
-- [ ] **ip-002.3:** Configure "Luna Ultimate Assistant" as the main orchestrator (Gemini 2.0 Flash).
+- [ ] **ip-002.3:** Configure "Luna Ultimate Assistant" as the main orchestrator (Gemini 2.5 Flash).
 - [ ] **ip-002.4:** Integrate Buffer Window memory for context-aware conversations.
 
 ---
@@ -39,7 +42,7 @@ Version: v1.9
 - [ ] **ip-002.9:** Implement Telegram Webhook Trigger for text and voice messages.
 - [ ] **ip-002.10:** Setup Voice-to-Text transcription (Whisper/Gemini).
 - [ ] **ip-002.11:** Implement Interactive Approval Buttons:
-    - ✅ **Approve:** Dispatches task to Upstash Redis Queue.
+    - ✅ **Approve:** Dispatches task via direct HMAC webhook to n8n.
     - 🔄 **Adjust:** Triggers feedback loop for caption regeneration.
     - ❌ **Reject:** Cancels the current task.
 - [ ] **ip-002.12:** Implement basic command handlers: `/status`, `/process`, `/list`.
@@ -52,8 +55,8 @@ Version: v1.9
 *Ref: specs/architecture.md v2.1 - State Recovery*
 
 - [ ] **ip-002.13:** Generate secure HMAC signatures for worker payloads.
-- [ ] **ip-002.14:** Create the final JSON task structure with HMAC handshake.
-- [ ] **ip-002.15:** Integrate with the `Luna Webhook Receiver` via Upstash Redis.
+- [ ] **ip-002.14:** Create the final JSON task structure with HMAC handshake for direct webhook dispatch.
+- [ ] **ip-002.15:** Integrate with the `Luna Webhook Receiver` via direct HMAC-signed HTTP POST.
 
 ---
 
