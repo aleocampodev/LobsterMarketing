@@ -1,7 +1,7 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.7
-<!-- v1.7: Added Oracle Cloud Media Processor — heavy media delegated from n8n (ADR-004). -->
+Version: v1.9
+<!-- v1.9: Clarified full pipeline flow: Drive → Resize+Watermark → Luna Caption → Telegram Buttons → Publish. Added ip-003.23 and ip-003.24 for caption approval and callback handling. -->
 <!-- v1.6: Removed Redis — direct HMAC webhook architecture (ADR-003). ip-003.3 superseded. -->
 <!-- v1.5: Added Strategic Scheduling and Pipeline Heartbeat. Clarified Watermark source. -->
 <!-- v1.4: Updated architecture reference to v2.1. -->
@@ -29,9 +29,9 @@ Version: v1.7
 ## 2. Oracle Media Processor Integration (New)
 *Ref: specs/media_processor_api.md*
 
-- [ ] **ip-003.19:** Deploy the Media Processor API on Oracle Cloud VM (`/opt/media-processor/server.js`).
-- [ ] **ip-003.20:** Configure OCI firewall (iptables + Security List) to expose port 3001.
-- [ ] **ip-003.21:** Implement n8n HTTP Request node that calls `POST /process` on Oracle with HMAC-signed payload.
+- [x] **ip-003.19:** Deploy the Media Processor API on Oracle Cloud VM (`/opt/media-processor/server.js`). (Completed: 2026-05-08)
+- [x] **ip-003.20:** Configure OCI firewall (iptables + Security List) to expose port 3001. (Completed: 2026-05-08)
+- [x] **ip-003.21:** Implement n8n HTTP Request node that calls `POST /process` on Oracle with HMAC-signed payload. (Completed: 2026-05-08)
 - [ ] **ip-003.22:** Configure the response handler to extract base64 processed image and pass to Social Publisher.
 
 ---
@@ -49,7 +49,15 @@ Version: v1.7
 
 ---
 
-## 3. Social Publishing & Circuit Breakers (New)
+## 3. Caption Approval Pipeline (New)
+*Ref: specs/openclaw_system_prompt.txt*
+
+- [ ] **ip-003.23:** Implement **Caption Approval Sender** workflow: after image is processed, send caption + image preview to Shirley via Telegram with InlineKeyboardMarkup buttons (Aprobar/Ajustar/Descartar).
+- [ ] **ip-003.24:** Implement **Callback Handler** workflow: receive Telegram callback_query, route action (approve → publish, adjust → regenerate, reject → cancel).
+
+---
+
+## 4. Social Publishing & Circuit Breakers (New)
 *Ref: specs/architecture.md v2.1*
 
 - [ ] **ip-003.8:** Implement `Luna Social Publisher Worker` (ID: `dENMnialkmtgKCo7`).
