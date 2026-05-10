@@ -1,6 +1,8 @@
 # Epic ip-003: The Arms - n8n Workflows
 
-Version: v1.9
+Version: v2.1
+<!-- v2.1: Token optimization for Caption Approval Pipeline — predefined adjustment options, max 2 adjustments. Ref: ADR-005. -->
+<!-- v2.0: Implemented Caption Approval Pipeline (ip-003.23 + ip-003.24). 2 buttons (Publicar/Ajustar). Adjust triggers feedback loop via Luna. Photo+caption preview sent by n8n from Drive /Procesadas/. -->
 <!-- v1.9: Clarified full pipeline flow: Drive → Resize+Watermark → Luna Caption → Telegram Buttons → Publish. Added ip-003.23 and ip-003.24 for caption approval and callback handling. -->
 <!-- v1.6: Removed Redis — direct HMAC webhook architecture (ADR-003). ip-003.3 superseded. -->
 <!-- v1.5: Added Strategic Scheduling and Pipeline Heartbeat. Clarified Watermark source. -->
@@ -50,10 +52,10 @@ Version: v1.9
 ---
 
 ## 3. Caption Approval Pipeline (New)
-*Ref: specs/openclaw_system_prompt.txt*
+*Ref: specs/openclaw_system_prompt.txt, workflows/caption-approval-pipeline.json*
 
-- [ ] **ip-003.23:** Implement **Caption Approval Sender** workflow: after image is processed, send caption + image preview to Shirley via Telegram with InlineKeyboardMarkup buttons (Aprobar/Ajustar/Descartar).
-- [ ] **ip-003.24:** Implement **Callback Handler** workflow: receive Telegram callback_query, route action (approve → publish, adjust → regenerate, reject → cancel).
+- [x] **ip-003.23:** Implement **Caption Approval Sender** workflow: n8n receives caption payload from Luna, downloads processed photo from Drive `/Procesadas/`, sends photo + caption + hashtags to Shirley via Telegram `sendPhoto` with 2 InlineKeyboardMarkup buttons (✅ Publicar / ✏️ Ajustar). (Completed: 2026-05-08 — Workflow JSON created in `workflows/caption-approval-pipeline.json`)
+- [x] **ip-003.24:** Implement **Callback Handler** workflow: Telegram Trigger receives `callback_query`, parses action (`approve`/`adjust`) and `task_id`. Approve → Social Publisher. Adjust → Notify Luna via webhook to ask Shirley for feedback and regenerate caption. (Completed: 2026-05-08 — Integrated in same workflow)
 
 ---
 

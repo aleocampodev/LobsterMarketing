@@ -1,5 +1,7 @@
 # Media Processor API — Oracle Cloud Worker
-Version: v1.1
+Version: v1.2
+<!-- v1.2: Added /process-video endpoint with ffmpeg support. -->
+<!-- v1.1: Updated response — n8n uploads processed files to Drive /Procesadas/. Oracle returns binary. -->
 <!-- v1.1: Updated response — n8n uploads processed files to Drive /Procesadas/. Oracle returns binary. -->
 <!-- v1.0: Initial spec for Oracle Cloud Media Processor replacing local n8n image processing. -->
 
@@ -248,6 +250,73 @@ async function processImage(inputPath, operations) {
   return { outputPath, metadata: await sharp(outputPath).metadata() };
 }
 
+// --- Video Size Presets ---
+const VIDEO_SIZES = {
+  portrait: { width: 1080, height: 1350 },
+  square: { width: 1080, height: 1080 },
+  landscape: { width: 1080, height: 566 },
+};
+
+const VIDEO_CRF = {
+  low: 28,
+  medium: 23,
+  high: 18,
+};
+
+// --- Process Video with ffmpeg ---
+async function processVideo(inputPath, operations) {
+  const { execFile } = require('child_process');
+  const format = operations.format || 'mp4';
+  const size = VIDEO_SIZES[operations.resize] || VIDEO_SIZES.portrait;
+  const crf = VIDEO_CRF[operations.quality] || VIDEO_CRF.medium;
+
+  const outputPath = path.join(TEMP_DIR, `vid_${Date.now()}_${Math.random().toString(36).slice(2)}.${format}`);
+
+  const ffmpegArgs = ['-i', inputPath, '-y'];
+
+  // Resize
+  ffmpegArgs.push('-vf', `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:black`);
+
+  // Watermark
+  if (operations.watermark) {
+    await ensureWatermarkLogo();
+    const tmpWatermark = path.join(TEMP_DIR, `wm_${Date.now()}.png`);
+    // Create watermark with opacity using sharp
+    const wmBuffer = await sharp(WATERMARK_PATH)
+      .resize(Math.round(size.width * 0.2))
+      .ensureAlpha(operations.watermark_opacity || 0.15)
+      .toBuffer();
+    fs.writeFileSync(tmpWatermark, wmBuffer);
+
+    // Replace -vf with overlay
+    ffmpegArgs.pop(); // remove last -vf pad
+    ffmpegArgs.pop(); // remove last -vf scale
+    ffmpegArgs.push('-i', tmpWatermark);
+    ffmpegArgs.push('-filter_complex', `[0:v]scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:black[bg];[bg][1:v]overlay=W-w-10:H-h-10`);
+  }
+
+  // Max duration
+  if (operations.max_duration) {
+    ffmpegArgs.push('-t', String(operations.max_duration));
+  }
+
+  // Encoding
+  if (format === 'mp4') {
+    ffmpegArgs.push('-c:v', 'libx264', '-preset', 'fast', '-crf', String(crf), '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart');
+  } else if (format === 'webm') {
+    ffmpegArgs.push('-c:v', 'libvpx-vp9', '-crf', String(crf), '-b:v', '0', '-c:a', 'libopus', '-b:a', '128k');
+  }
+
+  ffmpegArgs.push(outputPath);
+
+  return new Promise((resolve, reject) => {
+    execFile('ffmpeg', ffmpegArgs, { maxBuffer: 100 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) return reject(new Error(`ffmpeg failed: ${error.message}`));
+      resolve({ outputPath });
+    });
+  });
+}
+
 // --- Health Check ---
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'media-processor', version: '1.0.0' });
@@ -296,6 +365,45 @@ app.post('/process', validateHMAC, async (req, res) => {
     });
   } finally {
     // Cleanup temp files
+    if (inputPath) try { fs.unlinkSync(inputPath); } catch (e) { /* ignore */ }
+    if (outputPath) try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
+  }
+});
+
+// --- Process Video Endpoint ---
+app.post('/process-video', async (req, res) => {
+  const { file_url, operations, file_id } = req.body;
+
+  if (!file_url || !operations) {
+    return res.status(400).json({ error: 'Missing file_url or operations' });
+  }
+
+  let inputPath = null;
+  let outputPath = null;
+
+  try {
+    inputPath = await downloadFile(file_url);
+    const result = await processVideo(inputPath, operations);
+
+    outputPath = result.outputPath;
+    const processedBuffer = fs.readFileSync(outputPath);
+    const base64 = processedBuffer.toString('base64');
+
+    const format = operations.format || 'mp4';
+    res.json({
+      status: 'success',
+      file_id: file_id || null,
+      data: base64,
+      mime_type: `video/${format}`,
+      size_bytes: processedBuffer.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      file_id: file_id || null,
+      error: error.message,
+    });
+  } finally {
     if (inputPath) try { fs.unlinkSync(inputPath); } catch (e) { /* ignore */ }
     if (outputPath) try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
   }

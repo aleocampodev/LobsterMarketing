@@ -46,6 +46,22 @@ Every generated Instagram/Facebook caption MUST contain:
 5. **Emojis:** Used sparingly and ONLY at the end of the text block.
 6. **Hashtags:** Evergreen Niche, Brand, Daily Trends, and Campaign tags.
 
+### 2.3 Image Formats & Post Strategy
+Luna decides the image format based on the daily content strategy. The Oracle Media Processor supports:
+
+| Format | post_type | Size (px) | Platform | Use Case |
+|--------|-----------|-----------|----------|----------|
+| Portrait | `feed_ig` | 1080x1350 | Instagram Feed | Default — product showcase |
+| Landscape | `feed_fb` | 1080x566 | Facebook Feed | Wider audience reach |
+| Story | `story` | 1080x1920 | IG/FB Stories & Reels | Interactive content, stickers |
+| Square | `square` | 1080x1080 | Both | Versatile, carousel posts |
+
+**Strategy Guidelines:**
+- The heartbeat auto-processes in `feed_ig` (portrait) by default.
+- Luna recommends the format based on the day's strategy and content type.
+- Stories should include interactive sticker suggestions (polls, questions, quizzes, countdowns).
+- Multiple formats of the same piece can be used across different days in the week.
+
 ---
 
 ## 3. System Workflow & Architecture (Brain-Arms Pattern)

@@ -1,5 +1,7 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.7
+Version: v2.9
+<!-- v2.9: Token optimization for Caption Approval Pipeline — predefined adjustment options, max 2 adjustments. Ref: ADR-005. -->
+<!-- v2.8: Caption Approval Pipeline — 2 buttons (✅ Publicar / ✏️ Ajustar) instead of 3. n8n sends photo+caption preview. Adjust triggers feedback loop via Luna. -->
 <!-- v2.7: Defined Drive folder structure (Input + Procesadas). Processed images stored in Drive, not Supabase. -->
 <!-- v2.6: Fixed media flow — new files auto-processed without Telegram. Heartbeat only notifies if pipeline is empty. Logo from Drive. -->
 <!-- v2.3: Explicit Video support and Daily Scheduling flow. -->
@@ -26,8 +28,8 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  ① LISTEN    Telegram Messages (Voice, Text, Media)         │
  │  ② THINK     Gemini 2.5 Flash + Templates Bank             │
  │  ③ CRAFT     "Poemas Tejidos" (Variable Interpolation)      │
- │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)   │
- │  ⑤ DISPATCH  Sign Payload (HMAC) → Direct Webhook to n8n   │
+ │  ④ DISPATCH  Caption payload (HMAC) → n8n Caption Approval Pipeline  │
+ │  ⑤ FEEDBACK  If adjust → ask Shirley → regenerate → re-dispatch      │
  └──────────────────────────┬──────────────────────────────────┘
                             │
           ┌─────────────────┼─────────────────┐
@@ -45,6 +47,7 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │                                                             │
  │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                  │
  │  [ 🔀 ROUTER    ]  Delegate heavy work to Oracle Worker     │
+ │  [ 📸 APPROVAL  ]  Send Photo+Caption+Buttons to Telegram   │
  │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)    │
  │  [ 📝 SCRIBE    ]  Log Status & Notify User (Supabase)      │
  └──────────┬──────────────────────────────────────────────────┘
@@ -98,7 +101,8 @@ graph TD
     subgraph ArmsSub["🦾 THE ARMS — n8n (GCP e2-micro)"]
         Webhook --> Router["🔀 Task Router"]
         Router --> Oracle["💪 Oracle Media<br/>Processor API"]
-        Oracle --> SPW["📡 Social Publisher"]
+        Oracle --> Approval["📸 Caption Approval<br/>Pipeline"]
+        Approval --> SPW["📡 Social Publisher"]
         SPW --> Meta["📸 Instagram / Facebook<br/>Graph API"]
         SPW --> FLW["📝 Feedback & Logging"]
     end
@@ -144,16 +148,24 @@ sequenceDiagram
     participant SP as 📡 Social Publisher
     participant FL as 📝 Feedback/Logging
 
-    T->>O: Sends Voice / Text or ✅ Approves
+    T->>O: Sends Voice / Text
     O->>O: Processes Intent (Templates + Gemini 2.5 Flash)
-    O->>W: HMAC-Signed HTTP POST (Task JSON)
+    O->>W: HMAC-Signed HTTP POST (Caption Payload)
     Note over W: Signature validated — task authorized
-    W->>MP: POST /process (file_url, operations)
-    MP->>MP: Download from Drive + Resize + Watermark
-    MP-->>W: Return processed image (base64)
-    W->>SP: Upload to Instagram / Facebook
-    SP->>FL: Log success in Supabase
-    FL->>T: "Poem successfully published! 🌸"
+    W->>T: sendPhoto (processed image + caption + ✅/✏️ buttons)
+    T->>W: callback_query (✅ Publicar or ✏️ Ajustar)
+    alt ✅ Publicar
+        W->>SP: Publish to Instagram / Facebook
+        SP->>FL: Log success in Supabase
+        FL->>T: "Publicado con exito!"
+    else ✏️ Ajustar
+        W->>O: Notify adjust (webhook)
+        O->>T: "Que te gustaria cambiar?"
+        T->>O: Feedback (e.g. "mas divertido")
+        O->>O: Regenerates caption
+        O->>W: New HMAC payload (same task_id)
+        W->>T: New preview (photo + new caption + buttons)
+    end
 ```
 
 ### 2.2 Decision Logic: The Brain (Internal Luna Loop)
@@ -181,12 +193,10 @@ graph TD
 
     DB --> Template["📅 Apply Day Theme<br/>(Content Calendar)"]
     Template --> Gen["✨ Generate Poem Proposal"]
-    Gen --> Approval{"👤 Does Shirley Approve?"}
+    Gen --> Dispatch["🛡️ Dispatch caption payload<br/>to n8n Approval Pipeline"]
 
-    Approval -- "🔄 No / Adjust" --> Gen
-    Approval -- "✅ Yes" --> Dispatch["🛡️ Dispatch to n8n Webhook"]
-
-    Chat --> Response["📱 Response in Telegram"]
+    Stats --> Response["📱 Response in Telegram"]
+    Chat --> Response
     Stats --> Response
     Dispatch --> Response
 ```
@@ -289,7 +299,10 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 - **Trigger:** Shirley sends a message to Luna via Telegram requesting content (e.g., "publica el collar nuevo", or Luna drafts from the processed queue).
 - **Classification:** If metadata is missing, Luna asks Shirley to classify the piece via inline buttons ( Necklace, Earring, etc.).
 - **Drafting:** Luna generates a caption proposal using Templates Bank + Gemini.
-- **Approval:** Luna presents the draft with ✅/🔄/❌ buttons for Shirley's approval.
+- **Dispatch:** Luna sends caption payload (with `file_id` from `/Procesadas/`) to n8n Caption Approval Pipeline.
+- **Preview:** n8n sends the full publication preview to Shirley: processed photo + caption + hashtags + 2 inline buttons (**✅ Publicar** / **✏️ Ajustar**).
+- **Approval (✅ Publicar):** n8n publishes to Meta directly and logs to Supabase.
+- **Adjust (✏️ Ajustar):** n8n notifies Luna, which asks Shirley for feedback ("What would you like to change?"), regenerates the caption, and re-dispatches to n8n for a new preview.
 
 ### 5.3 Pipeline Heartbeat (Proactivity — Only When Empty)
 - **Schedule:** Once a day at 9:00 AM.
@@ -303,8 +316,10 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 | **Detected** | Drive Scan /Input/ | n8n detects new file | Record in `processed_files` |
 | **Processing**| Auto (no human) | Oracle: resize + watermark | Processed bytes |
 | **Processed** | Upload success | n8n uploads to Drive /Procesadas/, Supabase updated | `metadata.processed_file_id` |
-| **Drafting** | Shirley Request | OpenClaw generates caption proposal | Message in Telegram |
-| **Publishing**| User Approval | Social Publisher reads from Drive /Procesadas/ | Live post URL |
+| **Drafting** | Shirley Request | OpenClaw generates caption proposal | Caption payload |
+| **Pending Approval** | Luna dispatch | n8n sends photo+caption+2 buttons to Shirley | Telegram preview message |
+| **Publishing**| ✅ Publicar | Social Publisher reads from Drive /Procesadas/ | Live post URL |
+| **Adjusting** | ✏️ Ajustar | Luna asks feedback, regenerates, re-dispatches | New preview |
 | **Logged** | Completion | Feedback & Logging Worker | Final confirmation |
 
 ---

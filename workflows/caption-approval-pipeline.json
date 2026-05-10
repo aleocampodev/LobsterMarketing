@@ -1,0 +1,274 @@
+{
+  "name": "Caption Approval Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "caption-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Caption Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.WEBHOOK_SECRET;\nconst headers = $input.first().json.headers;\nconst body = $input.first().json.body;\nconst signature = headers['x-luna-signature'];\n\nif (!signature) {\n  return { json: { error: 'Missing HMAC signature' } };\n}\n\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(JSON.stringify(body));\nconst expected = hmac.digest('hex');\n\nif (signature !== expected) {\n  return { json: { error: 'Invalid HMAC signature' } };\n}\n\nconst payload = body;\nconst caption = [payload.caption, payload.hashtags.join(' ')].join('\\n\\n');\nconst driveUrl = `https://drive.google.com/uc?export=download&id=${payload.file_id}`;\n\nreturn {\n  json: {\n    task_id: payload.task_id,\n    file_id: payload.file_id,\n    file_name: payload.file_name,\n    caption: caption,\n    drive_url: driveUrl,\n    platforms: payload.platforms,\n    product_type: payload.product_type,\n    chat_id: $env.SHIRLEY_TELEGRAM_CHAT_ID\n  }\n};"
+      },
+      "id": "node-verify-hmac",
+      "name": "Verify HMAC + Build Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'received', task_id: $json.task_id }) }}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 180]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendPhoto",
+        "chatId": "={{ $json.chat_id }}",
+        "file": "={{ $json.drive_url }}",
+        "additionalFields": {
+          "caption": "={{ $json.caption }}",
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboardRows": {
+          "row": [
+            {
+              "buttons": {
+                "button": [
+                  {
+                    "text": "✅ Publicar",
+                    "callbackData": "={{ 'approve:' + $json.task_id }}"
+                  },
+                  {
+                    "text": "✏️ Ajustar",
+                    "callbackData": "={{ 'adjust:' + $json.task_id }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-send-photo",
+      "name": "Send Photo + Buttons",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [680, 340],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Luna Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": ["callback_query"],
+        "additionalFields": {}
+      },
+      "id": "node-callback-trigger",
+      "name": "Telegram Callback Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 600],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Luna Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callbackData = $input.first().json.callback_query.data;\nconst [action, taskId] = callbackData.split(':');\nconst queryId = $input.first().json.callback_query.id;\nconst chatId = String($input.first().json.callback_query.message.chat.id);\nconst messageId = String($input.first().json.callback_query.message.message_id);\n\nreturn {\n  json: {\n    action: action,\n    task_id: taskId,\n    query_id: queryId,\n    chat_id: chatId,\n    message_id: messageId\n  }\n};"
+      },
+      "id": "node-parse-callback",
+      "name": "Parse Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 600]
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerQuery",
+        "queryId": "={{ $json.query_id }}",
+        "additionalFields": {
+          "text": "Procesando..."
+        }
+      },
+      "id": "node-answer-callback",
+      "name": "Answer Callback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [680, 520],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Luna Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "operation": "equals",
+              "value1": "={{ $json.action }}",
+              "value2": "approve"
+            },
+            {
+              "operation": "equals",
+              "value1": "={{ $json.action }}",
+              "value2": "adjust"
+            }
+          ]
+        }
+      },
+      "id": "node-switch-action",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [680, 680]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=✅ ¡Publicado con éxito! Tu creación ya está en Instagram y Facebook.",
+        "additionalFields": {}
+      },
+      "id": "node-approve-notify",
+      "name": "Notify Published",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [920, 580],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Luna Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "={{ $env.OPENCLAW_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'adjust', task_id: $json.task_id, message: 'Shirley wants to adjust the caption. Ask her what she would like to change.' }) }}",
+        "options": {}
+      },
+      "id": "node-notify-luna-adjust",
+      "name": "Notify Luna (Adjust)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 780]
+    }
+  ],
+  "connections": {
+    "Caption Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC + Build Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC + Build Data": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Photo + Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Callback Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Callback": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "Notify Published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Luna (Adjust)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
