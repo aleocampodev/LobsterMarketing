@@ -1,0 +1,73 @@
+{
+  "name": "📋 Caption Cron + Notify (WF2a-1)",
+  "id": "qoZ77gxnxsCdJDuT",
+  "active": false,
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Daily Caption Trigger",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"triggerAtHour": 11, "triggerAtMinute": 0, "triggerInterval": [{"weeksBetweenTriggers": 1}], "triggerOnWeekdays": ["monday", "tuesday", "wednesday", "thursday"]},
+            {"triggerAtHour": 16, "triggerAtMinute": 0, "triggerInterval": [{"weeksBetweenTriggers": 1}], "triggerOnWeekdays": ["friday"]},
+            {"triggerAtHour": 9, "triggerAtMinute": 0, "triggerInterval": [{"weeksBetweenTriggers": 1}], "triggerOnWeekdays": ["saturday"]}
+          ]
+        }
+      },
+      "position": [240, 304],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3
+    },
+    {
+      "credentials": {"supabaseApi": {"id": "xX5CZKJLuLoSqfGG", "name": "Supabase account"}},
+      "id": "find-processed",
+      "name": "Find Processed Image",
+      "parameters": {"useCustomSchema": true, "schema": "nenufar", "resource": "row", "operation": "getAll", "tableId": "processed_files", "returnAll": false, "limit": 1, "filterType": "manual", "matchType": "allFilters", "filters": {"conditions": [{"condition": "eq", "keyName": "status", "keyValue": "processed"}]}},
+      "position": [480, 304],
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1
+    },
+    {
+      "id": "check-found",
+      "name": "Has Image?",
+      "parameters": {"conditions": {"combinator": "and", "conditions": [{"id": "c1", "leftValue": "={{ $json.id }}", "operator": {"operation": "notEmpty", "singleValue": true, "type": "string"}, "rightValue": ""}], "options": {"caseSensitive": true, "typeValidation": "strict"}}, "options": {}},
+      "position": [720, 304],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2
+    },
+    {
+      "id": "prepare-msg",
+      "name": "Build Notification",
+      "parameters": {"jsCode": "const img = $input.first().json;\nconst metadata = typeof img.metadata === 'string' ? JSON.parse(img.metadata) : (img.metadata || {});\nconst postType = metadata.post_type || 'feed_ig';\nconst formatMap = { feed_ig: 'Portrait (Instagram)', feed_fb: 'Landscape (Facebook)', story: 'Story (1080x1920)', square: 'Cuadrado (1080x1080)' };\nconst format = formatMap[postType] || postType;\nconst msg = `🌸 Shirley, tengo una imagen lista para publicar:\\n\\n📄 Archivo: ${img.file_name}\\n📐 Formato: ${format}\\n\\nDile a Luna: \"Publica el archivo ${img.file_name}\"\\ny ella generara el caption para que lo apruebes.`;\nreturn [{ json: { message: msg, chat_id: $env.SHIRLEY_TELEGRAM_CHAT_ID || '6327668964' } }];"},
+      "position": [960, 224],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "credentials": {"telegramApi": {"id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account"}},
+      "id": "notify-shirley",
+      "name": "Notify Shirley",
+      "parameters": {"resource": "message", "operation": "sendMessage", "chatId": "={{ $json.chat_id }}", "text": "={{ $json.message }}", "additionalFields": {}},
+      "position": [1200, 224],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "9d594560-7c9d-4d7e-8344-3754543ae62c"
+    },
+    {
+      "id": "no-image",
+      "name": "No Image - Stop",
+      "parameters": {},
+      "position": [960, 384],
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Daily Caption Trigger": {"main": [[{"index": 0, "node": "Find Processed Image", "type": "main"}]]},
+    "Find Processed Image": {"main": [[{"index": 0, "node": "Has Image?", "type": "main"}]]},
+    "Has Image?": {"main": [[{"index": 0, "node": "Build Notification", "type": "main"}], [{"index": 0, "node": "No Image - Stop", "type": "main"}]]},
+    "Build Notification": {"main": [[{"index": 0, "node": "Notify Shirley", "type": "main"}]]}
+  },
+  "settings": {"executionOrder": "v1", "callerPolicy": "workflowsFromSameOwner", "availableInMCP": false, "binaryMode": "separate"}
+}

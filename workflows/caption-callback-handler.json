@@ -1,0 +1,119 @@
+{
+  "name": "📋 Caption Callback + Publish (WF2b)",
+  "id": "soOfnxGp0Fxh3I7G",
+  "active": false,
+  "nodes": [
+    {
+      "id": "75a35e0c-c6ff-44a6-8e9f-17a35784203d",
+      "name": "Telegram Callback",
+      "parameters": {"updates": ["callback_query"], "additionalFields": {}},
+      "position": [-1104, 224],
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "webhookId": "wf2b-telegram-callback"
+    },
+    {
+      "id": "713d3ebc-d0bf-4a71-8aa4-3ab995e2dbc4",
+      "name": "Parse Callback",
+      "parameters": {"jsCode": "const cb = $input.first().json.callback_query;\nconst parts = cb.data.split(':');\nreturn [{ json: {\n  action: parts[0],\n  task_id: parts[1] || '',\n  file_id: parts[2] || '',\n  post_type: parts[3] || 'feed_ig',\n  query_id: cb.id,\n  chat_id: String(cb.message.chat.id),\n  message_id: String(cb.message.message_id)\n} }];"},
+      "position": [-880, 224],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "credentials": {"telegramApi": {"id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account"}},
+      "id": "0dc5ccc2-b3e7-48cd-a8ed-9076a3e8783c",
+      "name": "Answer Callback",
+      "parameters": {"resource": "callback", "queryId": "={{ $json.query_id }}", "additionalFields": {}},
+      "position": [-656, 224],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "79b13f5b-7e3a-4f1a-b1df-2194848b9c07"
+    },
+    {
+      "id": "19d333c7-b81b-4045-b8d6-43795b533dd8",
+      "name": "Route Action",
+      "parameters": {"dataType": "string", "value1": "={{ $json.action }}", "rules": {"rules": [{"value2": "approve"}, {"value2": "adjust"}]}},
+      "position": [-448, 224],
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1
+    },
+    {
+      "id": "e467a451-c8b5-4ad7-b43f-6c57fc5b68b3",
+      "name": "Build Meta URL + Get Caption",
+      "parameters": {"jsCode": "const prev = $('Parse Callback').first().json;\nconst driveUrl = `https://drive.google.com/uc?export=download&id=${prev.file_id}`;\nreturn { json: {\n  drive_url: driveUrl,\n  file_id: prev.file_id,\n  task_id: prev.task_id,\n  post_type: prev.post_type,\n  chat_id: prev.chat_id,\n  caption: ''\n} };"},
+      "position": [-224, 80],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "id": "8f6358fa-c64d-4137-a200-325f4f1c5d65",
+      "name": "Publish to Instagram",
+      "parameters": {"method": "POST", "url": "=https://graph.facebook.com/v21.0/{{ $env.IG_BUSINESS_ACCOUNT_ID }}/media", "sendBody": true, "contentType": "form-urlencoded", "bodyParameters": {"parameters": [{"name": "image_url", "value": "={{ $json.drive_url }}"}, {"name": "caption", "value": "={{ $json.caption }}"}, {"name": "access_token", "value": "={{ $env.META_PAGE_ACCESS_TOKEN }}"}]}, "options": {}},
+      "position": [0, 0],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1
+    },
+    {
+      "id": "604676a3-67ab-44b1-bbd9-57bce36fb806",
+      "name": "Publish to Facebook",
+      "parameters": {"method": "POST", "url": "=https://graph.facebook.com/v21.0/{{ $env.FB_PAGE_ID }}/photos", "sendBody": true, "contentType": "form-urlencoded", "bodyParameters": {"parameters": [{"name": "url", "value": "={{ $json.drive_url }}"}, {"name": "message", "value": "={{ $json.caption }}"}, {"name": "access_token", "value": "={{ $env.META_PAGE_ACCESS_TOKEN }}"}]}, "options": {}},
+      "position": [0, 160],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1
+    },
+    {
+      "credentials": {"supabaseApi": {"id": "xX5CZKJLuLoSqfGG", "name": "Supabase account"}},
+      "id": "10bd4f9b-4d34-4484-a014-aeda2c607943",
+      "name": "Mark Published",
+      "parameters": {"operation": "update", "tableId": "processed_files", "filters": {"conditions": [{"keyName": "file_id", "keyValue": "={{ $('Parse Callback').first().json.file_id }}"}]}, "fieldsUi": {"fieldValues": [{"fieldId": "status", "fieldValue": "published"}]}},
+      "position": [224, 80],
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1
+    },
+    {
+      "credentials": {"telegramApi": {"id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account"}},
+      "id": "51314688-7db8-46b1-a918-aaf8982d44c9",
+      "name": "Notify Published",
+      "parameters": {"resource": "message", "operation": "sendMessage", "chatId": "={{ $('Parse Callback').first().json.chat_id }}", "text": "✅ ¡Publicado con éxito! Tu creación ya está en Instagram y Facebook.", "additionalFields": {}},
+      "position": [448, 80],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "6b59e302-6875-4f90-b1a7-7f9daf14e5f7"
+    },
+    {
+      "id": "5624c16e-a246-44ce-8b4b-c4dfb7b26c07",
+      "name": "Notify Luna Adjust",
+      "parameters": {"method": "POST", "url": "={{ $env.OPENCLAW_BRIDGE_URL }}", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify({ action: 'adjust', task_id: $json.task_id, message: 'Shirley wants to adjust the caption.' }) }}", "options": {}},
+      "position": [-224, 368],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1
+    },
+    {
+      "credentials": {"telegramApi": {"id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account"}},
+      "id": "47ea1ae7-2162-4781-9a0e-9efbbf127043",
+      "name": "Notify Adjusting",
+      "parameters": {"resource": "message", "operation": "sendMessage", "chatId": "={{ $json.chat_id }}", "text": "✏️ Le avisé a Luna. Te pregunta en un momento qué quieres cambiar.", "additionalFields": {}},
+      "position": [-224, 528],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "74f1dd6e-c774-4365-a7b4-e3f6bf249381"
+    }
+  ],
+  "connections": {
+    "Telegram Callback": {"main": [[{"index": 0, "node": "Parse Callback", "type": "main"}]]},
+    "Parse Callback": {"main": [[{"index": 0, "node": "Answer Callback", "type": "main"}]]},
+    "Answer Callback": {"main": [[{"index": 0, "node": "Route Action", "type": "main"}]]},
+    "Route Action": {"main": [[{"index": 0, "node": "Build Meta URL + Get Caption", "type": "main"}], [{"index": 0, "node": "Notify Luna Adjust", "type": "main"}, {"index": 0, "node": "Notify Adjusting", "type": "main"}]]},
+    "Build Meta URL + Get Caption": {"main": [[{"index": 0, "node": "Publish to Instagram", "type": "main"}, {"index": 0, "node": "Publish to Facebook", "type": "main"}]]},
+    "Publish to Instagram": {"main": [[{"index": 0, "node": "Mark Published", "type": "main"}]]},
+    "Publish to Facebook": {"main": [[{"index": 0, "node": "Mark Published", "type": "main"}]]},
+    "Mark Published": {"main": [[{"index": 0, "node": "Notify Published", "type": "main"}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

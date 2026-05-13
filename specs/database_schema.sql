@@ -1,6 +1,6 @@
 -- ============================================
 -- Nenufar Marketing Automation - Database Schema
--- Version: v1.4
+-- Version: v1.5
 -- All tables, indexes, and functions scoped to `nenufar` schema.
 -- v1.4: Added template_used column to processed_files. Updated mark_file_published.
 --      Seeded 15 boutique templates. Removed RAG/Vector dependencies.
@@ -126,6 +126,22 @@ CREATE TABLE IF NOT EXISTS nenufar.engagement_calendar (
     published_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- ============================================
+-- Table: nenufar.pending_captions (Caption Approval Bridge)
+-- Persists captions between webhook execution and Telegram callback.
+-- ============================================
+CREATE TABLE IF NOT EXISTS nenufar.pending_captions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id TEXT UNIQUE NOT NULL,
+    file_id TEXT NOT NULL,
+    caption TEXT NOT NULL,
+    post_type TEXT DEFAULT 'feed_ig',
+    platforms TEXT DEFAULT '[]',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pc_task_id ON nenufar.pending_captions(task_id);
 
 -- ============================================
 -- Table: nenufar.comment_patterns (Proactive Replies)
@@ -337,6 +353,7 @@ ALTER TABLE nenufar.content_calendar ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.templates_bank ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.post_engagement ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.engagement_calendar ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nenufar.pending_captions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nenufar.comment_patterns ENABLE ROW LEVEL SECURITY;
 
 -- ============================================

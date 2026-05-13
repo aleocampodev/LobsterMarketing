@@ -1,51 +1,62 @@
 {
-  "name": "Caption Approval Pipeline",
+  "name": "📸 Caption Approval Pipeline v2",
+  "id": "qoZ77gxnxsCdJDuT",
+  "active": true,
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
         "path": "caption-approval",
-        "responseMode": "responseNode",
+        "responseMode": "lastNode",
         "options": {}
       },
-      "id": "node-webhook",
+      "id": "s1",
       "name": "Caption Webhook",
+      "position": [208, 304],
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300]
+      "webhookId": "b81f8bb1-5442-460b-baf6-77fc97e924e3",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst secret = $env.WEBHOOK_SECRET;\nconst headers = $input.first().json.headers;\nconst body = $input.first().json.body;\nconst signature = headers['x-luna-signature'];\n\nif (!signature) {\n  return { json: { error: 'Missing HMAC signature' } };\n}\n\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(JSON.stringify(body));\nconst expected = hmac.digest('hex');\n\nif (signature !== expected) {\n  return { json: { error: 'Invalid HMAC signature' } };\n}\n\nconst payload = body;\nconst caption = [payload.caption, payload.hashtags.join(' ')].join('\\n\\n');\nconst driveUrl = `https://drive.google.com/uc?export=download&id=${payload.file_id}`;\n\nreturn {\n  json: {\n    task_id: payload.task_id,\n    file_id: payload.file_id,\n    file_name: payload.file_name,\n    caption: caption,\n    drive_url: driveUrl,\n    platforms: payload.platforms,\n    product_type: payload.product_type,\n    chat_id: $env.SHIRLEY_TELEGRAM_CHAT_ID\n  }\n};"
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.WEBHOOK_SECRET;\nconst body = $input.first().json.body;\nconst headers = $input.first().json.headers;\nconst signature = headers['x-luna-signature'];\nif (!signature) throw new Error('Missing HMAC signature');\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(JSON.stringify(body));\nconst expected = hmac.digest('hex');\nif (signature !== expected) throw new Error('Invalid HMAC signature');\nconst payload = body;\nconst hashtags = (payload.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' ');\nconst caption = [payload.caption, hashtags].join('\\n\\n');\nconst driveUrl = 'https://drive.google.com/uc?export=download&id=' + payload.file_id;\nreturn [{ json: { task_id: payload.task_id, file_id: payload.file_id, file_name: payload.file_name || 'pieza.jpg', caption: caption, drive_url: driveUrl, platforms: payload.platforms || ['instagram', 'facebook'], post_type: payload.post_type || 'feed_ig', chat_id: payload.chat_id || $env.SHIRLEY_TELEGRAM_CHAT_ID || '6327668964' } }];"
       },
-      "id": "node-verify-hmac",
-      "name": "Verify HMAC + Build Data",
+      "id": "s2",
+      "name": "Verify HMAC",
+      "position": [432, 304],
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [460, 300]
+      "typeVersion": 2
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'received', task_id: $json.task_id }) }}",
-        "options": {}
+        "useCustomSchema": true,
+        "tableId": "pending_captions",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "task_id", "fieldValue": "={{ $json.task_id }}" },
+            { "fieldId": "file_id", "fieldValue": "={{ $json.file_id }}" },
+            { "fieldId": "caption", "fieldValue": "={{ $json.caption }}" },
+            { "fieldId": "post_type", "fieldValue": "={{ $json.post_type }}" },
+            { "fieldId": "platforms", "fieldValue": "={{ JSON.stringify($json.platforms) }}" }
+          ]
+        }
       },
-      "id": "node-respond",
-      "name": "Respond OK",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "s4",
+      "name": "Store Caption",
+      "position": [640, 304],
+      "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [680, 180]
+      "credentials": {
+        "supabaseApi": { "id": "xX5CZKJLuLoSqfGG", "name": "Supabase account" }
+      }
     },
     {
       "parameters": {
         "resource": "message",
         "operation": "sendPhoto",
-        "chatId": "={{ $json.chat_id }}",
-        "file": "={{ $json.drive_url }}",
-        "additionalFields": {
-          "caption": "={{ $json.caption }}",
-          "parse_mode": "HTML"
-        },
+        "chatId": "={{ $('Verify HMAC').first().json.chat_id }}",
+        "file": "={{ $('Verify HMAC').first().json.drive_url }}",
         "replyMarkup": "inlineKeyboard",
         "inlineKeyboardRows": {
           "row": [
@@ -54,221 +65,191 @@
                 "button": [
                   {
                     "text": "✅ Publicar",
-                    "callbackData": "={{ 'approve:' + $json.task_id }}"
+                    "callbackData": "={{ 'approve:' + $('Verify HMAC').first().json.task_id + ':' + $('Verify HMAC').first().json.file_id + ':' + $('Verify HMAC').first().json.post_type }}"
                   },
                   {
                     "text": "✏️ Ajustar",
-                    "callbackData": "={{ 'adjust:' + $json.task_id }}"
+                    "callbackData": "={{ 'adjust:' + $('Verify HMAC').first().json.task_id }}"
                   }
                 ]
               }
             }
           ]
+        },
+        "additionalFields": {
+          "caption": "={{ $('Verify HMAC').first().json.caption }}"
         }
       },
-      "id": "node-send-photo",
+      "id": "s5",
       "name": "Send Photo + Buttons",
+      "position": [864, 304],
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [680, 340],
+      "webhookId": "c264af41-068f-415c-884c-e065acc66bcb",
       "credentials": {
-        "telegramApi": {
-          "id": "TELEGRAM_CREDENTIAL_ID",
-          "name": "Luna Telegram Bot"
-        }
+        "telegramApi": { "id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account" }
       }
     },
     {
+      "id": "25611942-9510-4e96-9e5a-d607811e384c",
+      "name": "Telegram Callback Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [208, 600],
       "parameters": {
         "updates": ["callback_query"],
         "additionalFields": {}
       },
-      "id": "node-callback-trigger",
-      "name": "Telegram Callback Trigger",
-      "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1.1,
-      "position": [240, 600],
       "credentials": {
-        "telegramApi": {
-          "id": "TELEGRAM_CREDENTIAL_ID",
-          "name": "Luna Telegram Bot"
-        }
-      }
+        "telegramApi": { "id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account" }
+      },
+      "webhookId": "993a7493-60c6-4174-bdcc-1102b826df95"
     },
     {
-      "parameters": {
-        "jsCode": "const callbackData = $input.first().json.callback_query.data;\nconst [action, taskId] = callbackData.split(':');\nconst queryId = $input.first().json.callback_query.id;\nconst chatId = String($input.first().json.callback_query.message.chat.id);\nconst messageId = String($input.first().json.callback_query.message.message_id);\n\nreturn {\n  json: {\n    action: action,\n    task_id: taskId,\n    query_id: queryId,\n    chat_id: chatId,\n    message_id: messageId\n  }\n};"
-      },
-      "id": "node-parse-callback",
+      "id": "9202a90f-4f14-44af-9764-18d86c4c5712",
       "name": "Parse Callback",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 600]
+      "position": [432, 600],
+      "parameters": {
+        "jsCode": "const callbackData = $input.first().json.callback_query.data;\nconst parts = callbackData.split(':');\nconst action = parts[0];\nconst taskId = parts[1] || '';\nconst fileId = parts[2] || '';\nconst postType = parts[3] || 'feed_ig';\nconst queryId = $input.first().json.callback_query.id;\nconst chatId = String($input.first().json.callback_query.message.chat.id);\nconst messageId = String($input.first().json.callback_query.message.message_id);\nreturn { json: { action, task_id: taskId, file_id: fileId, post_type: postType, query_id: queryId, chat_id: chatId, message_id: messageId } };"
+      }
     },
     {
+      "id": "dfb0b9cf-08eb-497a-a8d5-660bacad07b6",
+      "name": "Answer Callback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [656, 500],
       "parameters": {
         "resource": "callback",
         "operation": "answerQuery",
         "queryId": "={{ $json.query_id }}",
-        "additionalFields": {
-          "text": "Procesando..."
-        }
+        "additionalFields": { "text": "Procesando..." }
       },
-      "id": "node-answer-callback",
-      "name": "Answer Callback",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [680, 520],
       "credentials": {
-        "telegramApi": {
-          "id": "TELEGRAM_CREDENTIAL_ID",
-          "name": "Luna Telegram Bot"
+        "telegramApi": { "id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account" }
+      },
+      "webhookId": "19c0f008-8a84-4e03-acb0-a3fc2c2c043c"
+    },
+    {
+      "id": "70472b92-41a1-47f5-be0f-f05a5c786f21",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [656, 700],
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "operation": "equals", "value1": "={{ $json.action }}", "value2": "approve" },
+            { "operation": "equals", "value1": "={{ $json.action }}", "value2": "adjust" }
+          ]
         }
       }
     },
     {
+      "id": "dbe129a0-d338-43a3-bb89-d62165d21a62",
+      "name": "Call Publish Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 600],
       "parameters": {
-        "rules": {
-          "rules": [
-            {
-              "operation": "equals",
-              "value1": "={{ $json.action }}",
-              "value2": "approve"
-            },
-            {
-              "operation": "equals",
-              "value1": "={{ $json.action }}",
-              "value2": "adjust"
-            }
-          ]
-        }
+        "method": "POST",
+        "url": "={{ $env.N8N_BASE_URL + '/webhook/publish' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ file_id: $json.file_id, task_id: $json.task_id, post_type: $json.post_type, chat_id: $json.chat_id, caption: '' }) }}",
+        "options": {}
       },
-      "id": "node-switch-action",
-      "name": "Route by Action",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3,
-      "position": [680, 680]
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
     },
     {
+      "id": "db5bf079-24a3-4f7c-b4be-228bb7148efb",
+      "name": "Notify Adjusting",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [880, 820],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chat_id }}",
-        "text": "=✅ ¡Publicado con éxito! Tu creación ya está en Instagram y Facebook.",
+        "text": "✏️ Le avisé a Luna. Te pregunta en un momento qué quieres cambiar.",
         "additionalFields": {}
       },
-      "id": "node-approve-notify",
-      "name": "Notify Published",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [920, 580],
       "credentials": {
-        "telegramApi": {
-          "id": "TELEGRAM_CREDENTIAL_ID",
-          "name": "Luna Telegram Bot"
-        }
-      }
+        "telegramApi": { "id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account" }
+      },
+      "webhookId": "bdf5cb05-dc4f-4d9b-a06f-9b86ee1b4090"
     },
     {
+      "id": "81578b0b-eb26-43dd-a981-36dc53948559",
+      "name": "Notify Luna Adjust",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 940],
       "parameters": {
-        "httpMethod": "POST",
+        "method": "POST",
         "url": "={{ $env.OPENCLAW_WEBHOOK_URL }}",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ action: 'adjust', task_id: $json.task_id, message: 'Shirley wants to adjust the caption. Ask her what she would like to change.' }) }}",
+        "jsonBody": "={{ JSON.stringify({ action: 'adjust', task_id: $json.task_id, message: 'Shirley wants to adjust the caption.' }) }}",
         "options": {}
-      },
-      "id": "node-notify-luna-adjust",
-      "name": "Notify Luna (Adjust)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [920, 780]
+      }
     }
   ],
   "connections": {
     "Caption Webhook": {
       "main": [
-        [
-          {
-            "node": "Verify HMAC + Build Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Verify HMAC", "type": "main", "index": 0 }]
       ]
     },
-    "Verify HMAC + Build Data": {
+    "Verify HMAC": {
       "main": [
-        [
-          {
-            "node": "Respond OK",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Photo + Buttons",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Store Caption", "type": "main", "index": 0 }]
+      ]
+    },
+    "Store Caption": {
+      "main": [
+        [{ "node": "Send Photo + Buttons", "type": "main", "index": 0 }]
       ]
     },
     "Telegram Callback Trigger": {
       "main": [
-        [
-          {
-            "node": "Parse Callback",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Parse Callback", "type": "main", "index": 0 }]
       ]
     },
     "Parse Callback": {
       "main": [
         [
-          {
-            "node": "Answer Callback",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Route by Action",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Answer Callback", "type": "main", "index": 0 },
+          { "node": "Route by Action", "type": "main", "index": 0 }
         ]
       ]
     },
     "Route by Action": {
       "main": [
+        [{ "node": "Call Publish Workflow", "type": "main", "index": 0 }],
         [
-          {
-            "node": "Notify Published",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Notify Luna (Adjust)",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Notify Luna Adjust", "type": "main", "index": 0 },
+          { "node": "Notify Adjusting", "type": "main", "index": 0 }
         ]
       ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "binaryMode": "separate"
   }
 }

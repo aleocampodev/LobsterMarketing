@@ -1,0 +1,27 @@
+
+     const crypto = require('crypto');
+     const app = express();
+     app.use(express.json());
+
+     const PORT = process.env.BRIDGE_PORT || 3010;
+     const BRIDGE_SECRET = process.env.BRIDGE_SECRET || 'fe4f2ef63ed74d0fab3a73471f95f8646f51961ebacffbf9ad2ad55a3157a47f';
+     const TELEGRAM_BOT_TOKEN = '8285873928:AAEO-53gtdp0gOTjKmKSz7ZZ3SCTjaQL8AY';
+     const SHIRLEY_CHAT_ID = '6327668964';
+
+     function sendTelegram(text) {
+       return fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ chat_id: SHIRLEY_CHAT_ID, text, parse_mode: 'Markdown' })
+       });
+     }
+
+     app.post('/send', (req, res) => {
+       const sig = req.headers['x-bridge-signature'];
+       const expected = crypto.createHmac('sha256', BRIDGE_SECRET).update(JSON.stringify(req.body)).digest('hex');
+       if (sig && sig !== expected) {
+         return res.status(403).json({ error: 'Invalid signature' });
+       }
+       const { message, file_id, file_name, post_type, processed_file_id, chat_id } = req.body;
+       const text = message || `Publica el archivo ${file_name || 'unknown'}`;
+       sendTelegram(t

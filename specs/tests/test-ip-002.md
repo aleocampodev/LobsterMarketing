@@ -7,7 +7,8 @@ Version: v3.0
 Validate the integration between the OpenClaw (Luna) brain and the user interface (Telegram), ensuring that Luna can receive messages, process them using the Brain-Arms pattern with the Templates Bank, dispatch signed tasks to n8n workers, handle adjust callbacks, classify products, and act proactively when the pipeline is empty.
 
 ## 2. Validation Summary
-- **Status:** [ ] Pending Verification
+- **Status:** [ ] Ready for Manual Verification
+<!-- All test procedures defined. Ready for manual E2E execution by Shirley. -->
 - **Brain Integration:** [ ] Confirmed (Gemini 2.5 Flash)
 - **Voice Consistency:** [ ] Confirmed (Marketing Strategist / Spanish Colombia)
 - **Approval Workflow:** [ ] Confirmed (2 buttons: ✅ Publicar / ✏️ Ajustar, handled by n8n)

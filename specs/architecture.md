@@ -1,5 +1,6 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v2.9
+Version: v3.0
+<!-- v3.0: Added Luna Bridge (HTTP→WebSocket proxy) for n8n→OpenClaw communication. Ref: specs/luna-bridge-api.md. -->
 <!-- v2.9: Token optimization for Caption Approval Pipeline — predefined adjustment options, max 2 adjustments. Ref: ADR-005. -->
 <!-- v2.8: Caption Approval Pipeline — 2 buttons (✅ Publicar / ✏️ Ajustar) instead of 3. n8n sends photo+caption preview. Adjust triggers feedback loop via Luna. -->
 <!-- v2.7: Defined Drive folder structure (Input + Procesadas). Processed images stored in Drive, not Supabase. -->
@@ -51,8 +52,8 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)    │
  │  [ 📝 SCRIBE    ]  Log Status & Notify User (Supabase)      │
  └──────────┬──────────────────────────────────────────────────┘
-            │ HTTP POST /process
-            ▼
+            │ HTTP POST /process           │ HTTP POST /send (adjust)
+            ▼                              ▼
  ┌─────────────────────────────────────────────────────────────┐
  │  💪  MEDIA PROCESSOR — Oracle Cloud (ARM A1)                │
  │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
@@ -68,6 +69,16 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  Drive /Procesadas/ ← System uploads watermarked here      │
  │  Supabase DB        ← Metadata + references (no binaries)  │
  │  Supabase Storage   ← Watermark logo only (~KB)            │
+ └─────────────────────────────────────────────────────────────┘
+
+ ┌─────────────────────────────────────────────────────────────┐
+ │  🌉  LUNA BRIDGE — Oracle Cloud (same VM as OpenClaw)       │
+ │     HTTP→WebSocket proxy · port 3002 · HMAC-secured        │
+ │                                                             │
+ │  [ 📥 RECEIVE   ]  HTTP POST from n8n (HMAC validated)     │
+ │  [ 🔄 TRANSLATE ]  Wrap in envelope {source, timestamp}    │
+ │  [ 📤 FORWARD   ]  Send via WebSocket to OpenClaw Gateway  │
+ │  🔗  Connects to ws://127.0.0.1:18789 (auto-reconnect)     │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -110,10 +121,13 @@ graph TD
     subgraph OracleSub["💪 ORACLE CLOUD (ARM A1)"]
         OracleAPI["Media Processor<br/>(Sharp + ffmpeg)"]
         OracleDrive["📁 Google Drive"]
+        Bridge["🌉 Luna Bridge<br/>(HTTP→WebSocket)"]
     end
 
     Oracle -.-> OracleAPI
     OracleAPI --> OracleDrive
+    Approval -- "✏️ Adjust callback" --> Bridge
+    Bridge -- "WebSocket message" --> Brain
 
     FLW --> Supabase[("🗄️ Supabase DB<br/>(Long-Term Memory)")]
     FLW -- "✅ Success / ❌ Error" --> Telegram
@@ -145,6 +159,7 @@ sequenceDiagram
     participant O as 🧠 OpenClaw / Luna (Brain)
     participant W as 🛡️ n8n Webhook (GCP)
     participant MP as 💪 Oracle Media Proc.
+    participant LB as 🌉 Luna Bridge
     participant SP as 📡 Social Publisher
     participant FL as 📝 Feedback/Logging
 
@@ -159,7 +174,8 @@ sequenceDiagram
         SP->>FL: Log success in Supabase
         FL->>T: "Publicado con exito!"
     else ✏️ Ajustar
-        W->>O: Notify adjust (webhook)
+        W->>LB: HTTP POST /send (adjust notification)
+        LB->>O: WebSocket message (source: n8n)
         O->>T: "Que te gustaria cambiar?"
         T->>O: Feedback (e.g. "mas divertido")
         O->>O: Regenerates caption
@@ -274,7 +290,16 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 - **Security:** HMAC signature validation on every request (same `WEBHOOK_SECRET`).
 - **API Contract:** See `specs/media_processor_api.md` for full endpoint specification.
 
-### 5.4 The Infrastructure (GCP + OCI + Supabase + Drive)
+### 5.4 Luna Bridge — Oracle Cloud (HTTP→WebSocket Proxy)
+- **Environment:** Node.js micro-service on the same OCI VM as OpenClaw. Port 3002.
+- **Role:** Translates HTTP POST requests from n8n into WebSocket messages to OpenClaw's gateway.
+- **Why:** OpenClaw's gateway only speaks WebSocket (`ws://127.0.0.1:18789`). n8n cannot send WebSocket messages directly. The bridge acts as a protocol translator.
+- **Flow:** n8n → HTTP POST `/send` (HMAC validated) → WebSocket message → OpenClaw gateway.
+- **Security:** HMAC signature validation on every incoming request. Only accessible from n8n's IP.
+- **Resilience:** Auto-reconnects to OpenClaw gateway if the WebSocket drops. Returns 503 with `retry_after` if disconnected.
+- **API Contract:** See `specs/luna-bridge-api.md` for full specification.
+
+### 5.5 The Infrastructure (GCP + OCI + Supabase + Drive)
 - **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode. Lightweight router only.
 - **Media Processor (OCI ARM A1):** Node.js API for heavy media processing. Shares VM with OpenClaw.
 - **Supabase:** PostgreSQL for metadata and references. Storage bucket `nenufar-assets` for watermark logo only.

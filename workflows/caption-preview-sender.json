@@ -1,0 +1,100 @@
+{
+  "name": "📋 Caption Preview Sender (WF2a-2)",
+  "id": "4U7012o8wOkHldD8",
+  "active": false,
+  "nodes": [
+    {
+      "id": "webhook-caption",
+      "name": "Webhook: Caption Return",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "caption-return",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "position": [240, 304],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "webhookId": "7ba350f1-3b44-4993-b20f-df511aff298f",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "verify-hmac",
+      "name": "Verify HMAC + Build Data",
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.WEBHOOK_SECRET;\nconst body = $input.first().json.body;\nconst headers = $input.first().json.headers;\nconst signature = headers['x-luna-signature'];\nif (!signature) throw new Error('Missing HMAC signature');\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(JSON.stringify(body));\nconst expected = hmac.digest('hex');\nif (signature !== expected) throw new Error('Invalid HMAC signature');\nconst payload = body;\nconst hashtags = (payload.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' ');\nconst caption = [payload.caption, hashtags].join('\\n\\n');\nconst driveUrl = 'https://drive.google.com/uc?export=download&id=' + payload.file_id;\nreturn [{ json: {\n  task_id: payload.task_id,\n  file_id: payload.file_id,\n  file_name: payload.file_name || 'pieza.jpg',\n  caption: caption,\n  drive_url: driveUrl,\n  platforms: payload.platforms || ['instagram', 'facebook'],\n  post_type: payload.post_type || 'feed_ig',\n  chat_id: payload.chat_id || $env.SHIRLEY_TELEGRAM_CHAT_ID || '6327668964'\n}}];"
+      },
+      "position": [480, 304],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "credentials": {"supabaseApi": {"id": "xX5CZKJLuLoSqfGG", "name": "Supabase account"}},
+      "id": "store-caption",
+      "name": "Store Caption",
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "nenufar",
+        "resource": "row",
+        "operation": "create",
+        "tableId": "pending_captions",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {"fieldId": "task_id", "fieldValue": "={{ $json.task_id }}"},
+            {"fieldId": "file_id", "fieldValue": "={{ $json.file_id }}"},
+            {"fieldId": "caption", "fieldValue": "={{ $json.caption }}"},
+            {"fieldId": "post_type", "fieldValue": "={{ $json.post_type }}"},
+            {"fieldId": "platforms", "fieldValue": "={{ JSON.stringify($json.platforms) }}"}
+          ]
+        }
+      },
+      "position": [720, 304],
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1
+    },
+    {
+      "credentials": {"telegramApi": {"id": "Qnh5jmW5sNzjGjrY", "name": "Telegram account"}},
+      "id": "send-preview",
+      "name": "Send Preview to Shirley",
+      "parameters": {
+        "resource": "message",
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Verify HMAC + Build Data').first().json.chat_id }}",
+        "file": "={{ $('Verify HMAC + Build Data').first().json.drive_url }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboardRows": {
+          "row": [{"buttons": {"button": [
+            {"text": "✅ Publicar", "callbackData": "={{ 'approve:' + $('Verify HMAC + Build Data').first().json.task_id + ':' + $('Verify HMAC + Build Data').first().json.file_id + ':' + $('Verify HMAC + Build Data').first().json.post_type }}"},
+            {"text": "✏️ Ajustar", "callbackData": "={{ 'adjust:' + $('Verify HMAC + Build Data').first().json.task_id }}"}
+          ]}}]
+        },
+        "additionalFields": {"caption": "={{ $('Verify HMAC + Build Data').first().json.caption }}"}
+      },
+      "position": [960, 304],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "send-preview-tlgrm"
+    },
+    {
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "parameters": {"respondWith": "json", "responseBody": "={{ JSON.stringify({ status: 'received', task_id: $json.task_id }) }}", "options": {}},
+      "position": [1200, 304],
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook: Caption Return": {"main": [[{"index": 0, "node": "Verify HMAC + Build Data", "type": "main"}]]},
+    "Verify HMAC + Build Data": {"main": [[{"index": 0, "node": "Store Caption", "type": "main"}]]},
+    "Store Caption": {"main": [[{"index": 0, "node": "Send Preview to Shirley", "type": "main"}]]},
+    "Send Preview to Shirley": {"main": [[{"index": 0, "node": "Respond OK", "type": "main"}]]},
+    "Respond OK": {"main": []}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
