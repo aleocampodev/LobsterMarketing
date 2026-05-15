@@ -1,5 +1,6 @@
 # AGENTS.md - Operating Manual & AI Agent Rules
-Version: v1.1
+Version: v1.2
+<!-- v1.2: Updated architecture to reflect n8n migration to Oracle Cloud. All components on single VM. Bridge removed. -->
 
 This document defines the strict operational rules, behaviors, and workflows for all AI agents (OpenClaw) operating within the Nenufar Marketing Automation System.
 
@@ -73,8 +74,8 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
 ```text
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║       🌸  LUNA SYSTEM ARCHITECTURE — NENUFAR  🌸                 ║
-║       Brain = OpenClaw (Luna) · Arms = n8n + Oracle Worker       ║
+       🌸  LUNA SYSTEM ARCHITECTURE — NENUFAR v4.0  🌸            ║
+       Brain = OpenClaw (Luna) · Arms = n8n · Same Oracle VM     ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
@@ -87,7 +88,7 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
  │  ② THINK     Gemini 2.5 Flash + Templates Bank              │
  │  ③ CRAFT     "Poemas Tejidos" (Eco-Poetic Voice)            │
  │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)    │
- │  ⑤ DISPATCH  Sign Payload (HMAC) → Direct Webhook to n8n    │
+ │  ⑤ DISPATCH  dispatch-caption.js → n8n (localhost)    │
  └───────┬──────────────┬──────────────────────────────────────┘
          │              │
          ▼              ▼
@@ -108,15 +109,15 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
   └─────────┘    └──────────┘    └───────────┘    └──────┬─────┘
                                                               │
   ┌─────────┐    ┌──────────┐    ┌───────────┐    ┌─────────┴───┐
-  │ ⑤ HMAC  │───►│ ⑥ n8n    │───►│ ⑦ ORACLE │───►│ ⑧ PUBLISH  │
-  │ WEBHOOK │    │  ROUTE   │    │  MEDIA   │    │ Meta API    │
+  │ ⑤ n8n   │───►│ ⑥ MEDIA │───►│ ⑦ PREVIEW│───►│ ⑧ PUBLISH  │
+  │ DISPATCH│    │  PROC.   │    │ CAPTION   │    │ Meta API    │
   │ Dispatch│    │ & DELEG  │    │ PROC.    │    │ (IG / FB)   │
   └────┬────┘    └──────────┘    └───────────┘    └─────────────┘
        │              ▲                              │
        │              │                              ▼
   ┌─────────┐    ┌──────────┐              ┌──────────────────┐
-  │ ⑨ LOG   │───►│ ⑩ FEED   │───► 📱      │ Oracle = Heavy   │
-  │ Supabase│    │ BACK     │   Notify     │ GCP = Lightweight│
+  │ ⑨ LOG   │───►│ ⑩ FEED   │───► 📱      │ All on Oracle   │
+  │ Supabase│    │ BACK     │   Notify     │ Single VM       │
   └─────────┘    └──────────┘   Shirley     └──────────────────┘
 ```
 
@@ -129,17 +130,17 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
     2. Processes intent using Gemini 2.5 Flash with Eco-poetic voice.
     3. Uses Templates Bank to generate brand-aligned content.
     4. Presents draft to user with approval buttons.
-    5. Upon approval, dispatches signed payload via direct HMAC webhook to n8n workers.
+    5. Upon approval, dispatches caption via `dispatch-caption.js` script to n8n (localhost:5678).
 
-### 3.3 The Arms — n8n (GCP) + Oracle Cloud (Media Processor)
-- **n8n (GCP e2-micro):** Lightweight router — validates webhooks, delegates heavy work to Oracle, publishes to Meta.
-- **Oracle Cloud (ARM A1):** Media Processor API — resize, watermark, format conversion via Sharp. Shares VM with OpenClaw.
+### 3.3 The Arms — n8n + Media Processor (All on Oracle Cloud)
+- **n8n (Oracle Cloud, Docker):** Orchestration layer — validates webhooks, routes tasks, publishes to Meta. Port 5678.
+- **Media Processor (same VM):** Resize, watermark, format conversion via Sharp. Port 3001.
 - **Task Distribution:**
     - **Webhook Receiver (n8n):** Validates HMAC signatures on incoming webhook payloads.
-    - **Task Router (n8n):** Delegates media processing to Oracle Media Processor via HTTP POST.
-    - **Media Processor (Oracle):** Downloads from Drive, resizes, applies watermark, returns processed image.
+    - **Task Router (n8n):** Delegates media processing to Media Processor (localhost:3001).
+    - **Media Processor:** Downloads from Drive, resizes, applies watermark, returns processed image.
     - **Social Publisher (n8n):** Publishes to Instagram/Facebook via Meta Graph API.
-    - **Feedback & Logging (n8n):** Persists metadata in Supabase and notifies OpenClaw via Telegram.
+    - **Feedback & Logging (n8n):** Persists metadata in Supabase.
 
 ---
 

@@ -17,13 +17,15 @@
 - **Gateway Mode:** Local.
 
 ## System Configuration (n8n & Infrastructure)
-- WEBHOOK_SECRET: ******************************** (Used for OpenClaw -> n8n -> Oracle signing)
-- **n8n (GCP e2-micro):** `n8n-stack-prod-dev.duckdns.org` (HTTPS). Regular Mode. Lightweight router only.
-- **Media Processor (Oracle Cloud ARM A1):** Port 3001. Heavy media processing (Sharp + ffmpeg). Same VM as OpenClaw.
+- WEBHOOK_SECRET: ******************************** (Used for OpenClaw -> n8n signing)
+- **n8n (Oracle Cloud):** Docker container on `132.145.73.80:5678`. All components on single VM. Migrated from GCP e2-micro on 2026-05-14.
+- **OpenClaw (Oracle Cloud):** Same VM. PM2 process. Port 18789 (gateway). Luna communicates via Telegram.
+- **Media Processor (Oracle Cloud):** Same VM. Port 3001. Sharp (images) + ffmpeg (video).
+- **Luna Bridge:** DEPRECATED (v4.0). Removed when n8n migrated to Oracle. n8n now talks directly to OpenClaw via Telegram Bot API.
 - **Database Store:** Supabase PostgreSQL (via Transaction Pooler, port 6543).
-- **Memory Optimization:** `max-old-space-size=512MB` (Optimized for GCP e2-micro).
-- **Persistence:** Local volume `./n8n-persistence`.
-- **Note (2026-05-07):** Added Oracle Cloud Media Processor (ADR-004). n8n on e2-micro now delegates all heavy media operations to Oracle. Brain + Media Processor share the same OCI VM.
+- **External Domain:** `nenufar-bridge.duckdns.org` (DuckDNS) for external access when needed.
+- **Persistence:** Local volume `./n8n-persistence` on Oracle VM.
+- **Migration Note (2026-05-14):** n8n migrated from GCP e2-micro to Oracle Cloud. All components now on single VM. Eliminates timeouts, DuckDNS dependency for internal calls, and GCP cost. Luna dispatches captions via `dispatch-caption.js` script instead of `webhook_dispatch` plugin (which never existed as a native OpenClaw plugin).
 
 ## Brand Insights
 - Nenufar's mission is deeply rooted in social impact, specifically empowering working mothers in Cartagena.
@@ -31,6 +33,9 @@
 
 ## Technical Lessons
 - Decoupling decision-making (OpenClaw) from execution (n8n) allows for better scalability on free-tier cloud providers.
+- Colocating Brain and Arms on the same VM eliminates network latency, timeouts, and external DNS dependencies.
+- The `webhook_dispatch` plugin never existed as a native OpenClaw plugin. Luna dispatches via `dispatch-caption.js` shell script with HMAC signing.
+- DuckDNS is useful for external access but should not be relied upon for internal component communication.
 
 ## Session Log
 - **2026-05-10:** COMPLETED IP-002 (all tasks). Session covered: ip-002.13-002.15 (HMAC+dispatch), ip-002.4 (Buffer Window memory), ip-002.11 (approval callback fix), ip-002.16 (classification buttons), ip-002.18 (proactive nudge), ip-002.17 (validation report v3.0). Key files modified: specs/agent_prompts.md v1.4 (Sections 5+6), specs/openclaw_system_prompt.txt (callbacks, classify, proactive), specs/implementation_plan/ip-002 v3.0 (COMPLETED), specs/tests/test-ip-002.md v3.0.

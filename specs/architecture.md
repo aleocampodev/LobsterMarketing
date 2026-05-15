@@ -1,6 +1,6 @@
 # System Architecture: Nenufar Marketing Automation
-Version: v3.0
-<!-- v3.0: Added Luna Bridge (HTTP→WebSocket proxy) for n8n→OpenClaw communication. Ref: specs/luna-bridge-api.md. -->
+Version: v4.0
+<!-- v4.0: n8n migrated from GCP e2-micro to Oracle Cloud. All components on single VM. Brain and Arms colocated. Luna Bridge removed — n8n communicates directly with OpenClaw via Telegram Bot API. Luna dispatches captions via dispatch-caption.js script. Media Processor on same VM. DuckDNS used for external domain only. -->
 <!-- v2.9: Token optimization for Caption Approval Pipeline — predefined adjustment options, max 2 adjustments. Ref: ADR-005. -->
 <!-- v2.8: Caption Approval Pipeline — 2 buttons (✅ Publicar / ✏️ Ajustar) instead of 3. n8n sends photo+caption preview. Adjust triggers feedback loop via Luna. -->
 <!-- v2.7: Defined Drive folder structure (Input + Procesadas). Processed images stored in Drive, not Supabase. -->
@@ -19,7 +19,8 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
 ### 1.1 Visual Workflow Architecture (ASCII)
 ```text
 ╔═══════════════════════════════════════════════════════════════╗
-║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v2.5  🌸            ║
+║  🌸  NENUFAR — LUNA SYSTEM ARCHITECTURE v4.0  🌸            ║
+║  All components on single Oracle Cloud VM (132.145.73.80)    ║
 ╚═══════════════════════════════════════════════════════════════╝
 
  ┌─────────────────────────────────────────────────────────────┐
@@ -29,7 +30,7 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  ① LISTEN    Telegram Messages (Voice, Text, Media)         │
  │  ② THINK     Gemini 2.5 Flash + Templates Bank             │
  │  ③ CRAFT     "Poemas Tejidos" (Variable Interpolation)      │
- │  ④ DISPATCH  Caption payload (HMAC) → n8n Caption Approval Pipeline  │
+ │  ④ DISPATCH  Caption payload → dispatch-caption.js → n8n   │
  │  ⑤ FEEDBACK  If adjust → ask Shirley → regenerate → re-dispatch      │
  └──────────────────────────┬──────────────────────────────────┘
                             │
@@ -41,22 +42,23 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  Bot API      │  │ (Memory/DB)  │          │
  └──────────────┘  └──────────────┘          │
                                              │
-               HMAC-Signed HTTP POST         │
+               localhost (same VM)            │
                                              ▼
  ┌─────────────────────────────────────────────────────────────┐
- │  🦾  THE ARMS — n8n (GCP e2-micro) — Lightweight Router     │
+ │  🦾  THE ARMS — n8n (Oracle Cloud :5678)                     │
+ │     Docker container on same VM as Brain                     │
  │                                                             │
  │  [ 🛡️ RECEIVER  ]  Validate HMAC Signature                  │
- │  [ 🔀 ROUTER    ]  Delegate heavy work to Oracle Worker     │
+ │  [ 🔀 ROUTER    ]  Delegate to Media Processor (localhost)   │
  │  [ 📸 APPROVAL  ]  Send Photo+Caption+Buttons to Telegram   │
  │  [ 📡 PUBLISHER ]  Meta Graph API (Instagram & Facebook)    │
  │  [ 📝 SCRIBE    ]  Log Status & Notify User (Supabase)      │
  └──────────┬──────────────────────────────────────────────────┘
-            │ HTTP POST /process           │ HTTP POST /send (adjust)
-            ▼                              ▼
+            │ HTTP POST /process (localhost)
+            ▼
  ┌─────────────────────────────────────────────────────────────┐
- │  💪  MEDIA PROCESSOR — Oracle Cloud (ARM A1)                │
- │     Sharp (images) · ffmpeg (video) · HMAC-secured API     │
+ │  💪  MEDIA PROCESSOR — Oracle Cloud (same VM)                │
+ │     Sharp (images) · ffmpeg (video) · port 3001             │
  │                                                             │
  │  [ 📥 DOWNLOAD  ]  Fetch media from Google Drive /Input/   │
  │  [ 📥 LOGO      ]  Fetch watermark logo from Supabase     │
@@ -69,16 +71,6 @@ The system follows a **Brain-Arms pattern**: **OpenClaw (Luna)** is the Brain �
  │  Drive /Procesadas/ ← System uploads watermarked here      │
  │  Supabase DB        ← Metadata + references (no binaries)  │
  │  Supabase Storage   ← Watermark logo only (~KB)            │
- └─────────────────────────────────────────────────────────────┘
-
- ┌─────────────────────────────────────────────────────────────┐
- │  🌉  LUNA BRIDGE — Oracle Cloud (same VM as OpenClaw)       │
- │     HTTP→WebSocket proxy · port 3002 · HMAC-secured        │
- │                                                             │
- │  [ 📥 RECEIVE   ]  HTTP POST from n8n (HMAC validated)     │
- │  [ 🔄 TRANSLATE ]  Wrap in envelope {source, timestamp}    │
- │  [ 📤 FORWARD   ]  Send via WebSocket to OpenClaw Gateway  │
- │  🔗  Connects to ws://127.0.0.1:18789 (auto-reconnect)     │
  └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -271,18 +263,18 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
     5. **Human-in-the-Loop:** Presents the content and media preview to Shirley for approval.
     6. **Dispatch:** Upon approval, sends a signed payload (HMAC) directly to the n8n Webhook Receiver for execution.
 
-### 5.2 The Arms — n8n (GCP e2-micro, Lightweight Router)
-- **Environment:** n8n Instance on GCP (Docker, Regular Mode).
-- **Role:** Lightweight orchestration layer — validates webhooks, routes tasks, delegates heavy processing to Oracle.
+### 5.2 The Arms — n8n (Oracle Cloud, Docker)
+- **Environment:** n8n Docker container on the same Oracle Cloud VM as the Brain (port 5678).
+- **Role:** Orchestration layer — validates webhooks, routes tasks, delegates to Media Processor (localhost).
 - **Workers:**
     - **Webhook Receiver:** Validates HMAC signatures on incoming webhook payloads.
-    - **Task Router:** Delegates media processing to the Oracle Media Processor API via HTTP.
+    - **Task Router:** Delegates media processing to the Media Processor API (localhost:3001).
     - **Social Publisher:** Publishes to Instagram/Facebook via Meta Graph API.
-    - **Feedback & Logging:** Persists metadata in Supabase and notifies OpenClaw via Telegram.
-- **Key Principle:** The e2-micro instance never processes heavy media. All CPU/RAM-intensive operations are delegated to Oracle Cloud.
+    - **Feedback & Logging:** Persists metadata in Supabase and notifies via Telegram.
+- **Key Principle:** n8n and the Brain are on the same VM. No external network calls between them. No timeouts, no DNS dependency.
 
-### 5.3 Media Processor — Oracle Cloud (ARM A1)
-- **Environment:** Node.js micro-service on the same OCI VM as OpenClaw.
+### 5.3 Media Processor — Oracle Cloud (same VM)
+- **Environment:** Node.js micro-service on the Oracle Cloud VM (port 3001).
 - **Role:** Heavy compute worker for all media operations.
 - **Capabilities:**
     - **Image Processing:** Resize (1080x1350, 1080x1080, 1080x566), watermark (Nenufar logo at 15% opacity), format conversion (JPEG, PNG, WebP) via Sharp.
@@ -290,18 +282,15 @@ The core of the system is the **Agentic Loop** — OpenClaw (Luna) acts as the B
 - **Security:** HMAC signature validation on every request (same `WEBHOOK_SECRET`).
 - **API Contract:** See `specs/media_processor_api.md` for full endpoint specification.
 
-### 5.4 Luna Bridge — Oracle Cloud (HTTP→WebSocket Proxy)
-- **Environment:** Node.js micro-service on the same OCI VM as OpenClaw. Port 3002.
-- **Role:** Translates HTTP POST requests from n8n into WebSocket messages to OpenClaw's gateway.
-- **Why:** OpenClaw's gateway only speaks WebSocket (`ws://127.0.0.1:18789`). n8n cannot send WebSocket messages directly. The bridge acts as a protocol translator.
-- **Flow:** n8n → HTTP POST `/send` (HMAC validated) → WebSocket message → OpenClaw gateway.
-- **Security:** HMAC signature validation on every incoming request. Only accessible from n8n's IP.
-- **Resilience:** Auto-reconnects to OpenClaw gateway if the WebSocket drops. Returns 503 with `retry_after` if disconnected.
-- **API Contract:** See `specs/luna-bridge-api.md` for full specification.
+### 5.4 Luna Bridge — REMOVED (v4.0)
+- **Status:** Deprecated. Removed in v4.0 when n8n migrated to Oracle Cloud.
+- **Reason:** n8n and OpenClaw are now on the same VM. n8n communicates directly with OpenClaw via Telegram Bot API (sendMessage). Luna dispatches captions to n8n via the `dispatch-caption.js` script (HMAC-signed HTTP POST to localhost).
+- **Previous role:** Was an HTTP→Telegram relay needed when n8n was on GCP and couldn't reach OpenClaw directly.
 
-### 5.5 The Infrastructure (GCP + OCI + Supabase + Drive)
-- **n8n (GCP e2-micro):** Dockerized instance running in Regular Mode. Lightweight router only.
-- **Media Processor (OCI ARM A1):** Node.js API for heavy media processing. Shares VM with OpenClaw.
+### 5.5 The Infrastructure (Oracle Cloud + Supabase + Drive)
+- **n8n (Oracle Cloud):** Dockerized instance on the same VM as OpenClaw. Port 5678.
+- **OpenClaw (Oracle Cloud):** Luna AI agent. Communicates via Telegram. Port 18789 (gateway).
+- **Media Processor (Oracle Cloud):** Node.js API. Port 3001. Same VM.
 - **Supabase:** PostgreSQL for metadata and references. Storage bucket `nenufar-assets` for watermark logo only.
 - **Google Drive:** Binary file storage for original and processed media.
     - `/Input/` — Original files uploaded by Shirley (monitored by heartbeat).
