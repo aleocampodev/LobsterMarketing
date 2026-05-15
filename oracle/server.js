@@ -10,6 +10,9 @@ const upload = multer({ limits: { fileSize: 100 * 1024 * 1024 } });
 const app = express();
 app.use(express.json({ limit: "100mb" }));
 
+// --- Async task store for video processing ---
+const asyncTasks = new Map();
+
 // --- Configuration ---
 const PORT = process.env.MEDIA_PROCESSOR_PORT || 3001;
 const HMAC_SECRET = process.env.WEBHOOK_SECRET || "your-webhook-secret";
@@ -21,6 +24,34 @@ const WATERMARK_PATH = path.join(__dirname, "logo", "nenufar-logo.png");
 const TEMP_DIR = path.join(__dirname, "temp");
 
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
+
+const N8N_VIDEO_CALLBACK_URL = process.env.N8N_VIDEO_CALLBACK_URL || "";
+
+// --- Notify n8n when video processing is done ---
+async function notifyVideoDone(taskId, fileId, fileName, postType, status, error) {
+  if (!N8N_VIDEO_CALLBACK_URL) {
+    console.log("[callback] Skipping — N8N_VIDEO_CALLBACK_URL not configured");
+    return;
+  }
+  try {
+    const payload = {
+      task_id: taskId,
+      file_id: fileId,
+      file_name: fileName,
+      post_type: postType || "feed_ig",
+      status: status,
+    };
+    if (error) payload.error = error;
+    await fetch(N8N_VIDEO_CALLBACK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    console.log(`[callback] Notified n8n: ${status} for ${fileId}`);
+  } catch (err) {
+    console.error(`[callback] Failed to notify n8n:`, err.message);
+  }
+}
 
 const uploadWithStorage = multer({
   storage: multer.diskStorage({
@@ -115,19 +146,26 @@ async function ensureWatermarkLogo() {
 async function buildWatermarkPng(targetSize, opacity) {
   const { data: raw, info } = await sharp(WATERMARK_PATH)
     .resize(targetSize, targetSize, { fit: "inside" })
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
+  const maxAlpha = Math.round(255 * opacity);
   for (let i = 0; i < raw.length; i += 4) {
     const lum = 0.299 * raw[i] + 0.587 * raw[i + 1] + 0.114 * raw[i + 2];
-    raw[i + 3] = lum > 210 ? 0 : Math.round(255 * opacity);
+    if (lum >= 230) {
+      raw[i + 3] = 0;
+    } else if (lum <= 180) {
+      raw[i + 3] = maxAlpha;
+    } else {
+      raw[i + 3] = Math.round(maxAlpha * (230 - lum) / 50);
+    }
   }
 
   return sharp(Buffer.from(raw), {
     raw: { width: info.width, height: info.height, channels: 4 },
   })
+    .blur(1.2)
     .png()
     .toBuffer();
 }
@@ -146,50 +184,22 @@ async function buildWatermarkPng(targetSize, opacity) {
 // no como píxeles. Igual que lo que hace Lightroom con el slider "Texture".
 // ─────────────────────────────────────────────────────────────────────────────
 async function enhanceProduct(inputBuffer) {
-  // Paso 1: obtener dimensiones originales
   const meta = await sharp(inputBuffer).metadata();
   const origW = meta.width;
   const origH = meta.height;
 
-  // Paso 2: upscale 2x con lanczos3
-  const upscaled = await sharp(inputBuffer)
+  const enhanced = await sharp(inputBuffer)
     .resize(origW * 2, origH * 2, {
       kernel: sharp.kernel.lanczos3,
       fastShrinkOnLoad: false,
     })
-    .toBuffer();
-
-  // Paso 3: blur gaussiano en el upscale para disolver juntas entre mostacillas
-  // sigma 1.8 a este tamaño equivale a ~0.9 en la imagen original — suave pero efectivo
-  const blurred = await sharp(upscaled).blur(1.8).toBuffer();
-
-  // Paso 4: downscale de vuelta con mitchell — preserva estructura sin ringing
-  const downscaled = await sharp(blurred)
+    .blur(1.8)
     .resize(origW, origH, {
       kernel: sharp.kernel.mitchell,
       fastShrinkOnLoad: false,
     })
-    .toBuffer();
-
-  // Paso 5: sharpen selectivo post-downscale
-  // sigma bajo + m2 alto = recupera bordes grandes (figura del personaje)
-  // sin recuperar la cuadrícula de granos (frecuencia alta)
-  const sharpened = await sharp(downscaled)
     .sharpen({ sigma: 0.8, m1: 0.3, m2: 3.5, x1: 2.0, y2: 15, y3: 0 })
-    .toBuffer();
-
-  // Paso 6: colores de producto fotográfico profesional
-  // saturation 1.5 = colores ricos como en foto de estudio
-  // brightness 1.06 = evitar que los negros del cabello se hundan
-  // hue 0 = no desviar tonos
-  const vivid = await sharp(sharpened)
     .modulate({ saturation: 1.5, brightness: 1.06 })
-    .toBuffer();
-
-  // Paso 7: contraste local adaptativo
-  // clahe normaliza zonas oscuras (capa negra) y claras (libro) por separado
-  // maxSlope 4 = contraste pronunciado sin posterización
-  const enhanced = await sharp(vivid)
     .clahe({ width: 32, height: 32, maxSlope: 4 })
     .toBuffer();
 
@@ -238,7 +248,7 @@ async function processImage(inputPath, operations) {
   }
 
   if (operations.watermark) {
-    const opacity = 0.95; // Aumentamos opacidad al 95% igual que en video
+    const opacity = 0.95;
     const resizedImage = await pipeline.toBuffer();
 
     const imgMeta = await sharp(resizedImage).metadata();
@@ -246,7 +256,7 @@ async function processImage(inputPath, operations) {
     const imgH = imgMeta.height || 1350;
 
     const shortSide = Math.min(imgW, imgH);
-    const wmSize = Math.min(Math.round(shortSide * 0.1), 150);
+    const wmSize = Math.min(Math.round(shortSide * 0.11), 160);
     const margin = Math.round(shortSide * 0.03);
 
     const finalWm = await buildWatermarkPng(wmSize, opacity);
@@ -286,20 +296,12 @@ async function processVideo(inputPath, operations) {
     `vid_${Date.now()}_${Math.random().toString(36).slice(2)}.${format}`,
   );
 
-  // super-res simulado en ffmpeg:
-  // 1. scale 2x con lanczos
-  // 2. gblur para disolver cuadrícula
-  // 3. scale de vuelta con lanczos
-  // 4. unsharp para recuperar bordes grandes
-  // 5. eq para colores vivos
   const fgEnhance =
-    "scale=iw*2:ih*2:flags=lanczos," +
-    "gblur=sigma=1.5," +
     `scale=${size.width}:${size.height}:flags=lanczos:force_original_aspect_ratio=decrease,` +
     "unsharp=5:5:0.5:5:5:0," +
     "eq=saturation=1.5:brightness=0.06:contrast=1.05";
 
-  const bgBlur = `scale=${size.width}:${size.height}:flags=lanczos:force_original_aspect_ratio=increase,crop=${size.width}:${size.height},boxblur=40:20`;
+  const bgBlur = `scale=${size.width}:${size.height}:flags=lanczos:force_original_aspect_ratio=increase,crop=${size.width}:${size.height},gblur=sigma=25`;
 
   let tmpWatermark = null;
   const ffmpegArgs = ["-i", inputPath, "-y"];
@@ -307,10 +309,10 @@ async function processVideo(inputPath, operations) {
   if (operations.watermark) {
     await ensureWatermarkLogo();
 
-    const opacity = 0.95; // Aumentamos la opacidad para que se visualice bien
+    const opacity = 0.95;
     const shortSide = Math.min(size.width, size.height);
-    const wmSize = Math.min(Math.round(shortSide * 0.08), 120);
-    const margin = Math.round(shortSide * 0.04);
+    const wmSize = Math.min(Math.round(shortSide * 0.11), 160);
+    const margin = Math.round(shortSide * 0.03);
 
     // Posición: Inferior Derecha
     const logoX = size.width - wmSize - margin;
@@ -389,6 +391,25 @@ async function processVideo(inputPath, operations) {
     );
   });
 }
+
+// --- GET /task-status/:taskId --- Poll async video processing result ---
+app.get("/task-status/:taskId", (req, res) => {
+  const task = asyncTasks.get(req.params.taskId);
+  if (!task) return res.status(404).json({ error: "Task not found" });
+
+  if (task.status === "done" && req.query.return === "binary") {
+    if (!fs.existsSync(task.output_path)) {
+      return res.status(410).json({ status: "error", error: "Output file expired" });
+    }
+    res.set("Content-Type", `video/${task.format}`);
+    res.set("Content-Length", fs.statSync(task.output_path).size);
+    const stream = fs.createReadStream(task.output_path);
+    stream.pipe(res);
+    return;
+  }
+
+  res.json(task);
+});
 
 // --- Health Check ---
 app.get("/health", (req, res) => {
@@ -509,7 +530,7 @@ app.post("/process", uploadWithStorage.single("image"), async (req, res) => {
   }
 });
 
-// --- Process Video Endpoint ---
+// --- Process Video Endpoint (ASYNC) ---
 app.post(
   "/process-video",
   uploadWithStorage.single("image"),
@@ -520,35 +541,25 @@ app.post(
       hasFile: !!file,
       file_id,
       opsStr: opsStr ? opsStr.substring(0, 100) : opsStr,
-      bodyKeys: Object.keys(req.body),
     });
 
     let operations;
     try {
       operations = opsStr ? JSON.parse(opsStr) : undefined;
     } catch (e) {
-      console.error("[/process-video] JSON.parse failed for opsStr:", opsStr);
-      return res
-        .status(400)
-        .json({ error: `Invalid operations JSON: ${opsStr}` });
+      return res.status(400).json({ error: `Invalid operations JSON: ${opsStr}` });
     }
 
     if ((!file && !file_url && !file_base64) || !operations) {
-      return res
-        .status(400)
-        .json({
-          error: "Missing file or operations",
-          received: {
-            hasFile: !!file,
-            hasUrl: !!file_url,
-            hasBase64: !!file_base64,
-            operations: opsStr,
-          },
-        });
+      return res.status(400).json({
+        error: "Missing file or operations",
+        received: { hasFile: !!file, hasUrl: !!file_url, hasBase64: !!file_base64, operations: opsStr },
+      });
     }
 
+    // Generate task_id and respond immediately
+    const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     let inputPath = null;
-    let outputPath = null;
 
     try {
       if (file) {
@@ -557,38 +568,51 @@ app.post(
         inputPath = await getInputFile(req.body);
       }
 
-      const result = await processVideo(inputPath, operations);
-      outputPath = result.outputPath;
+      asyncTasks.set(taskId, { status: "processing", file_id: file_id || null });
 
-      const processedBuffer = fs.readFileSync(outputPath);
-      const format = operations.format || "mp4";
-      res.set("Content-Type", `video/${format}`);
-      res.set(
-        "Content-Disposition",
-        `attachment; filename="${file_id || "output"}.${format}"`,
-      );
-      res.send(processedBuffer);
+      // Respond immediately
+      res.json({ status: "processing", task_id: taskId, file_id: file_id || null });
+
+      // Process in background
+      const capturedInputPath = inputPath;
+      const capturedFileId = file_id || null;
+      const capturedFileName = req.body.file_name || "video.mp4";
+      const capturedPostType = req.body.post_type || "feed_ig";
+      process.nextTick(() => {
+        processVideo(capturedInputPath, operations)
+          .then(async (result) => {
+            asyncTasks.set(taskId, {
+              status: "done",
+              file_id: capturedFileId,
+              output_path: result.outputPath,
+              format: operations.format || "mp4",
+            });
+            try { fs.unlinkSync(capturedInputPath); } catch (e) {}
+            console.log(`[/process-video] task ${taskId} done, output: ${result.outputPath}`);
+
+            // Notify n8n callback workflow to download + upload to Drive + mark Supabase
+            await notifyVideoDone(taskId, capturedFileId, capturedFileName, capturedPostType, "done");
+
+            // Cleanup output after 5 minutes
+            setTimeout(() => {
+              try { fs.unlinkSync(result.outputPath); } catch (e) {}
+              asyncTasks.delete(taskId);
+            }, 5 * 60 * 1000);
+          })
+          .catch(async (err) => {
+            asyncTasks.set(taskId, {
+              status: "error",
+              file_id: capturedFileId,
+              error: err.message,
+            });
+            try { fs.unlinkSync(capturedInputPath); } catch (e) {}
+            await notifyVideoDone(taskId, capturedFileId, capturedFileName, capturedPostType, "error", err.message);
+            console.error(`[/process-video] task ${taskId} failed:`, err.message);
+          });
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          status: "error",
-          file_id: file_id || null,
-          error: error.message,
-        });
-    } finally {
-      if (inputPath)
-        try {
-          fs.unlinkSync(inputPath);
-        } catch (e) {
-          /* ignore */
-        }
-      if (outputPath)
-        try {
-          fs.unlinkSync(outputPath);
-        } catch (e) {
-          /* ignore */
-        }
+      if (inputPath) try { fs.unlinkSync(inputPath); } catch (e) {}
+      res.status(500).json({ status: "error", file_id: file_id || null, error: error.message });
     }
   },
 );

@@ -112,7 +112,7 @@ CREATE TABLE nenufar.templates_bank (
 | Layer | Technology | Purpose |
 |:------|:-----------|:--------|
 | **Brain** | OpenClaw (Luna) | AI agent with eco-poetic voice |
-| **LLM** | Gemini 2.0 Flash | Content generation + intent classification |
+| **LLM** | Gemini 2.5 Flash | Content generation + intent classification |
 | **Templates** | Supabase / Markdown | Brand knowledge & pre-defined copy |
 | **Interface** | Telegram Bot | Human-in-the-loop approval |
 | **Broker** | Direct HMAC Webhook | Task dispatch between Brain and Arms |

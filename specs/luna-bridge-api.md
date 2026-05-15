@@ -1,5 +1,6 @@
 # Luna Bridge API Specification
-Version: v1.0
+Version: v1.2
+<!-- v1.2: Fixed DNS issue — all URLs use direct IP instead of DuckDNS. Bridge now sends direct instruction to OpenClaw (not generic notification). -->
 
 ## Overview
 

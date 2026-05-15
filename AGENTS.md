@@ -81,10 +81,10 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
 
  ┌──────────────────────────────────────────────────────────────┐
  │  🧠  THE BRAIN — OPENCLAW (LUNA)      [Oracle Cloud VM]     │
- │     AI Agent · Gemini 2.0 Flash · Telegram Interface        │
+ │     AI Agent · Gemini 2.5 Flash · Telegram Interface        │
  │                                                              │
  │  ① LISTEN    Telegram Messages (Voice, Text, Media)          │
- │  ② THINK     Gemini 2.0 Flash + Templates Bank              │
+ │  ② THINK     Gemini 2.5 Flash + Templates Bank              │
  │  ③ CRAFT     "Poemas Tejidos" (Eco-Poetic Voice)            │
  │  ④ INTERACT  Request Approval (Telegram ✅/🔄/❌ Buttons)    │
  │  ⑤ DISPATCH  Sign Payload (HMAC) → Direct Webhook to n8n    │
@@ -122,11 +122,11 @@ Luna decides the image format based on the daily content strategy. The Oracle Me
 
 ### 3.2 The Brain — OpenClaw (Luna)
 - **Interface:** Telegram Bot (communicates with Shirley via text, voice, media, and approval buttons).
-- **Cognition:** Gemini 2.0 Flash + Templates Bank.
+- **Cognition:** Gemini 2.5 Flash + Templates Bank.
 - **Role:** Central Intelligence and Creative Engine.
 - **Workflow:** 
     1. Receives Text/Voice via Telegram.
-    2. Processes intent using Gemini 2.0 Flash with Eco-poetic voice.
+    2. Processes intent using Gemini 2.5 Flash with Eco-poetic voice.
     3. Uses Templates Bank to generate brand-aligned content.
     4. Presents draft to user with approval buttons.
     5. Upon approval, dispatches signed payload via direct HMAC webhook to n8n workers.

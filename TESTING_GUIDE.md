@@ -12,7 +12,7 @@ Test the complete implementation of the Nenufar system, focusing on:
 ## 📋 Prerequisites
 
 ### 1. Gemini API Configuration
-Configured in n8n/OpenClaw: **"Google Generative AI"** (Gemini 2.0 Flash)
+Configured in n8n/OpenClaw: **"Google Generative AI"** (Gemini 2.5 Flash)
 
 ### 2. Supabase
 - URL: `https://your-project-id.supabase.co`
